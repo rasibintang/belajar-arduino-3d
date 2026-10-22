@@ -44,6 +44,7 @@ export function createServo() {
   g.add(horn);
 
   g.userData.setAngle = (deg) => {
+    g.userData.angle = deg;
     horn.rotation.y = ((deg - 90) * Math.PI) / 180;
   };
   g.userData.cableExit = (() => {

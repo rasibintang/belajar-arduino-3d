@@ -47,6 +47,32 @@ export function playTone(hz, ms) {
   current = osc;
 }
 
+let held = null;
+
+/** Nada kontinu yang mengikuti frekuensi (untuk buzzer di sandbox). hz = 0 menghentikan. */
+export function holdTone(hz) {
+  if (!hz || muted || !ensure()) {
+    if (held) {
+      held.gain.gain.setTargetAtTime(0, ctx.currentTime, 0.01);
+      const osc = held.osc;
+      setTimeout(() => osc.stop(), 80);
+      held = null;
+    }
+    return;
+  }
+  if (!held) {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'square';
+    gain.gain.value = 0;
+    osc.connect(gain).connect(master);
+    osc.start();
+    gain.gain.setTargetAtTime(1, ctx.currentTime, 0.005);
+    held = { osc, gain };
+  }
+  held.osc.frequency.setTargetAtTime(hz, ctx.currentTime, 0.002);
+}
+
 /** Bunyi "klik" pendek (kontak relay berpindah). Tidak mengganggu tone() yang sedang main. */
 export function click() {
   if (muted || !ensure()) return;

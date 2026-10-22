@@ -333,7 +333,11 @@ export function createStage(canvas, handlers = {}) {
     const ud = part?.userData ?? {};
     const base = { x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, moved: false, part, point: hit?.point };
 
-    if (ud.stick) {
+    if (ud.move) {
+      // sandbox: seret komponen di lantai
+      ud.move.start(hit.point);
+      gesture = { ...base, type: 'move' };
+    } else if (ud.stick) {
       ud.stick.press?.(true);
       gesture = { ...base, type: 'stick' };
     } else if (ud.press) {
@@ -357,7 +361,7 @@ export function createStage(canvas, handlers = {}) {
       hovered = part;
       if (canLift(part)) springy.add(part);
       const ud = part?.userData ?? {};
-      canvas.style.cursor = !part ? 'grab' : ud.drag || ud.stick ? 'move' : ud.knob ? 'ew-resize' : 'pointer';
+      canvas.style.cursor = !part ? 'grab' : ud.cursor ?? (ud.drag || ud.stick || ud.move ? 'move' : ud.knob ? 'ew-resize' : 'pointer');
       handlers.onHover?.(part, e.clientX, e.clientY, hit?.point);
       return;
     }
@@ -381,6 +385,9 @@ export function createStage(canvas, handlers = {}) {
     } else if (gesture.type === 'knob' && gesture.moved) {
       const total = e.clientX - gesture.x0 - (e.clientY - gesture.y0);
       ud.knob.set(THREE.MathUtils.clamp(gesture.v0 + total * (ud.knob.speed ?? 1), ud.knob.min, ud.knob.max));
+    } else if (gesture.type === 'move' && gesture.moved) {
+      const p = groundPoint(e.clientX, e.clientY, 0);
+      if (p) ud.move.drag(p);
     } else if (gesture.type === 'stick' && gesture.moved) {
       // joystick: geser = miring; tombol tekan dilepas begitu mulai menggeser
       if (!gesture.dragging) {
@@ -397,6 +404,7 @@ export function createStage(canvas, handlers = {}) {
     const g = gesture;
     gesture = null;
     if (g.type === 'press') g.part.userData.press(false);
+    if (g.type === 'move') g.part.userData.move?.end(g.moved);
     if (g.type === 'stick') {
       g.part.userData.stick.press?.(false);
       g.part.userData.stick.release();
@@ -501,6 +509,13 @@ export function createStage(canvas, handlers = {}) {
     select,
     focus,
     touch,
+    /** Layer yang ikut dipilih pointer (mis. titik pin tak terlihat di layer 2). */
+    setPickLayers(...layers) {
+      raycaster.layers.disableAll();
+      for (const l of layers) raycaster.layers.enable(l);
+    },
+    /** Titik di bidang datar y untuk koordinat layar. */
+    groundPoint,
     /** Atur kecepatan semua animasi (1 normal, kecil = "kurangi animasi"). */
     setMotion(speed) {
       tweens.speed = speed;

@@ -1,2 +1,4 @@
 node_modules
 dist
+# arduino-cli portabel + core AVR + library (diunduh lokal, lihat README)
+tools/
