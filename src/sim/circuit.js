@@ -219,6 +219,14 @@ export class Circuit {
         return self.mcuPins.find((p) => p.group === g)?.name ?? null;
       },
       changed: () => self.solve(),
+      /** Tandai perlu dihitung ulang tanpa langsung menghitung (untuk perubahan sangat sering). */
+      markDirty: () => (self.dirty = true),
+      /** Nilai logika sebuah titik saat ini (menghitung ulang bila perlu). */
+      digital(node) {
+        if (self.dirty) self.solve();
+        const v = self.volts[self.nodeGroup.get(node)];
+        return v !== null && v > LOGIC_HIGH;
+      },
       now: () => self.runner?.cycles ?? 0,
       schedule(cycles, fn) {
         self.runner?.cpu.addClockEvent(fn, Math.max(1, Math.round(cycles)));
@@ -271,8 +279,34 @@ export class Circuit {
     else this.dirty = true;
   }
 
-  /** Hitung tegangan setiap grup, lalu perbarui input MCU dan perangkat. */
+  /**
+   * Hitung tegangan setiap grup, lalu perbarui input MCU dan perangkat.
+   * Saklar yang bergantung pada tegangan (transistor) dihitung ulang sampai stabil.
+   */
   solve() {
+    // perangkat bisa memicu perubahan saat sedang dihitung: jadwalkan ulang, jangan rekursif
+    if (this.solving) {
+      this.again = true;
+      return;
+    }
+    this.solving = true;
+    try {
+      for (let round = 0; round < 6; round++) {
+        this.again = false;
+        for (let pass = 0; pass < 4; pass++) {
+          const states = this.switches.map((s) => !!s.closed());
+          this.solveOnce(states);
+          if (this.switches.every((s, i) => !!s.closed() === states[i])) break;
+        }
+        this.afterSolve();
+        if (!this.again) break;
+      }
+    } finally {
+      this.solving = false;
+    }
+  }
+
+  solveOnce(closed) {
     this.dirty = false;
     const n = this.groupCount;
     // 1. gabungkan grup yang tersambung lewat saklar tertutup
@@ -281,7 +315,9 @@ export class Circuit {
       while (parent[x] !== x) x = parent[x] = parent[parent[x]];
       return x;
     };
-    for (const s of this.switches) if (s.closed()) parent[find(s.a)] = find(s.b);
+    this.switches.forEach((s, i) => {
+      if (closed[i]) parent[find(s.a)] = find(s.b);
+    });
 
     // 2. sumber kuat: catu daya, output MCU, perangkat yang menggerakkan pin
     const strong = new Array(n).fill(null);
@@ -362,7 +398,9 @@ export class Circuit {
     for (let g = 0; g < n; g++) this.volts[g] = V[find(g)];
     this.root = find;
     this.driven = strong; // per root: tegangan sumber kuat, atau null
+  }
 
+  afterSolve() {
     // 4. input MCU membaca tegangan grupnya
     if (this.runner) {
       for (const p of this.mcuPins) {

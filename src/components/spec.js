@@ -54,7 +54,25 @@ export const BEHAVIORS = {
   servo: { roles: ['signal', 'vcc', 'gnd'], desc: 'Berputar ke sudut sesuai lebar pulsa (1–2 ms).' },
   'i2c-lcd': { roles: ['sda', 'scl', 'vcc', 'gnd'], desc: 'Layar karakter lewat bus I²C (alamat di props).' },
   hcsr04: { roles: ['vcc', 'trig', 'echo', 'gnd'], desc: 'Pulsa trig 10 µs → pulsa echo sepanjang waktu tempuh suara.' },
+  'rgb-led': { roles: ['red', 'green', 'blue', 'cathode'], desc: 'Tiga LED dengan katoda bersama.' },
+  ldr: { roles: ['a', 'b'], desc: 'Resistor yang hambatannya bergantung pada cahaya (props lux).' },
+  indicator: { roles: ['gnd'], desc: 'Modul LED dengan resistor bawaan: tiap output HIGH = menyala.' },
+  seg7: { roles: ['common'], desc: 'Tujuh segmen + titik, katoda bersama.' },
+  npn: { roles: ['base', 'collector', 'emitter'], desc: 'Kolektor tersambung ke emitor saat basis cukup tinggi.' },
+  'dc-motor': { roles: ['plus', 'minus'], desc: 'Kecepatan sebanding beda tegangan terminal (rata-rata PWM).' },
+  relay: { roles: ['signal', 'vcc', 'gnd'], desc: 'Kumparan aktif saat sinyal HIGH dan modul mendapat daya.' },
+  joystick: { roles: ['vcc', 'gnd', 'x', 'y', 'sw'], desc: 'Dua pembagi tegangan + tombol ke GND.' },
+  keypad: { roles: [], desc: 'Matriks: tombol ditekan menyambungkan baris dan kolomnya.' },
+  hc595: { roles: ['vcc', 'gnd', 'data', 'shift', 'latch', 'oe', 'mr'], desc: 'Register geser 8 bit dengan latch.' },
+  ws2812: { roles: ['din', 'vcc', 'gnd'], desc: 'Bit data berdurasi (0,4 / 0,8 µs), 24 bit GRB per LED.' },
+  dht: { roles: ['vcc', 'data', 'gnd'], desc: 'Protokol satu kabel: 40 bit setelah pulsa mulai dari MCU.' },
+  'i2c-rtc': { roles: ['sda', 'scl', 'vcc', 'gnd'], desc: 'Register waktu BCD lewat I²C.' },
+  encoder: { roles: ['clk', 'dt', 'vcc', 'gnd'], desc: 'Dua sinyal kuadratur per "klik" putaran.' },
+  stepper: { roles: ['vcc', 'gnd'], desc: 'Urutan pola IN1–IN4 menggeser poros per langkah.' },
 };
+
+/** Field perilaku berisi daftar pin yang juga harus diperiksa. */
+const PIN_LIST_FIELDS = ['outputs', 'segments', 'inputs', 'rows', 'cols'];
 
 /** Nilai awal props. */
 export function defaultProps(spec) {
@@ -142,6 +160,11 @@ export function validateSpec(spec) {
   need(b && b.kind in BEHAVIORS, `behavior.kind "${b?.kind}" tidak dikenal`);
   if (b && BEHAVIORS[b.kind]) {
     for (const role of BEHAVIORS[b.kind].roles) need(ids.has(b[role]), `behavior.${role} menunjuk pin "${b[role]}" yang tidak ada`);
+    for (const field of PIN_LIST_FIELDS) {
+      if (!Array.isArray(b[field])) continue; // mis. LCD memakai rows/cols sebagai ukuran layar
+      for (const id of b[field]) need(ids.has(id), `behavior.${field} menyebut pin "${id}" yang tidak ada`);
+    }
+    for (const [a, c] of b.always ?? []) need(ids.has(a) && ids.has(c), `behavior.always [${a}, ${c}] tidak valid`);
     if (b.kind === 'switch') {
       for (const pair of [...(b.always ?? []), ...(b.pressed ?? [])]) {
         need(pair.length === 2 && pair.every((id) => ids.has(id)), `pasangan switch [${pair}] tidak valid`);

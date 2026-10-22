@@ -2,6 +2,24 @@ import { Meter } from './meter.js';
 import { FREQ } from './avr.js';
 import { LcdI2C } from './hd44780.js';
 import { holdTone } from './audio.js';
+import { powered } from './device-utils.js';
+import {
+  rgbLedDevice,
+  ldrDevice,
+  indicatorDevice,
+  seg7Device,
+  npnDevice,
+  motorDevice,
+  relayDevice,
+  joystickDevice,
+  keypadDevice,
+  hc595Device,
+  ws2812Device,
+  dhtDevice,
+  rtcDevice,
+  encoderDevice,
+  stepperDevice,
+} from './devices-more.js';
 
 /**
  * Perangkat simulasi untuk setiap jenis perilaku komponen (spec.behavior.kind).
@@ -27,6 +45,21 @@ const FACTORIES = {
   servo: servoDevice,
   'i2c-lcd': lcdDevice,
   hcsr04: sonarDevice,
+  'rgb-led': rgbLedDevice,
+  ldr: ldrDevice,
+  indicator: indicatorDevice,
+  seg7: seg7Device,
+  npn: npnDevice,
+  'dc-motor': motorDevice,
+  relay: relayDevice,
+  joystick: joystickDevice,
+  keypad: keypadDevice,
+  hc595: hc595Device,
+  ws2812: ws2812Device,
+  dht: dhtDevice,
+  'i2c-rtc': rtcDevice,
+  encoder: encoderDevice,
+  stepper: stepperDevice,
 };
 
 export function createDevice(part, ctx) {
@@ -34,12 +67,6 @@ export function createDevice(part, ctx) {
   if (!factory) return null;
   return factory(part, ctx, (pin) => `${part.id}:${pin}`);
 }
-
-const powered = (ctx, vcc, gnd) => {
-  const v = ctx.volts(vcc);
-  const g = ctx.volts(gnd);
-  return v !== null && g !== null && v - g > 3;
-};
 
 // ---------------------------------------------------------------- Arduino Uno
 function unoDevice(part, ctx, n) {
