@@ -14,6 +14,8 @@ import { Runner } from './sim/runner.js';
 import { unlockAudio, setMuted } from './sim/audio.js';
 import { LESSONS, LEVELS, levelOf, defaultParams, codeSegments } from './lessons/index.js';
 import { createKit } from './lessons/kit.js';
+import { sandboxProject, hasSandbox } from './lessons/sandbox-links.js';
+import { encodeProject } from './sandbox/project.js';
 import { CATALOG } from './data/catalog.js';
 import { icon, LOGO } from './ui/icons.js';
 import { store } from './ui/store.js';
@@ -109,6 +111,15 @@ async function boot() {
       if (part) inspector.open(part, x, y);
     },
   });
+  // Buka rangkaian & kode pelajaran ini di sandbox (emulator sungguhan, bisa diubah bebas)
+  const sandboxBtn = $('.btn-sandbox');
+  sandboxBtn.innerHTML = icon('breadboard');
+  sandboxBtn.addEventListener('click', async () => {
+    const project = sandboxProject(app.lesson, app.params);
+    if (!project) return;
+    location.href = `sandbox.html#${await encodeProject(project)}`;
+  });
+
   const strip = createLessonStrip($('.lessons'), {
     lessons: LESSONS,
     levels: LEVELS,
@@ -239,6 +250,8 @@ async function boot() {
         else openLesson(0);
       } else if (name === 'run') {
         toggleRun();
+      } else if (name === 'sandbox') {
+        location.href = 'sandbox.html';
       }
     },
     onFlyoutClick(e, { close, refresh }) {
@@ -363,6 +376,7 @@ async function boot() {
     // tombol RESET di papan memulai ulang sketch yang sedang berjalan
     if (kit.parts.board) kit.parts.board.userData.onReset = () => runner.restart();
     code.setSerialInput(lesson.serialInput ?? null);
+    sandboxBtn.hidden = !hasSandbox(lesson);
     // komponen jatuh satu per satu; kabel tergambar setelahnya
     const animMs = stage.setContent(kit.root, { animate: !instant });
     lesson.apply?.(app.params, app.parts, false);

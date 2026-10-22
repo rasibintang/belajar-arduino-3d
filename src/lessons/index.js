@@ -61,11 +61,15 @@ export function defaultParams(lesson) {
  * Mengembalikan daftar potongan: string biasa atau { key, value }.
  */
 export function codeSegments(lesson, params) {
-  const expanded = lesson.code.replace(/\{\{(\w+)\.(\w+)\}\}/g, (_, key, field) => {
-    const def = lesson.params.find((p) => p.key === key);
-    const opt = def?.options?.find((o) => o.value === params[key]);
-    return opt?.code?.[field] ?? '';
-  });
+  // potongan kode dari opsi boleh berisi {{key.field}} lagi, jadi diulang sampai habis
+  let expanded = lesson.code;
+  for (let pass = 0; pass < 4 && /\{\{\w+\.\w+\}\}/.test(expanded); pass++) {
+    expanded = expanded.replace(/\{\{(\w+)\.(\w+)\}\}/g, (_, key, field) => {
+      const def = lesson.params.find((p) => p.key === key);
+      const opt = def?.options?.find((o) => o.value === params[key]);
+      return opt?.code?.[field] ?? '';
+    });
+  }
   const out = [];
   let last = 0;
   for (const m of expanded.matchAll(/\{\{(\w+)\}\}/g)) {

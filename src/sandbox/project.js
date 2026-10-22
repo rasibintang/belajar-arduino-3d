@@ -21,7 +21,11 @@ export function saveLocal(project) {
 }
 
 // --- tautan berbagi: #p=<deflate + base64url> ---
-const toB64 = (bytes) => btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+function toB64(bytes) {
+  let s = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
 const fromB64 = (s) => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0));
 
 async function pipe(bytes, stream) {
@@ -29,12 +33,17 @@ async function pipe(bytes, stream) {
   return new Uint8Array(await new Response(out).arrayBuffer());
 }
 
-export async function shareUrl(project) {
+/** Proyek -> potongan hash "p=…" (dikompres bila browser mendukung). */
+export async function encodeProject(project) {
   const { name, sketch, diagram } = project;
   const json = new TextEncoder().encode(JSON.stringify({ name, sketch, diagram }));
   const packed = typeof CompressionStream === 'function' ? await pipe(json, new CompressionStream('deflate-raw')) : json;
+  return `p=${typeof CompressionStream === 'function' ? '' : 'raw.'}${toB64(packed)}`;
+}
+
+export async function shareUrl(project) {
   const url = new URL(location.href);
-  url.hash = `p=${typeof CompressionStream === 'function' ? '' : 'raw.'}${toB64(packed)}`;
+  url.hash = await encodeProject(project);
   return url.toString();
 }
 

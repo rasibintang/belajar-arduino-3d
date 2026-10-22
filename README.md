@@ -1,7 +1,8 @@
 # Learn Arduino
 
-Kursus Arduino interaktif dengan papan 3D: 11 pelajaran dasar, rangkaian yang bisa diklik
-dan diseret, kode yang bisa diubah, simulasi `setup()`/`loop()`, serta Serial Monitor.
+Kursus Arduino interaktif dengan papan 3D — 30 pelajaran (Dasar, Menengah, Mahir) — plus
+**sandbox** untuk merakit rangkaian sendiri seperti Wokwi: kode C++ sungguhan dikompilasi
+oleh `arduino-cli` lalu dijalankan emulator ATmega328P (`avr8js`) di browser.
 Dibangun dengan **Vite + Three.js** (JavaScript biasa, tanpa framework UI).
 
 Desain terinspirasi dari [Learn Arduino](https://learn-arduino-red.vercel.app/) karya Dilum Sanjaya.
@@ -11,9 +12,54 @@ Kode, model 3D, dan teks pelajaran di repo ini ditulis ulang dari awal.
 
 ```bash
 npm install
-npm run dev      # http://localhost:5173
-npm run build    # hasil di dist/ — bisa langsung di-deploy ke Vercel/Netlify
+npm run setup:arduino   # sekali saja: unduh arduino-cli + core AVR + library ke tools/
+npm run dev             # http://localhost:5173  (pelajaran)  ·  /sandbox.html  ·  /gallery.html
+npm run build           # hasil di dist/
 ```
+
+Saat `npm run dev`, endpoint kompilasi `/api/compile` langsung tersedia (middleware Vite).
+Tanpa `setup:arduino`, pelajaran tetap jalan (simulasi bawaan), tetapi tombol Run di sandbox
+akan melaporkan bahwa server kompilasi belum terpasang.
+
+## Sandbox (`sandbox.html`)
+
+- Kiri: `sketch.ino` (editor dengan penanda error compiler dan sorotan baris yang sedang jalan),
+  `diagram.json`, daftar library. Kanan: meja kerja 3D + Serial Monitor dua arah.
+- **+** membuka katalog komponen (26 komponen, 7 kategori). Seret komponen; komponen
+  breadboard otomatis menancap ke lubang. Klik pin → klik pin lain = kabel. `R` putar, `Delete` hapus.
+- 21 contoh proyek. Disimpan otomatis di browser; **Unduh/Buka** file `.json`; **Bagikan** = tautan
+  berisi seluruh proyek (dikompres di hash URL).
+- Setiap pelajaran punya tombol **Buka di sandbox** (kecuali H-bridge & robot): rangkaian setara
+  dari komponen standar + kode pelajaran dengan parameter terpilih.
+
+### Cara kerja simulasi
+
+```
+sketch.ino ──POST /api/compile──▶ arduino-cli ──▶ .hex + peta alamat→baris (DWARF)
+                                                   │
+browser: avr8js (CPU, timer/PWM, ADC, USART, I²C, EEPROM)
+           ⇅ kait port / baca PIN / ADC
+         sim/circuit.js — netlist (kabel, jalur breadboard, kaki tertancap)
+                          + pemecah tegangan (sumber kuat, jaringan resistor/Millman, saklar)
+           ⇅
+         sim/devices*.js — perilaku tiap komponen (LED, servo, LCD HD44780, DHT11, WS2812, …)
+```
+
+### Server kompilasi untuk produksi
+
+Situs statis (Vercel/Netlify) tidak bisa menjalankan `arduino-cli`, jadi server kompilasi
+dijalankan terpisah (VPS kecil / layanan kontainer):
+
+```bash
+docker build -t learn-arduino-compiler .
+docker run -p 8787:8787 -e CORS_ORIGIN=https://situsmu.vercel.app learn-arduino-compiler
+# lalu build frontend dengan alamatnya:
+VITE_COMPILE_URL=https://compiler.situsmu.com/api/compile npm run build
+```
+
+Keamanan: server menolak `#include` dengan path absolut atau `..`, membatasi ukuran sketch
+(100 KB) dan waktu kompilasi (90 detik), mengompilasi satu per satu, dan menyimpan cache
+hasil. Jalankan di kontainer sebagai pengguna biasa (sudah diatur di `Dockerfile`).
 
 ## Struktur
 
@@ -109,10 +155,15 @@ export default {
 ```
 
 - Daftarkan di `src/components/index.js`.
+- Perilaku listriknya (`behavior.kind`) dijalankan oleh `src/sim/devices.js` /
+  `devices-more.js`: satu fungsi per jenis, memakai `ctx.resistor`, `ctx.switch`, `ctx.drive`,
+  `ctx.watch` (tepi sinyal dengan stempel siklus CPU), `ctx.volts`, `ctx.schedule`.
 - Buka **http://localhost:5173/gallery.html** untuk melihat semua komponen beserta titik
   pinnya, dan hasil `validateSpec()` (pin di kisi 2,54 mm, peran perilaku menunjuk pin yang ada, dll.).
-- Komponen tersedia: Arduino Uno, breadboard, LED, resistor, push button, potensiometer,
-  buzzer, servo SG90, LCD 16×2 I²C, HC-SR04.
+- Komponen tersedia (26): Arduino Uno, breadboard, resistor, transistor TIP120, 74HC595, LED,
+  LED RGB, modul 8 LED, lampu lalu lintas, buzzer, relay, NeoPixel ring, push button,
+  potensiometer, joystick, keypad 4×4, rotary encoder, LDR, HC-SR04, DHT11, RTC DS3231,
+  7-segment, LCD 16×2 I²C, servo SG90, motor DC, stepper 28BYJ-48 + ULN2003.
 
 ## Animasi
 
