@@ -91,6 +91,29 @@ Setiap komponen adalah satu fungsi yang mengembalikan `THREE.Group`:
   `userData.drag` (seret di lantai).
 - Objek cahaya/efek: bungkus dengan `noOutline()` agar tidak diberi garis tepi.
 
+## Standar komponen (untuk sandbox)
+
+Folder `src/components/` berisi **spesifikasi** komponen: satu file per komponen yang
+menyatukan model 3D (`src/parts/`), daftar pin, props yang bisa diatur, dan perilaku
+listriknya (sebagai data). Format lengkapnya dijelaskan di `src/components/spec.js`.
+
+```js
+export default {
+  type: 'led', name: 'LED 5 mm', category: 'output', icon: 'led',
+  surface: 'breadboard',                 // kaki ditancapkan ke lubang (atau 'floor')
+  create: (props) => createLED({ color: props.color }),
+  props: [{ key: 'color', label: 'Warna', type: 'swatch', value: 'red', options: [...] }],
+  pins: legsAlongX([['K', 'Katoda (−)'], ['A', 'Anoda (+)']]),
+  behavior: { kind: 'led', anode: 'A', cathode: 'K' },
+};
+```
+
+- Daftarkan di `src/components/index.js`.
+- Buka **http://localhost:5173/gallery.html** untuk melihat semua komponen beserta titik
+  pinnya, dan hasil `validateSpec()` (pin di kisi 2,54 mm, peran perilaku menunjuk pin yang ada, dll.).
+- Komponen tersedia: Arduino Uno, breadboard, LED, resistor, push button, potensiometer,
+  buzzer, servo SG90, LCD 16×2 I²C, HC-SR04.
+
 ## Animasi
 
 - `core/tween.js` — mesin animasi kecil (`Tweens`, `Ease.outBack`, dll.).

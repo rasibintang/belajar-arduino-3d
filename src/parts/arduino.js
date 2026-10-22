@@ -20,6 +20,9 @@ const PINS = {};
 ['NC', 'IOREF', 'RESET', '3V3', '5V', 'GND', 'GND.2', 'VIN'].forEach((n, i) => (PINS[n] = [1.04 + i * 0.1, 0.1]));
 ['A0', 'A1', 'A2', 'A3', 'A4', 'A5'].forEach((n, i) => (PINS[n] = [1.94 + i * 0.1, 0.1]));
 
+/** Nama semua pin header Uno, urut seperti di papan. */
+export const PIN_NAMES = Object.keys(PINS);
+
 const HEADERS = [
   { first: 'SCL', count: 10 },
   { first: 'D7', count: 8 },

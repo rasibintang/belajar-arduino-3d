@@ -20,6 +20,27 @@ const colX = (c) => (c - (COLS + 1) / 2) * PITCH;
 // Lubang jalur daya: kelompok 5 dengan jeda
 const RAIL_COLS = Array.from({ length: 25 }, (_, i) => 2 + i + Math.floor(i / 5));
 
+/** Semua lubang breadboard sebagai { id, row, col }, mis. { id: 'c12', row: 'c', col: 12 }. */
+export function breadboardHoles() {
+  const holes = [];
+  for (const row of 'abcdefghij') {
+    for (let col = 1; col <= COLS; col++) holes.push({ id: `${row}${col}`, row, col });
+  }
+  for (const row of ['tp', 'tn', 'bp', 'bn']) {
+    for (const col of RAIL_COLS) holes.push({ id: `${row}${col}`, row, col });
+  }
+  return holes;
+}
+
+/**
+ * Jalur tembaga di dalam breadboard: lubang dengan jalur yang sama saling tersambung.
+ * a–e satu kolom = satu jalur; f–j satu kolom = satu jalur; tiap rel daya = satu jalur panjang.
+ */
+export function breadboardStrip(row, col) {
+  if (row.length === 2) return `rail-${row}`;
+  return 'abcde'.includes(row) ? `col${col}-front` : `col${col}-back`;
+}
+
 function drawSlab(ctx, w, h, S, zMin) {
   const px = (x) => (x + W / 2) * S;
   const pz = (z) => (z - zMin) * S;

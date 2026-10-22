@@ -154,7 +154,7 @@ export default {
     kit.wire(t(drv, terms.B2), t(right, right.userData.terms.b), 'black', opts(6, { bare: true }));
     // header sensor: VCC, Trig, Echo, GND
     [['5V', 'red'], ['D2', 'purple'], ['D3', 'blue'], ['GND.2', 'black']].forEach(([pin, color], i) => {
-      const end = t(sonar, new THREE.Vector3((i - 1.5) * 2.54, 3.5, -1.6));
+      const end = t(sonar, new THREE.Vector3((i - 1.5) * 2.54, 3.5, 0));
       kit.wire(kit.pin(pin), end, color, opts(6 + i * 2, { bare: true, radius: 1 }));
     });
   },

@@ -90,5 +90,7 @@ export function createUltrasonic() {
   g.userData.setPing(-1);
   g.userData.anchor = anchor(g, 0, Y0 + H + 0.5, 0);
   g.userData.front = anchor(g, 0, Y0 + H / 2, 12.9);
+  // geser semua bagian agar ujung kaki tepat di z = 0 (garis lubang breadboard)
+  for (const child of g.children) child.position.z += 1.6;
   return markPart(g, { key: 'sonar', name: 'Sensor jarak HC-SR04', desc: 'Mengukur jarak dengan pantulan suara ultrasonik.' });
 }
