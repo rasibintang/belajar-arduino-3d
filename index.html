@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Learn Arduino</title>
+    <meta name="description" content="Belajar Arduino lewat papan 3D interaktif: rangkai LED, tombol, sensor, motor, dan servo, lalu jalankan kodenya dan lihat hasilnya. 11 pelajaran dasar." />
+    <meta name="theme-color" content="#f5ecdc" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body>
+    <div class="loader" id="loader" role="status" aria-live="polite">
+      <div class="loader-inner">
+        <span data-logo></span>
+        <p class="loader-title">Learn Arduino</p>
+        <div class="loader-track" aria-hidden="true"><span class="loader-fill"></span></div>
+        <p class="loader-step">Memuat</p>
+        <noscript><p>Aktifkan JavaScript untuk memulai kursus 3D interaktif ini.</p></noscript>
+      </div>
+    </div>
+
+    <div id="app" class="app" inert>
+      <svg class="decor" id="decor" aria-hidden="true"></svg>
+
+      <nav class="sidebar" aria-label="Menu utama">
+        <button class="side-toggle" aria-label="Lebarkan menu" aria-expanded="false"></button>
+        <ul class="side-nav">
+          <li><a href="#" data-nav="home" data-icon="home" title="Beranda"><span class="nav-icon"></span><span class="side-label">Beranda</span></a></li>
+          <li><a href="#" data-nav="lessons" data-icon="book" title="Pelajaran"><span class="nav-icon"></span><span class="side-label">Pelajaran</span></a></li>
+          <li><a href="#" data-nav="parts" data-icon="chip" title="Komponen"><span class="nav-icon"></span><span class="side-label">Komponen</span></a></li>
+          <li><a href="#" data-nav="run" data-icon="play" title="Jalankan simulasi"><span class="nav-icon"></span><span class="side-label">Simulator</span></a></li>
+          <li><a href="#" data-nav="settings" data-icon="gear" title="Pengaturan"><span class="nav-icon"></span><span class="side-label">Pengaturan</span></a></li>
+        </ul>
+      </nav>
+      <aside class="flyout" id="flyout" hidden></aside>
+
+      <header class="brand">
+        <span data-logo></span>
+        <span class="brand-rule" aria-hidden="true"></span>
+        <div class="brand-text">
+          <h1>Learn Arduino</h1>
+          <p>Jelajahi <i>·</i> Pahami <i>·</i> Rakit</p>
+        </div>
+      </header>
+
+      <main class="stage" id="stage">
+        <canvas id="canvas" aria-label="Tampilan 3D interaktif. Seret atau WASD untuk menggeser, Q dan E untuk memutar, scroll untuk zoom."></canvas>
+        <svg class="leaders" id="leaders" aria-hidden="true"></svg>
+        <div class="callouts" id="callouts"></div>
+        <div class="inspector" id="inspector" role="dialog" aria-label="Pengaturan komponen" hidden></div>
+        <div class="tip" id="tip" role="tooltip" hidden><b></b><span></span></div>
+
+        <div class="viewbar" id="viewbar" role="toolbar" aria-label="Tampilan 3D">
+          <p class="view-hint">Seret / WASD geser · Q / E putar · Scroll zoom</p>
+          <button data-view="left" data-icon="rotLeft" title="Putar kiri (Q)" aria-label="Putar kiri"></button>
+          <button data-view="right" data-icon="rotRight" title="Putar kanan (E)" aria-label="Putar kanan"></button>
+          <span class="viewbar-sep"></span>
+          <button data-view="out" data-icon="minus" title="Perkecil (−)" aria-label="Perkecil"></button>
+          <button data-view="in" data-icon="plus" title="Perbesar (+)" aria-label="Perbesar"></button>
+          <span class="viewbar-sep"></span>
+          <button data-view="reset" data-icon="compass" class="compass" title="Kembalikan tampilan (R)" aria-label="Kembalikan tampilan"></button>
+        </div>
+      </main>
+
+      <section class="status" aria-label="Progres">
+        <div class="progress-card">
+          <svg viewBox="0 0 24 24" class="icon progress-icon" aria-hidden="true"><path d="M12 6.5C10 5 7 4.6 3.5 4.8v13.4c3.5-.2 6.5.3 8.5 1.8 2-1.5 5-2 8.5-1.8V4.8C17 4.6 14 5 12 6.5zM12 6.5V20" /></svg>
+          <div class="progress-body">
+            <span class="progress-label">Dasar</span>
+            <div class="progress-row">
+              <span class="progress-track" role="progressbar" aria-valuemin="0" aria-valuenow="0"><span class="progress-fill"></span></span>
+              <span class="progress-count">0/11</span>
+            </div>
+          </div>
+        </div>
+        <time class="clock">
+          <span id="clock-date"></span>
+          <span id="clock-time"></span>
+        </time>
+      </section>
+
+      <section class="info-card card" aria-label="Informasi pelajaran">
+        <div class="tabs" role="tablist"></div>
+        <div class="info-body">
+          <button class="icon-btn expand" aria-label="Perbesar panel">
+            <svg viewBox="0 0 24 24" class="icon"><path d="M3 8V3h5M16 3h5v5M21 16v5h-5M8 21H3v-5" /><circle cx="12" cy="12" r="1.3" class="fill" /></svg>
+          </button>
+          <div class="info-content" role="tabpanel"></div>
+        </div>
+      </section>
+
+      <section class="code-card card" aria-label="Coba sendiri" data-state="idle">
+        <header>
+          <h2>Coba sendiri</h2>
+          <div class="code-actions">
+            <button class="icon-btn btn-expand" aria-label="Perbesar kode" title="Perbesar kode" aria-expanded="false"></button>
+            <button class="icon-btn btn-copy" aria-label="Salin kode" title="Salin kode"></button>
+            <button class="btn-run" aria-label="Jalankan sketch" title="Jalankan sketch (Spasi)"></button>
+          </div>
+        </header>
+        <div class="code-wrap">
+          <pre class="code"><code></code></pre>
+          <div class="console">
+            <div class="console-head">
+              <span class="console-dot"></span>
+              <span class="console-title">Serial Monitor</span>
+              <span class="console-status">Berhenti</span>
+              <button class="console-close" aria-label="Hentikan sketch"></button>
+            </div>
+            <div class="console-lines" aria-live="polite"></div>
+            <form class="console-input" hidden autocomplete="off">
+              <div class="console-hints"></div>
+              <div class="console-row">
+                <input type="text" placeholder="Ketik perintah, lalu Enter" aria-label="Kirim ke Serial" />
+                <button type="submit">Kirim</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <section class="lessons" aria-label="Pelajaran">
+        <div class="lessons-head">
+          <h2>Pelajaran</h2>
+          <div class="level-tabs" role="tablist" aria-label="Level"></div>
+        </div>
+        <div class="strip">
+          <button class="strip-arrow strip-prev" aria-label="Geser ke kiri" hidden></button>
+          <ol class="lesson-list"></ol>
+          <button class="strip-arrow strip-next" aria-label="Geser ke kanan"></button>
+        </div>
+      </section>
+      <!-- di dalam .app agar satu stacking context dengan panel yang diperbesar -->
+      <div class="backdrop" id="backdrop"></div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
