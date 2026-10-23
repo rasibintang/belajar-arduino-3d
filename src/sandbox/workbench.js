@@ -24,7 +24,8 @@ const hitMat = new THREE.MeshBasicMaterial();
  *   onSelect(sel)             — { kind: 'part' | 'wire', id } atau null
  *   onPartClick(part, x, y)   — klik komponen saat simulasi berjalan
  *   onHover(info, x, y)       — { name, desc } atau null (tooltip)
- *   onWiring(on, fromNode)    — mulai/selesai menarik kabel dari sebuah pin
+ *   onWiring(on, fromNode, opts) — mulai/selesai menarik kabel dari sebuah pin
+ *                               (opts.rewire: sedang menyeret ujung kabel yang sudah ada)
  */
 export function createWorkbench(stage, hooks = {}) {
   const root = new THREE.Group();
@@ -63,6 +64,91 @@ export function createWorkbench(stage, hooks = {}) {
   root.add(rubber);
 
   const changed = () => hooks.onChange?.();
+
+  // --- pegangan di kedua ujung kabel terpilih: seret ke pin lain untuk memindahkan ujungnya
+  const handleGeo = new THREE.SphereGeometry(1.7, 16, 12);
+  const handleMat = new THREE.MeshBasicMaterial({ color: '#e8603c', depthTest: false, transparent: true, opacity: 0.95 });
+  let rewire = null; // { wire, end, fixed, pins: [{ node, pos }], target }
+  const handles = ['from', 'to'].map((end) => {
+    const h = new THREE.Mesh(handleGeo, handleMat);
+    h.renderOrder = 21;
+    h.userData.pickFirst = true;
+    h.layers.set(1); // dirender tanpa garis tepi …
+    h.layers.enable(PIN_LAYER); // … dan bisa dipilih pointer
+    h.userData.part = { name: t('sb.wireEnd'), desc: t('sb.wireEndDesc'), lift: false };
+    h.userData.move = {
+      start: () => startRewire(end),
+      drag: (p) => dragRewire(p),
+      planeY: 0,
+      end: (moved) => endRewire(moved),
+    };
+    // dibungkus grup biasa: stage mengatur ulang tinggi objek komponen tingkat atas setiap frame
+    const holder = new THREE.Group();
+    holder.add(h);
+    return holder;
+  });
+
+  function updateHandles() {
+    const w = selection?.kind === 'wire' && mode === 'edit' ? wires.get(selection.id) : null;
+    handles.forEach((h, i) => {
+      const p = w && pinWorld(i === 0 ? w.from : w.to);
+      if (p) {
+        h.position.copy(p);
+        if (!h.parent) root.add(h);
+      } else if (h.parent && !rewire) h.removeFromParent();
+    });
+  }
+
+  function startRewire(end) {
+    const wire = wires.get(selection?.id);
+    if (!wire) return;
+    const fixed = end === 'from' ? wire.to : wire.from;
+    const pins = [];
+    for (const part of parts.values()) {
+      part.group.updateMatrixWorld(true);
+      for (const pin of part.pins) pins.push({ node: `${part.id}:${pin.id}`, pos: part.group.localToWorld(pin.at.clone()) });
+    }
+    rewire = { wire, end, fixed, pins, target: null };
+    // seret di bidang setinggi pin ujung ini (permukaan breadboard ± 8,5 mm), bukan di lantai
+    handles[end === 'from' ? 0 : 1].children[0].userData.move.planeY = pinWorld(wire[end]).y;
+    if (wire.group) wire.group.visible = false;
+    const a = pinWorld(fixed);
+    startMarker.position.copy(a);
+    startMarker.visible = true;
+    rubber.visible = true;
+    hooks.onWiring?.(true, fixed, { rewire: true });
+  }
+
+  function dragRewire(p) {
+    if (!rewire) return;
+    let best = null;
+    let bestD = 3; // mm: jarak tangkap ke pin/lubang terdekat
+    for (const { node, pos } of rewire.pins) {
+      if (node === rewire.fixed) continue;
+      const d = Math.hypot(pos.x - p.x, pos.z - p.z);
+      if (d < bestD) (best = { node, pos }), (bestD = d);
+    }
+    rewire.target = best?.node ?? null;
+    const to = best ? best.pos : p;
+    handles[rewire.end === 'from' ? 0 : 1].position.copy(to);
+    marker.visible = !!best;
+    if (best) marker.position.copy(best.pos);
+    rubber.geometry.setFromPoints([pinWorld(rewire.fixed), to]);
+    rubber.computeLineDistances();
+  }
+
+  function endRewire(moved) {
+    if (!rewire) return;
+    const { wire, end, target } = rewire;
+    rewire = null;
+    startMarker.visible = false;
+    rubber.visible = false;
+    marker.visible = false;
+    if (wire.group) wire.group.visible = true;
+    hooks.onWiring?.(false, null, { rewire: true });
+    if (moved && target && target !== wire[end]) moveWireEnd(wire.id, end, target);
+    updateHandles();
+  }
 
   // ------------------------------------------------------------ util
   function nextId(type) {
@@ -402,6 +488,7 @@ export function createWorkbench(stage, hooks = {}) {
     root.add(g);
     wire.group = g;
     paint(wire);
+    if (selection?.id === wire.id) updateHandles();
   }
 
   function refreshWires(partId) {
@@ -508,6 +595,7 @@ export function createWorkbench(stage, hooks = {}) {
       const w = wires.get(sel.id);
       if (w) paint(w);
     }
+    updateHandles();
     hooks.onSelect?.(sel);
   }
 

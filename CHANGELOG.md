@@ -26,6 +26,9 @@ nomor versi mengikuti [SemVer](https://semver.org/lang/id/).
   - **LED kurang satu kabel:** anoda sudah ke Arduino tetapi katoda belum ke GND, padahal rel − di
     breadboard sudah tersambung GND → tanda ! di kaki katoda dengan tombol **Tambahkan kabel**
     (mis. `a13 → bn14`).
+- **Pindahkan ujung kabel tanpa menghapusnya:** pilih kabel, lalu seret titik oranye di salah satu
+  ujungnya ke pin/lubang lain. Panduan kabel menyorot tujuan yang cocok selama menyeret. Panel
+  kabel menyingkir ke kiri bila menutupi ujung kabel.
   - Dua bahasa (ID/EN). Tidak pernah memblokir; rangkaian setengah jadi tidak dinilai.
 - Tes otomatis `npm test` (`node --test`) untuk netlist, fungsi pin, rekomendasi, pemeriksaan,
   dan kelengkapan teks ID/EN.

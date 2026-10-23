@@ -808,3 +808,7 @@ body.sb {
 .sb-issues button:hover {
   filter: brightness(0.96);
 }
+.sb-panel[data-side='left'] {
+  right: auto;
+  left: 12px;
+}

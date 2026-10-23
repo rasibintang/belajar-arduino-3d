@@ -107,14 +107,14 @@ wb = createWorkbench(stage, {
     tip.hidden = false;
     tip.style.transform = `translate(${x - box.left + 16}px, ${y - box.top + 18}px)`;
   },
-  onWiring: (on, node) => {
+  onWiring: (on, node, opts = {}) => {
     setHint(on ? t('sb.hint.wiring') : null);
     if (on) guide.startWiring(node);
     else guide.stopWiring();
     guideLabel.textContent = guide.labelText;
     guideLabel.hidden = !guide.labelText;
     if (!guideLabel.hidden) placeGuideLabel();
-    if (on) {
+    if (on && !opts.rewire) {
       wb.select(null); // panel tidak boleh menutupi pin tujuan
       showPanel(null);
     }
@@ -175,7 +175,9 @@ const guideLabel = $('#guide-label');
 const pointer = { x: 0, y: 0 };
 function placeGuideLabel() {
   const box = $('#stage').getBoundingClientRect();
-  guideLabel.style.transform = `translate(${pointer.x - box.left + 16}px, ${pointer.y - box.top - 34}px)`; // di atas kursor: tooltip pin ada di bawahnya
+  // di atas kursor (tooltip pin ada di bawahnya), tetap di dalam meja
+  const x = Math.min(pointer.x - box.left + 16, box.width - guideLabel.offsetWidth - 8);
+  guideLabel.style.transform = `translate(${Math.max(8, x)}px, ${Math.max(8, pointer.y - box.top - 34)}px)`;
 }
 $('#stage').addEventListener('pointermove', (e) => {
   pointer.x = e.clientX;
@@ -342,6 +344,7 @@ function control(def, value) {
 }
 
 function showPanel(sel) {
+  delete panel.dataset.side;
   if (!sel) {
     panel.hidden = true;
     return;
@@ -357,8 +360,19 @@ function showPanel(sel) {
       <div class="insp-row"><label>${t('sb.color')}</label><div class="swatches">${Object.entries(WIRE_COLORS)
         .map(([name, hex]) => `<button class="swatch${name === w.color ? ' is-on' : ''}" data-color="${name}" title="${name}" style="--c:${hex}"></button>`)
         .join('')}</div></div>
+      <p class="insp-desc">${t('sb.wireMoveHint')}</p>
       <div class="sb-panel-actions"><button class="sb-btn sb-danger" data-act="delete">${t('sb.deleteWire')}</button></div>`;
     panel.hidden = false;
+    // panel tidak boleh menutupi pegangan ujung kabel: pindah ke kiri bila perlu
+    const box = panel.getBoundingClientRect();
+    const canvasBox = $('#canvas').getBoundingClientRect();
+    const covered = [w.from, w.to].some((node) => {
+      const q = stage.project(wb.pinWorld(node));
+      const x = canvasBox.left + q.x;
+      const y = canvasBox.top + q.y;
+      return x > box.left - 12 && x < box.right + 12 && y > box.top - 12 && y < box.bottom + 12;
+    });
+    if (covered) panel.dataset.side = 'left';
     return;
   }
   const part = wb.parts.get(sel.id);

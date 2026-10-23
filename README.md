@@ -36,7 +36,8 @@ akan melaporkan bahwa server kompilasi belum terpasang.
 - Kiri: `sketch.ino` (editor dengan penanda error compiler dan sorotan baris yang sedang jalan),
   `diagram.json`, daftar library. Kanan: meja kerja 3D + Serial Monitor dua arah.
 - **+** membuka katalog komponen (85 komponen, 10 kategori). Seret komponen; komponen
-  breadboard otomatis menancap ke lubang. Klik pin → klik pin lain = kabel. `R` putar, `Delete` hapus.
+  breadboard otomatis menancap ke lubang. Klik pin → klik pin lain = kabel. Pilih kabel lalu seret
+  titik oranye di ujungnya untuk memindahkan ujung itu. `R` putar, `Delete` hapus.
 - 38 contoh proyek. Disimpan otomatis di browser; **Unduh/Buka** file `.json`; **Bagikan** = tautan
   berisi seluruh proyek (dikompres di hash URL).
 - Setiap pelajaran punya tombol **Buka di sandbox** (kecuali H-bridge & robot): rangkaian setara

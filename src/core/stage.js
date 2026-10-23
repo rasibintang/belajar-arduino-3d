@@ -306,12 +306,16 @@ export function createStage(canvas, handlers = {}) {
   function hitAt(clientX, clientY) {
     if (!root) return null;
     setRay(clientX, clientY);
-    // kabel dan benda non-komponen tidak menghalangi komponen di belakangnya
+    // kabel dan benda non-komponen tidak menghalangi komponen di belakangnya;
+    // objek bertanda pickFirst (mis. pegangan ujung kabel, selalu tergambar di atas) didahulukan
+    let first = null;
     for (const hit of raycaster.intersectObject(root, true)) {
       const part = findPart(hit.object);
-      if (part) return { part, point: hit.point };
+      if (!part) continue;
+      if (part.userData.pickFirst) return { part, point: hit.point };
+      first ??= { part, point: hit.point };
     }
-    return null;
+    return first;
   }
   function groundPoint(clientX, clientY, y) {
     setRay(clientX, clientY);
@@ -386,7 +390,7 @@ export function createStage(canvas, handlers = {}) {
       const total = e.clientX - gesture.x0 - (e.clientY - gesture.y0);
       ud.knob.set(THREE.MathUtils.clamp(gesture.v0 + total * (ud.knob.speed ?? 1), ud.knob.min, ud.knob.max));
     } else if (gesture.type === 'move' && gesture.moved) {
-      const p = groundPoint(e.clientX, e.clientY, 0);
+      const p = groundPoint(e.clientX, e.clientY, ud.move.planeY ?? 0); // planeY: tinggi bidang seret (mm)
       if (p) ud.move.drag(p);
     } else if (gesture.type === 'stick' && gesture.moved) {
       // joystick: geser = miring; tombol tekan dilepas begitu mulai menggeser
