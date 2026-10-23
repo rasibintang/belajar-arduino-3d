@@ -1,6 +1,7 @@
 import { tr } from '../i18n/parts.js';
 import * as THREE from 'three';
 import { PITCH } from '../parts/lib.js';
+import { PIN_FNS, pinFunction } from '../sim/wiring/pin-functions.js';
 
 /**
  * STANDAR KOMPONEN
@@ -186,6 +187,7 @@ export function validateSpec(spec) {
     ids.add(p.id);
     need(p.name, `pin "${p.id}" tanpa nama`);
     need([p.at.x, p.at.y, p.at.z].every(Number.isFinite), `posisi pin "${p.id}" tidak valid`);
+    need(PIN_FNS.includes(pinFunction(spec, p.id)), `pin "${p.id}" tidak punya fungsi panduan kabel`);
   }
   if (spec.surface === 'breadboard' && pins.length) {
     const p0 = pins[0].at;
