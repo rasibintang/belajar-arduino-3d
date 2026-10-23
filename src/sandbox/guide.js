@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { noOutline } from '../parts/lib.js';
 import { recommend } from '../sim/wiring/recommend.js';
 import { pinOf } from '../sim/wiring/snapshot.js';
+import { issueWires } from '../sim/wiring/check.js';
 
 const STORE = 'la-wire-guide';
 const targetGeo = new THREE.SphereGeometry(1.5, 14, 10);
@@ -80,14 +81,6 @@ export function createGuide({ wb, stage, root, layer, t }) {
   popup.hidden = true;
   layer.append(popup);
 
-  /** Kabel yang ikut menyala untuk sebuah masalah: yang menyentuh pin terkait, atau semua kabel di netnya. */
-  function wiresOf(issue, s) {
-    const touching = s.wires.filter((w) => issue.nodes.includes(w.from) || issue.nodes.includes(w.to));
-    if (touching.length) return touching.map((w) => w.id);
-    const net = new Set(s.nets[issue.net]);
-    return s.wires.filter((w) => net.has(w.from) || net.has(w.to)).map((w) => w.id);
-  }
-
   function clearIssues() {
     cancelAnimationFrame(frameId);
     for (const x of shown) x.el.remove();
@@ -123,7 +116,7 @@ export function createGuide({ wb, stage, root, layer, t }) {
     const text = document.createElement('p');
     text.textContent = issueText(issue, t);
     popup.append(text);
-    if (issue.fix) {
+    if (issue.fix && wb.mode === 'edit') { // saat simulasi berjalan rangkaian tidak bisa diubah
       const btn = document.createElement('button');
       btn.className = 'sb-btn';
       btn.textContent = t('guide.fix', { suggest: pinOf(issue.fix.to) });
@@ -145,7 +138,7 @@ export function createGuide({ wb, stage, root, layer, t }) {
     if (!enabled) return;
     const state = new Map();
     for (const issue of issues) {
-      const ids = wiresOf(issue, s);
+      const ids = issueWires(issue, s);
       for (const id of ids) if (state.get(id) !== 'danger') state.set(id, issue.severity);
       const wireId = issue.fix?.wireId ?? ids[0];
       const wire = wb.wires.get(wireId);
@@ -173,7 +166,7 @@ export function createGuide({ wb, stage, root, layer, t }) {
     stopWiring,
     showIssues,
     /** Kabel utama sebuah masalah (untuk disorot dari daftar). */
-    wireOf: (issue) => shown.find((x) => x.issue === issue)?.wireId ?? (lastSnapshot ? wiresOf(issue, lastSnapshot)[0] : null),
+    wireOf: (issue) => shown.find((x) => x.issue === issue)?.wireId ?? (lastSnapshot ? issueWires(issue, lastSnapshot)[0] : null),
     setEnabled(on) {
       enabled = on;
       try {

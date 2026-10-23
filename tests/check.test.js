@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { checkCircuit, ISSUE_CODES } from '../src/sim/wiring/check.js';
+import { checkCircuit, issueWires, ISSUE_CODES } from '../src/sim/wiring/check.js';
 import { snap } from './helpers.js';
 
 test('5V langsung ke GND → short (danger)', () => {
@@ -72,4 +72,14 @@ test('setiap masalah memakai kode yang terdaftar', () => {
 test('7-segment langsung ke GND tanpa resistor → led-resistor', () => {
   const issues = checkCircuit(snap({ uno: 'arduino-uno', s7: 'seg7' }, [['uno:D2', 's7:A'], ['s7:COM1', 'uno:GND']]));
   assert.deepEqual(issues.map((i) => i.code), ['led-resistor']);
+});
+test('kabel yang menyala hanya kabel milik pin bermasalah, bukan semua kabel GND', () => {
+  const s = snap({ uno: 'arduino-uno', o1: 'oled-ssd1306', o2: 'oled-ssd1306' }, [['o1:VCC', 'uno:GND'], ['o2:GND', 'uno:GND']]);
+  const [i] = checkCircuit(s);
+  assert.equal(i.code, 'power-reversed');
+  assert.deepEqual(issueWires(i, s), ['w1']);
+});
+test('lewat breadboard: kabel dari pin komponen yang menyala', () => {
+  const s = snap({ uno: 'arduino-uno', bb: 'breadboard', o: 'oled-ssd1306' }, [['o:SDA', 'bb:a3'], ['bb:b3', 'uno:A2']]);
+  assert.deepEqual(issueWires(checkCircuit(s)[0], s), ['w1']);
 });

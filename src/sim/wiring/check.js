@@ -115,3 +115,16 @@ function ledWithoutResistor(s, anode, anodeFns) {
   const i = v.netOf(cathode);
   return i !== undefined && s.nets[i].some((n) => GROUND.includes(v.fn(n)));
 }
+
+/**
+ * Kabel yang ikut menyala untuk sebuah masalah: kabel di pin komponennya, lalu kabel di pin Uno-nya,
+ * dan baru semua kabel di net bila keduanya tidak berkabel langsung.
+ */
+export function issueWires(issue, s) {
+  for (const node of issue.nodes) {
+    const ids = s.wires.filter((w) => w.from === node || w.to === node).map((w) => w.id);
+    if (ids.length) return ids;
+  }
+  const net = new Set(s.nets[issue.net]);
+  return s.wires.filter((w) => net.has(w.from) || net.has(w.to)).map((w) => w.id);
+}

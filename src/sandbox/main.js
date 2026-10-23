@@ -281,6 +281,7 @@ const sim = createSim({
     setHint(state === 'running' ? t('sb.hint.running') : null);
     if (state === 'idle') $('#speed').textContent = '';
     if (state === 'running' && guide.enabled) for (const issue of issues) serial.warn(`⚠ ${issueText(issue, t)}`);
+    scheduleCheck(); // tombol "Pindahkan ke …" hanya di mode edit
     showPanel(null);
   },
 });
