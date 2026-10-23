@@ -22,6 +22,7 @@ Kode, model 3D, dan teks pelajaran di repo ini ditulis ulang dari awal.
 ```bash
 npm install
 npm run setup:arduino   # sekali saja: unduh arduino-cli + core AVR + library ke tools/
+npm test                # tes aturan panduan kabel & netlist (node --test)
 npm run dev             # http://localhost:5173  (pelajaran)  ·  /sandbox.html  ·  /gallery.html (katalog)
 npm run build           # hasil di dist/
 ```
@@ -40,6 +41,26 @@ akan melaporkan bahwa server kompilasi belum terpasang.
   berisi seluruh proyek (dikompres di hash URL).
 - Setiap pelajaran punya tombol **Buka di sandbox** (kecuali H-bridge & robot): rangkaian setara
   dari komponen standar + kode pelajaran dengan parameter terpilih.
+- **Panduan kabel** (tombol kompas, bisa dimatikan): saat menarik kabel, tujuan yang cocok menyala
+  hijau dengan label singkat (mis. *SDA → A4*, *pin digital → jalur resistor LED*). Kabel yang
+  belum tepat menyala jingga (kurang tepat) atau merah (berbahaya) dengan tanda **!** berisi saran
+  dan tombol **Pindahkan ke …**; semua masalah terkumpul di daftar **Periksa rangkaian (n)**.
+  Tidak pernah memblokir — kabel tetap boleh dipasang dan simulasi tetap jalan.
+
+### Panduan kabel (`src/sim/wiring/`)
+
+Aturan ditulis sebagai data, dari dokumentasi Arduino Uno dan datasheet komponen:
+
+- `pin-functions.js` — fungsi setiap pin (`gnd`, `vcc5`, `i2c-sda`, `pwm-in`, `led-anode`, …)
+  dari peran `behavior` spesifikasi komponen; pin Uno (PWM ~3/5/6/9/10/11, interupsi D2/D3,
+  Serial D0/D1, SPI D11–D13, I²C A4/A5); lubang breadboard (lubang/rel ±).
+- `recommend.js` — tujuan yang disarankan saat menarik kabel (dihitung sekali per tarikan).
+- `check.js` — pemeriksaan setelah terpasang: hubungan pendek, daya terbalik, daya di pin sinyal,
+  modul 3,3 V diberi 5V, I²C/SPI/analog/PWM di pin yang salah, D0/D1, LED tanpa resistor. Hanya
+  net yang tersambung ke Arduino yang dinilai, jadi rangkaian setengah jadi tidak dihakimi.
+- Komponen baru otomatis ikut bila perannya memakai nama yang sudah dikenal; `validateSpec`
+  memastikan setiap pin punya fungsi.
+- Tes: `npm test` (`node --test`, tanpa dependensi tambahan).
 
 ### Cara kerja simulasi
 
@@ -127,10 +148,12 @@ src/
   components/           Spesifikasi 85 komponen sandbox (model + pin + props + perilaku)
   sim/
     avr.js              Emulator ATmega328P (avr8js) + bus I²C & SPI
-    circuit.js          Netlist & pemecah tegangan rangkaian
+    netlist.js          Netlist: kabel, jalur breadboard, kaki tertancap (dipakai simulasi & panduan kabel)
+    circuit.js          Pemecah tegangan rangkaian
+    wiring/             Panduan kabel: fungsi pin, rekomendasi tujuan, pemeriksaan rangkaian
     devices*.js         Perilaku tiap komponen (LED, servo, LCD, OLED, TFT, kartu SD, …)
     runner.js           Simulasi JS untuk pelajaran
-  sandbox/              Sandbox (main, workbench, sim, contoh proyek) & katalog (gallery.js)
+  sandbox/              Sandbox (main, workbench, sim, guide, contoh proyek) & katalog (gallery.js)
   i18n/                 Dua bahasa: ui.js (antarmuka) + en/ (pelajaran, komponen, contoh)
   ui/                   Panel info, kartu kode, callout, inspektor, strip, sidebar, ikon
   data/catalog.js       Daftar di menu "Komponen"

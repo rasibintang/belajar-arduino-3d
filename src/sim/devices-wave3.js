@@ -132,12 +132,11 @@ export function ili9341Device(part, ctx, n) {
       return touchRegs[ptr++ & 0xff];
     },
   };
-  const attachTouch = b.touch ? i2cAttach(ctx, n, b, part, touchDevice, t('w.touchName')) : null;
+  const attachTouch = b.touch ? i2cAttach(ctx, n, b, part, touchDevice) : null;
 
   return {
     attach(runner) {
-      spi.attach(runner);
-      if (!spi.hardware && ctx.mcuPinOf(n(b.sck)) === null) ctx.warn(`tft-${part.id}`, t('w.tftPins', { id: part.id }));
+      spi.attach(runner); // pin SPI yang salah ditandai panduan kabel
       if (attachTouch) {
         attachTouch(runner);
         ud.press = (down, point) => {
@@ -480,9 +479,7 @@ export function microsdDevice(part, ctx, n) {
 
   return {
     attach(runner) {
-      spi.attach(runner);
-      if (!spi.hardware) ctx.warn(`sd-${part.id}`, t('w.sdPins', { id: part.id }));
-      else if (ctx.mcuPinOf(n(b.miso)) !== 'D12') ctx.warn(`sd-miso-${part.id}`, t('w.misoPin', { name: `microSD ${part.id}`, pin: 'DO' }));
+      spi.attach(runner); // pin SPI yang salah ditandai panduan kabel
     },
     frame(dt) {
       activity = Math.max(0, activity - dt);

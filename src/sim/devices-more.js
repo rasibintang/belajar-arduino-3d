@@ -1,4 +1,3 @@
-import { t } from '../i18n/index.js';
 import { Meter } from './meter.js';
 import { FREQ } from './avr.js';
 import { click } from './audio.js';
@@ -376,8 +375,7 @@ export function rtcDevice(part, ctx, n) {
     attach(runner) {
       const sda = ctx.mcuPinOf(n(b.sda));
       const scl = ctx.mcuPinOf(n(b.scl));
-      if (sda === 'A4' && scl === 'A5') runner.i2c.devices.set(b.address, device);
-      else ctx.warn(`rtc-${part.id}`, t('w.i2cPins', { name: `RTC ${part.id}` }));
+      if (sda === 'A4' && scl === 'A5') runner.i2c.devices.set(b.address, device); // pin I²C yang salah ditandai panduan kabel (sim/wiring/check.js)
     },
   };
 }

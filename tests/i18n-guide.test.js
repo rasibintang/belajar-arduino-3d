@@ -12,3 +12,20 @@ test('label panduan kabel tersedia dalam ID dan EN untuk setiap fungsi', () => {
     }
   }
 });
+
+import { ISSUE_CODES } from '../src/sim/wiring/check.js';
+
+test('teks masalah, panel, dan tombol pindah tersedia dalam ID dan EN', () => {
+  const NO_FIX = ['short', 'led-resistor'];
+  for (const lang of ['id', 'en']) {
+    for (const code of ISSUE_CODES) {
+      const text = UI[lang][`guide.issue.${code}`];
+      assert.ok(text, `${lang}: guide.issue.${code}`);
+      assert.ok(text.includes('{pin}') && text.includes('{target}'), `${lang}: ${code} memakai {pin} dan {target}`);
+      if (!NO_FIX.includes(code)) assert.ok(text.includes('{suggest}'), `${lang}: ${code} memakai {suggest}`);
+    }
+    assert.ok(UI[lang]['guide.panel']?.includes('{n}'), `${lang}: guide.panel`);
+    assert.ok(UI[lang]['guide.fix']?.includes('{suggest}'), `${lang}: guide.fix`);
+    assert.ok(UI[lang]['guide.empty'], `${lang}: guide.empty`);
+  }
+});

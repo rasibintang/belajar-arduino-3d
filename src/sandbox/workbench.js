@@ -10,6 +10,7 @@ const PIN_LAYER = 2; // titik pin: tidak dirender, hanya untuk dipilih pointer
 const SNAP_RANGE = 5; // mm: jarak maksimum untuk menancap ke breadboard
 const GRID = 1.27;
 const PALETTE = ['orange', 'yellow', 'green', 'blue', 'purple', 'white', 'brown'];
+const WIRE_GLOW = { warn: '#f0a020', danger: '#d9473c' };
 
 const pinHitGeo = new THREE.SphereGeometry(1.35, 10, 8);
 const holeHitGeo = new THREE.BoxGeometry(2.2, 1.6, 2.2);
@@ -398,9 +399,9 @@ export function createWorkbench(stage, hooks = {}) {
     g.traverse((o) => {
       if (o.isMesh) o.castShadow = true;
     });
-    if (selection?.kind === 'wire' && selection.id === wire.id) tint(g, true);
     root.add(g);
     wire.group = g;
+    paint(wire);
   }
 
   function refreshWires(partId) {
@@ -426,18 +427,39 @@ export function createWorkbench(stage, hooks = {}) {
     changed();
   }
 
-  function tint(group, on) {
-    group.traverse((o) => {
+  /** Cahaya kabel: teal bila terpilih, jingga/merah bila panduan kabel menemukan masalah. */
+  function paint(wire) {
+    const selected = selection?.kind === 'wire' && selection.id === wire.id;
+    const glow = selected ? '#1f9e94' : WIRE_GLOW[wire.state];
+    wire.group?.traverse((o) => {
       if (!o.isMesh) return;
-      if (on) {
-        o.userData.baseMat ??= o.material;
-        o.material = o.material.clone();
-        o.material.emissive = new THREE.Color('#1f9e94');
-        o.material.emissiveIntensity = 0.55;
-      } else if (o.userData.baseMat) {
+      o.userData.baseMat ??= o.material;
+      if (!glow) {
         o.material = o.userData.baseMat;
+        return;
       }
+      o.material = o.userData.baseMat.clone();
+      o.material.emissive = new THREE.Color(glow);
+      o.material.emissiveIntensity = selected ? 0.55 : 0.8;
     });
+  }
+
+  /** Tandai kabel: 'ok' | 'warn' | 'danger'. */
+  function setWireState(id, state) {
+    const w = wires.get(id);
+    if (!w || (w.state ?? 'ok') === state) return;
+    w.state = state;
+    paint(w);
+  }
+
+  /** Pindahkan salah satu ujung kabel ('from' | 'to') ke titik lain. */
+  function moveWireEnd(id, end, toNode) {
+    const w = wires.get(id);
+    if (!w || !pinWorld(toNode)) return null;
+    w[end] = toNode;
+    buildWire(w);
+    changed();
+    return w;
   }
 
   // ------------------------------------------------------------ menarik kabel
@@ -477,16 +499,14 @@ export function createWorkbench(stage, hooks = {}) {
 
   // ------------------------------------------------------------ seleksi
   function select(sel) {
-    if (selection?.kind === 'wire') {
-      const w = wires.get(selection.id);
-      if (w?.group) tint(w.group, false);
-    }
+    const prev = selection?.kind === 'wire' ? wires.get(selection.id) : null;
     selection = sel;
+    if (prev) paint(prev);
     if (sel?.kind === 'part') stage.select(parts.get(sel.id)?.group ?? null);
     else stage.select(null);
     if (sel?.kind === 'wire') {
       const w = wires.get(sel.id);
-      if (w?.group) tint(w.group, true);
+      if (w) paint(w);
     }
     hooks.onSelect?.(sel);
   }
@@ -633,6 +653,8 @@ export function createWorkbench(stage, hooks = {}) {
     addWire,
     removeWire,
     setWireColor,
+    setWireState,
+    moveWireEnd,
     select,
     cancelWiring,
     hover,

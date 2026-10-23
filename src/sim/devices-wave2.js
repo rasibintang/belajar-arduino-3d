@@ -7,14 +7,11 @@ import { powered } from './device-utils.js';
 const us = (t) => FREQ * t * 1e-6;
 
 /** Pasang perangkat I²C ke bus emulator bila SDA/SCL tersambung ke A4/A5. */
-export function i2cAttach(ctx, n, b, part, device, label) {
+export function i2cAttach(ctx, n, b, part, device) {
   return (runner) => {
     const sda = ctx.mcuPinOf(n(b.sda));
     const scl = ctx.mcuPinOf(n(b.scl));
-    if (sda !== 'A4' || scl !== 'A5') {
-      ctx.warn(`i2c-${part.id}`, t('w.i2cPins', { name: `${label} ${part.id}` }));
-      return;
-    }
+    if (sda !== 'A4' || scl !== 'A5') return; // pin I²C yang salah ditandai panduan kabel (sim/wiring/check.js)
     if (runner.i2c.devices.has(device.address)) {
       ctx.warn(`i2c-dup-${device.address}`, t('w.i2cDup', { addr: device.address.toString(16) }));
     }
@@ -170,7 +167,7 @@ export function oledDevice(part, ctx, n) {
   }
 
   return {
-    attach: i2cAttach(ctx, n, b, part, device, 'OLED'),
+    attach: i2cAttach(ctx, n, b, part, device),
     frame() {
       const on = powered(ctx, n(b.vcc), n(b.gnd)) && st.on;
       if (!on) return ud.draw(null);
@@ -496,7 +493,7 @@ export function mpu6050Device(part, ctx, n) {
       return v;
     },
   };
-  const attach = i2cAttach(ctx, n, b, part, device, 'MPU6050');
+  const attach = i2cAttach(ctx, n, b, part, device);
   return {
     attach(runner) {
       device.address = ctx.digital(n(b.ad0)) ? 0x69 : 0x68;
@@ -591,7 +588,7 @@ export function bmp180Device(part, ctx, n) {
       return v;
     },
   };
-  return { attach: i2cAttach(ctx, n, b, part, device, 'BMP180') };
+  return { attach: i2cAttach(ctx, n, b, part, device) };
 }
 
 // ---------------------------------------------------------------- DS18B20 (OneWire)
@@ -966,9 +963,7 @@ export function mfrc522Device(part, ctx, n) {
   const spi = spiSlave(ctx, n, { sck: b.sck, mosi: b.mosi, cs: b.cs, onByte, onSelect: () => (addr = null) });
   return {
     attach(runner) {
-      spi.attach(runner);
-      if (!spi.hardware) ctx.warn(`rfid-${part.id}`, t('w.spiPins', { name: `RFID ${part.id}` }));
-      else if (ctx.mcuPinOf(n(b.miso)) !== 'D12') ctx.warn(`rfid-miso-${part.id}`, t('w.misoPin', { name: `RFID ${part.id}`, pin: 'MISO' }));
+      spi.attach(runner); // pin SPI yang salah ditandai panduan kabel
       ud.press = (down) => {
         if (!down) return;
         card = !card;

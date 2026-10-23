@@ -3,6 +3,33 @@
 Semua perubahan penting pada proyek ini. Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/);
 nomor versi mengikuti [SemVer](https://semver.org/lang/id/).
 
+## [0.7.0] — 2026-10-23 · Panduan kabel
+
+### Ditambahkan
+- **Panduan kabel di sandbox** (tombol kompas di bilah alat, bawaan menyala, pilihan diingat):
+  - Saat menarik kabel, tujuan yang cocok untuk pin asal disorot hijau, pin Arduino lain
+    diredupkan, dan label di dekat kursor menjelaskan ke mana sebaiknya (mis. *GND → pin GND
+    atau rel −*). Contoh: dari `D13` pada proyek "LED + resistor", jalur resistor yang menuju
+    anoda LED (`c8`) yang menyala.
+  - Setelah kabel terpasang, kabel yang belum tepat menyala **jingga** (kurang tepat) atau
+    **merah** (berbahaya) dengan tanda **!**; klik untuk melihat alasan dan saran, plus tombol
+    **Pindahkan ke …** bila kabelnya langsung ke Arduino.
+  - Daftar **Periksa rangkaian (n)** di pojok meja; klik baris untuk memilih kabel dan
+    memfokuskan kamera. Masalah juga ditulis ke Serial Monitor saat simulasi mulai.
+  - Aturan: hubungan pendek, VCC/GND terbalik, pin daya di pin sinyal, modul 3,3 V diberi 5V,
+    I²C bukan di A4/A5, SPI bukan di D11–D13, keluaran analog di pin tanpa ADC, servo di pin
+    non-PWM, memakai D0/D1 (Serial), LED / 7-segment tanpa resistor.
+  - Dua bahasa (ID/EN). Tidak pernah memblokir; rangkaian setengah jadi tidak dinilai.
+- Tes otomatis `npm test` (`node --test`) untuk netlist, fungsi pin, rekomendasi, pemeriksaan,
+  dan kelengkapan teks ID/EN.
+
+### Diubah
+- Netlist dipisah dari simulator (`src/sim/netlist.js`) agar dipakai bersama simulasi dan
+  panduan kabel.
+- `validateSpec` kini memastikan setiap pin komponen punya fungsi panduan kabel.
+- Peringatan simulasi lama "sambungkan SDA ke A4…", "SCK ke D13…" dan sejenisnya dihapus;
+  kini ditangani pemeriksaan kabel (satu sumber aturan).
+
 ## [0.6.0] — 2026-10-23 · Dua bahasa, katalog komponen, siap Vercel
 
 ### Ditambahkan

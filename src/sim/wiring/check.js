@@ -62,20 +62,23 @@ function directWire(s, compNode, mcuNodes) {
   return null;
 }
 
-/** Periksa rangkaian → daftar masalah { severity, code, net, nodes: [komponen, Uno], fix? }. */
+/** Periksa rangkaian → daftar masalah { severity, code, net, nodes: [komponen, Uno], suggest?, fix? }. */
 export function checkCircuit(s) {
   const v = view(s);
   const issues = [];
+  const wired = new Set(s.wires.flatMap((w) => [w.from, w.to]));
+  // pin yang dikabel lebih dulu, supaya pesan menyebut "5V", bukan aliasnya "IOREF"
+  const pick = (list) => list.find((n) => wired.has(n)) ?? list[0];
   s.nets.forEach((nodes, net) => {
     const fns = nodes.map(v.fn);
     const mcuNodes = nodes.filter((n) => v.kind(n) === 'mcu');
     const supplies = nodes.filter((n) => v.kind(n) === 'source');
     if (!mcuNodes.length && !supplies.length) return;
-    const anchor = mcuNodes[0] ?? supplies[0];
+    const anchor = pick(mcuNodes) ?? pick(supplies);
 
     if (POWER.some((f) => fns.includes(f)) && GROUND.some((f) => fns.includes(f))) {
-      const p = nodes.find((n) => POWER.includes(v.fn(n)));
-      const g = nodes.find((n) => GROUND.includes(v.fn(n)));
+      const p = pick(nodes.filter((n) => POWER.includes(v.fn(n))));
+      const g = pick(nodes.filter((n) => GROUND.includes(v.fn(n))));
       issues.push({ severity: 'danger', code: 'short', net, nodes: [p, g] });
       return;
     }
@@ -95,7 +98,8 @@ export function checkCircuit(s) {
       const wire = directWire(s, node, mcuNodes);
       const uno = mcuNodes.length ? partOf(mcuNodes[0]) : null;
       const target = r.target ?? (uno && firstFree(s, uno, r.free));
-      if (wire && uno && target) issue.fix = { ...wire, to: `${uno}:${target}` };
+      if (uno && target) issue.suggest = `${uno}:${target}`;
+      if (wire && issue.suggest) issue.fix = { ...wire, to: issue.suggest };
       issues.push(issue);
     }
   });

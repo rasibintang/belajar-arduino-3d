@@ -6,6 +6,7 @@ import { snap } from './helpers.js';
 test('5V langsung ke GND → short (danger)', () => {
   const [i] = checkCircuit(snap({ uno: 'arduino-uno' }, [['uno:5V', 'uno:GND.1']]));
   assert.equal(i.code, 'short'); assert.equal(i.severity, 'danger');
+  assert.deepEqual(i.nodes, ['uno:5V', 'uno:GND.1']); // pin yang dikabel, bukan aliasnya (IOREF, GND)
 });
 test('SDA di A2 → i2c-pin dengan fix ke A4 lewat kabel yang sama', () => {
   const s = snap({ uno: 'arduino-uno', o: 'oled-ssd1306' }, [['o:SDA', 'uno:A2']]);
@@ -20,6 +21,7 @@ test('lewat breadboard → masalah terdeteksi tanpa fix', () => {
   const s = snap({ uno: 'arduino-uno', bb: 'breadboard', o: 'oled-ssd1306' }, [['o:SDA', 'bb:a3'], ['bb:b3', 'uno:A2']]);
   const [i] = checkCircuit(s);
   assert.equal(i.code, 'i2c-pin'); assert.equal(i.fix, undefined);
+  assert.equal(i.suggest, 'uno:A4'); // saran tetap ada walau tidak bisa dipindah otomatis
 });
 test('LED langsung D13 ke GND tanpa resistor → led-resistor (tanpa fix)', () => {
   const [i] = checkCircuit(snap({ uno: 'arduino-uno', led1: 'led' }, [['uno:D13', 'led1:A'], ['led1:K', 'uno:GND']]));

@@ -17,7 +17,8 @@ import { icon, LOGO } from '../ui/icons.js';
 import { escapeHtml } from '../ui/highlight.js';
 import { renderThumbs } from '../ui/thumbs.js';
 import { createWorkbench } from './workbench.js';
-import { createGuide } from './guide.js';
+import { createGuide, issueText } from './guide.js';
+import { checkCircuit } from '../sim/wiring/check.js';
 import { createCodeEditor } from './code-editor.js';
 import { createSim } from './sim.js';
 import { EXAMPLES, BLANK } from './examples.js';
@@ -91,6 +92,7 @@ wb = createWorkbench(stage, {
     persist();
     refreshDiagramTab();
     $('#empty').hidden = wb.parts.size > 0;
+    scheduleCheck();
   },
   onSelect: (sel) => showPanel(sel),
   onPartClick: (part) => showPanel({ kind: 'part', id: part.id }),
@@ -121,7 +123,47 @@ wb = createWorkbench(stage, {
 $('#canvas').addEventListener('pointermove', (e) => wb.pointerMove(e.clientX, e.clientY));
 
 // ------------------------------------------------------------------ panduan kabel
-const guide = createGuide({ wb, root: wb.root, t });
+const guide = createGuide({ wb, stage, root: wb.root, layer: $('#stage'), t });
+let issues = [];
+let checkQueued = false;
+
+/** Periksa ulang kabel (paling sering sekali per frame, karena memuat diagram memicu banyak perubahan). */
+function scheduleCheck() {
+  if (checkQueued) return;
+  checkQueued = true;
+  requestAnimationFrame(() => {
+    checkQueued = false;
+    const s = wb.snapshot();
+    issues = checkCircuit(s);
+    guide.showIssues(issues, s);
+    renderIssues();
+  });
+}
+
+const issuePanel = $('#guide-issues');
+function renderIssues() {
+  issuePanel.hidden = !guide.enabled || !issues.length;
+  if (issuePanel.hidden) return;
+  issuePanel.querySelector('h3').textContent = t('guide.panel', { n: issues.length });
+  const list = issuePanel.querySelector('ul');
+  list.replaceChildren(
+    ...issues.map((issue) => {
+      const li = document.createElement('li');
+      const btn = document.createElement('button');
+      btn.dataset.severity = issue.severity;
+      btn.textContent = issueText(issue, t);
+      btn.addEventListener('click', () => {
+        const id = guide.wireOf(issue);
+        const wire = id && wb.wires.get(id);
+        if (!wire) return;
+        if (wb.mode === 'edit') wb.select({ kind: 'wire', id });
+        stage.focus(wire.group);
+      });
+      li.append(btn);
+      return li;
+    })
+  );
+}
 const guideLabel = $('#guide-label');
 const pointer = { x: 0, y: 0 };
 function placeGuideLabel() {
@@ -140,6 +182,7 @@ guideBtn.addEventListener('click', () => {
   guide.setEnabled(!guide.enabled);
   guideBtn.setAttribute('aria-pressed', String(guide.enabled));
   if (!guide.enabled) guideLabel.hidden = true;
+  renderIssues();
 });
 
 // ------------------------------------------------------------------ editor
@@ -237,6 +280,7 @@ const sim = createSim({
     document.body.classList.toggle('is-running', state === 'running');
     setHint(state === 'running' ? t('sb.hint.running') : null);
     if (state === 'idle') $('#speed').textContent = '';
+    if (state === 'running' && guide.enabled) for (const issue of issues) serial.warn(`⚠ ${issueText(issue, t)}`);
     showPanel(null);
   },
 });
@@ -528,6 +572,7 @@ function loadDiagram(d) {
   for (const p of problems) serial.warn(p);
   project.diagram = wb.toDiagram();
   $('#empty').hidden = wb.parts.size > 0;
+  scheduleCheck();
   fit(true);
 }
 

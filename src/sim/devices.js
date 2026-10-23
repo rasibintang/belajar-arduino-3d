@@ -295,8 +295,7 @@ function lcdDevice(part, ctx, n) {
   const sclPin = ctx.mcuPinOf(n(b.scl));
   return {
     attach(runner) {
-      if (sdaPin === 'A4' && sclPin === 'A5') runner.i2c.devices.set(lcd.address, lcd);
-      else ctx.warn(`lcd-${part.id}`, t('w.i2cPins', { name: `LCD ${part.id}` }));
+      if (sdaPin === 'A4' && sclPin === 'A5') runner.i2c.devices.set(lcd.address, lcd); // pin I²C yang salah ditandai panduan kabel (sim/wiring/check.js)
     },
     frame() {
       const on = powered(ctx, n(b.vcc), n(b.gnd));
