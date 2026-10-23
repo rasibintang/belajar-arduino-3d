@@ -3,7 +3,7 @@
 // (ATmega328P = multilib avr5) yang disisakan.
 //   node scripts/slim-toolchain.mjs [folder-tools]   (bawaan: ./tools)
 
-import { readdirSync, rmSync, statSync, existsSync } from 'node:fs';
+import { readdirSync, rmSync, statSync, existsSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 const TOOLS = resolve(process.argv[2] ?? process.env.TOOLS_DIR ?? 'tools');
@@ -33,6 +33,9 @@ remove(join(DATA, 'tmp'));
 // indeks library (± 57 MB) hanya dipakai untuk mencari/memasang library, bukan untuk kompilasi
 remove(join(DATA, 'library_index.json'));
 remove(join(DATA, 'library_index.json.sig'));
+// …tetapi tanpa berkas ini arduino-cli mengunduhnya lagi (4,4 MB) setiap kompilasi yang memakai
+// library; indeks kosong cukup karena library sudah terpasang
+writeFileSync(join(DATA, 'library_index.json'), '{"libraries":[]}\n');
 for (const tool of ['avrdude', 'arduinoOTA']) remove(join(DATA, 'packages', 'arduino', 'tools', tool));
 
 // 2. avr-gcc: buang dokumentasi dan pustaka untuk keluarga AVR lain
