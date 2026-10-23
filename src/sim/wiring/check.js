@@ -1,11 +1,11 @@
 import { mcuPinInfo } from './pin-functions.js';
-import { view, pinOf, partOf } from './snapshot.js';
-import { recommend } from './recommend.js';
+import { view, pinOf, partOf, withoutWire } from './snapshot.js';
+import { recommend, netRole } from './recommend.js';
 
 /**
  * Pemeriksaan kabel yang sudah terpasang. Hanya net yang memuat pin Arduino atau simbol catu yang
  * dinilai, sehingga rangkaian yang masih setengah jadi tidak dihakimi. Pengecualian sempit: kabel yang
- * berakhir di jalur kosong tepat di sebelah lubang yang disarankan ("meleset", mis. seberang parit).
+ * berakhir di jalur kosong padahal komponen yang cocok sudah ada di breadboard itu ("meleset").
  */
 
 export const ISSUE_CODES = ['short', 'power-reversed', 'power-on-signal', 'vcc33-on-5v', 'i2c-pin', 'spi-pin', 'analog-pin', 'pwm-pin', 'serial-pin', 'led-resistor', 'wire-misplaced'];
@@ -170,9 +170,17 @@ const hole = (id) => {
 };
 
 /**
- * Kabel dari pin Arduino/catu yang berakhir di jalur breadboard tanpa komponen, padahal lubang yang
- * disarankan untuk pin itu ada di kolom yang sama (seberang parit) atau satu kolom di sebelahnya.
+ * Kabel dari pin Arduino/catu yang berakhir di jalur breadboard yang bukan tujuannya. Dinilai dengan
+ * "seandainya kabel ini dilepas": apakah jalur itu termasuk tujuan yang disarankan untuk pin asal?
+ * - jalur kosong: ditandai hanya bila komponen yang cocok sudah ada di breadboard itu (selain itu
+ *   rangkaian dianggap belum selesai);
+ * - jalur dengan fungsi yang jelas tidak cocok (mis. GND ke anoda LED atau ke rel +): ditandai;
+ * - jalur komponen netral (tombol, resistor biasa, LDR) atau masukan yang boleh diikat ke 5V/GND
+ *   (SLEEP/RESET driver, pin enable, ujung potensiometer): tidak dinilai.
+ * Saran: lubang kosong terdekat di jalur komponen yang cocok, atau rel bila tidak ada.
  */
+const UNJUDGED = ['neutral', 'digital-in', 'digital-io', 'tie-gnd', 'pot-end'];
+
 function misplacedWires(s) {
   const v = view(s);
   const out = [];
@@ -181,14 +189,24 @@ function misplacedWires(s) {
       const at = w[end];
       const src = w[other];
       if (v.kind(at) !== 'breadboard' || !['mcu', 'source'].includes(v.kind(src))) continue;
-      const h = hole(pinOf(at));
-      const net = s.nets[v.netOf(at)];
-      if (!h || net.some((n) => v.isComponent(n) && v.kind(n) !== 'none')) continue;
-      const near = recommend(s, src)
-        .targets.filter((n) => partOf(n) === partOf(at))
-        .map((n) => ({ n, t: hole(pinOf(n)) }))
-        .filter(({ t }) => t && Math.abs(t.col - h.col) <= 1)
-        .sort((a, b) => Math.abs(a.t.col - h.col) - Math.abs(b.t.col - h.col) || Math.abs(a.t.row - h.row) - Math.abs(b.t.row - h.row))[0];
+      const h = hole(pinOf(at)) ?? { row: -1, col: Number(pinOf(at).slice(2)) };
+      const before = withoutWire(s, w.id);
+      const vb = view(before);
+      const net = vb.netOf(at);
+      const role = netRole(before, net);
+      if (role.startsWith('mcu-') || role.startsWith('supply-')) continue; // ditangani aturan lain
+      const hasPart = before.nets[net].some((n) => vb.isComponent(n) && vb.kind(n) !== 'none');
+      if (UNJUDGED.includes(role) && hasPart) continue; // tombol, masukan yang diikat ke 5V/GND, …: tidak dinilai
+      const targets = recommend(before, src).targets.filter((n) => partOf(n) === partOf(at));
+      if (targets.some((n) => vb.netOf(n) === net)) continue; // jalur ini memang tujuan yang cocok
+      const options = targets
+        .map((n) => ({ n, t: hole(pinOf(n)), part: before.nets[vb.netOf(n)].some((m) => vb.isComponent(m) && vb.kind(m) !== 'none') }))
+        .filter((o) => o.t || !hasPart); // rel hanya jadi saran bila tujuan salahnya bukan jalur kosong
+      const withPart = options.filter((o) => o.part && o.t);
+      if (role === 'neutral' && !withPart.length) continue; // jalur kosong, belum ada komponen yang cocok
+      const pool = withPart.length ? withPart : options;
+      const pos = (o) => o.t ?? { row: -1, col: Number(pinOf(o.n).slice(2)) };
+      const near = pool.sort((a, b) => Math.abs(pos(a).col - h.col) - Math.abs(pos(b).col - h.col) || Math.abs(pos(a).row - h.row) - Math.abs(pos(b).row - h.row))[0];
       if (!near) continue;
       out.push({ severity: 'warn', code: 'wire-misplaced', net: v.netOf(at), nodes: [src, at], suggest: near.n, fix: { wireId: w.id, end, to: near.n } });
     }

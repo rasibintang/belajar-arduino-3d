@@ -100,9 +100,17 @@ test('D13 meleset satu kolom (c7, resistor di kolom 8) → saran c8', () => {
   const issues = checkCircuit(s);
   assert.deepEqual(issues.map((i) => [i.code, i.suggest]), [['wire-misplaced', 'bb:c8']]);
 });
-test('kabel ke jalur kosong yang jauh dari apa pun → diam (rangkaian setengah jadi)', () => {
-  const s = snap(LED_PARTS, [['uno:GND.1', 'bb:j25']], LED_LEGS);
-  assert.deepEqual(checkCircuit(s), []);
+test('kabel ke jalur kosong, belum ada komponen yang cocok di breadboard → diam (setengah jadi)', () => {
+  assert.deepEqual(checkCircuit(snap({ uno: 'arduino-uno', bb: 'breadboard' }, [['uno:GND.1', 'bb:j25']])), []);
+});
+test('GND dua kolom dari katoda (a11, katoda di kolom 13) → wire-misplaced dengan saran a13', () => {
+  // diagram pengguna kedua
+  const s = snap(LED_PARTS, [['uno:D13', 'bb:c8'], ['uno:GND.1', 'bb:a11']], LED_LEGS);
+  assert.deepEqual(checkCircuit(s).map((i) => [i.code, i.suggest]), [['wire-misplaced', 'bb:a13']]);
+});
+test('GND jauh dari katoda (j25) → tetap disarankan ke jalur katoda, bukan rel', () => {
+  const s = snap(LED_PARTS, [['uno:D13', 'bb:c8'], ['uno:GND.1', 'bb:j25']], LED_LEGS);
+  assert.deepEqual(checkCircuit(s).map((i) => [i.code, i.suggest]), [['wire-misplaced', 'bb:e13']]);
 });
 
 test('katoda LED belum ke rel − yang sudah ber-GND → led-open dengan saran tambah kabel', () => {
@@ -122,4 +130,20 @@ test('katoda belum ke GND tetapi belum ada rel ber-GND → diam', () => {
 });
 test('rel − ber-GND tetapi sisi anoda belum ke Arduino → diam', () => {
   assert.deepEqual(checkCircuit(snap(LED_PARTS, [['uno:GND.1', 'bb:bn12']], LED_LEGS)), []);
+});
+test('GND ke jalur anoda LED (a12) → wire-misplaced, saran ke jalur katoda a13', () => {
+  const s = snap(LED_PARTS, [['uno:D13', 'bb:c8'], ['uno:GND.1', 'bb:a12']], LED_LEGS);
+  assert.deepEqual(checkCircuit(s).map((i) => [i.code, i.suggest]), [['wire-misplaced', 'bb:a13']]);
+});
+test('GND ke rel + → wire-misplaced', () => {
+  const s = snap(LED_PARTS, [['uno:D13', 'bb:c8'], ['uno:GND.1', 'bb:bp12']], LED_LEGS);
+  assert.deepEqual(checkCircuit(s).map((i) => i.code), ['wire-misplaced']);
+});
+test('pin digital ke jalur tombol (komponen netral) → diam', () => {
+  const s = snap({ uno: 'arduino-uno', bb: 'breadboard', b1: 'push-button-6mm', ...LED_PARTS }, [['uno:D2', 'bb:a20'], ['uno:D13', 'bb:c8'], ['uno:GND.1', 'bb:a13']], [['b1:1a', 'bb:b20'], ...LED_LEGS]);
+  assert.deepEqual(checkCircuit(s), []);
+});
+test('5V ke jalur SLEEP+RESET A4988 (mengikat masukan ke HIGH) → diam', () => {
+  const s = snap({ uno: 'arduino-uno', bb: 'breadboard', drv: 'a4988', ...LED_PARTS }, [['uno:5V', 'bb:a16']], [['drv:SLEEP', 'bb:b16'], ['drv:RESET', 'bb:c16'], ['drv:VMOT', 'bb:b20'], ...LED_LEGS]);
+  assert.deepEqual(checkCircuit(s), []);
 });

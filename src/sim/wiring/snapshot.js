@@ -20,7 +20,14 @@ export function snapshotFromTopology({ parts, wires, inserted }) {
     wires: wires.map(({ id, from, to }) => ({ id, from, to })),
     nets: groupNodes,
     occupied,
+    topology: { parts, wires, inserted }, // untuk withoutWire()
   };
+}
+
+/** Snapshot yang sama tanpa satu kabel ("seandainya kabel ini dilepas"). */
+export function withoutWire(s, wireId) {
+  const { parts, wires, inserted } = s.topology;
+  return snapshotFromTopology({ parts, wires: wires.filter((w) => w.id !== wireId), inserted });
 }
 
 export const partOf = (node) => node.slice(0, node.indexOf(':'));
