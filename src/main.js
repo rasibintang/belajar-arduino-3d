@@ -1,5 +1,6 @@
 import { t, translateDom, languageSwitch } from './i18n/index.js';
-import { mountAccount } from './account/ui.js';
+import { mountAccount, toast } from './account/ui.js';
+import { syncProgress } from './account/progress-sync.js';
 import '@fontsource/barlow-semi-condensed/500.css';
 import '@fontsource/barlow-semi-condensed/600.css';
 import '@fontsource/barlow-semi-condensed/700.css';
@@ -50,7 +51,7 @@ translateDom();
 document.querySelector('meta[name="description"]')?.setAttribute('content', t('meta.description'));
 document.querySelectorAll('.topbar [data-icon]').forEach((a) => a.insertAdjacentHTML('afterbegin', icon(a.dataset.icon)));
 $('.top-lang').append(languageSwitch());
-mountAccount($('.account-slot'));
+const account = mountAccount($('.account-slot'));
 const loader = createLoader($('#loader'));
 document.querySelectorAll('[data-logo]').forEach((el) => (el.innerHTML = LOGO));
 
@@ -140,6 +141,28 @@ async function boot() {
     const level = LEVELS.find((l) => l.id === levelId);
     progress.set(level.lessons.filter((l) => store.isDone(l.id)).length, level.lessons.length, level.title);
   }
+
+  // progres pelajaran ikut akun: digabung saat masuk, setiap pelajaran selesai dikirim
+  account.then((acc) => {
+    if (!acc.backend) return;
+    const sync = async () => {
+      if (!acc.user()) return;
+      try {
+        const { added } = await syncProgress(acc.backend, store);
+        if (added) {
+          strip.refreshDone();
+          showProgress();
+        }
+      } catch {
+        toast(t('acct.offline'), 'error');
+      }
+    };
+    sync();
+    acc.onChange((user) => user && sync());
+    store.onDone((id) => {
+      if (acc.user()) acc.backend.progress.push([id]).catch(() => {}); // progres lokal tetap tercatat
+    });
+  });
   startClock($('#clock-date'), $('#clock-time'));
   drawDecor($('#decor'));
 

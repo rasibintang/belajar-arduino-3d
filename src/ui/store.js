@@ -12,6 +12,7 @@ function load() {
 }
 
 const data = Object.assign({ done: [], settings: {}, params: {}, lesson: 0 }, load());
+const doneListeners = new Set();
 
 function save() {
   try {
@@ -27,9 +28,24 @@ export const store = {
     if (!data.done.includes(id)) {
       data.done.push(id);
       save();
+      for (const fn of doneListeners) fn(id);
       return true;
     }
     return false;
+  },
+  allDone: () => [...data.done],
+  /** Tambahkan progres dari akun (gabungan, tidak pernah menghapus). → ada yang bertambah? */
+  mergeDone(ids) {
+    const before = data.done.length;
+    for (const id of ids) if (!data.done.includes(id)) data.done.push(id);
+    if (data.done.length === before) return false;
+    save();
+    return true;
+  },
+  /** Dipanggil setiap ada pelajaran yang baru selesai. */
+  onDone(fn) {
+    doneListeners.add(fn);
+    return () => doneListeners.delete(fn);
   },
   doneCount: () => data.done.length,
   resetProgress() {
