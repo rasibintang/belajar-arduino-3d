@@ -1,3 +1,4 @@
+import { t } from '../i18n/index.js';
 import { Meter } from './meter.js';
 import { FREQ } from './avr.js';
 import { LcdI2C } from './hd44780.js';
@@ -184,7 +185,7 @@ function ledDevice(part, ctx, n) {
         const over = va - vk - vf;
         if (over > 0) {
           const ohms = ctx.seriesOhms(A, K);
-          if (ohms < 10) ctx.warn(`led-${part.id}`, `LED ${part.id} tanpa resistor — pada rangkaian nyata LED bisa rusak.`);
+          if (ohms < 10) ctx.warn(`led-${part.id}`, t('w.noResistor', { name: `LED ${part.id}` }));
           const mA = (over / Math.max(ohms, 10)) * 1000;
           level = Math.min(1, mA / 12);
         }
@@ -275,7 +276,7 @@ function servoDevice(part, ctx, n) {
   return {
     frame(dt) {
       if (!powered(ctx, n(b.vcc), n(b.gnd))) {
-        ctx.warn(`servo-${part.id}`, `Servo ${part.id} belum mendapat daya (sambungkan V+ ke 5V dan GND).`);
+        ctx.warn(`servo-${part.id}`, t('w.servoPower', { id: part.id }));
         return;
       }
       const step = 600 * dt; // ± 0,1 detik / 60°
@@ -295,7 +296,7 @@ function lcdDevice(part, ctx, n) {
   return {
     attach(runner) {
       if (sdaPin === 'A4' && sclPin === 'A5') runner.i2c.devices.set(lcd.address, lcd);
-      else ctx.warn(`lcd-${part.id}`, `LCD ${part.id}: sambungkan SDA ke A4/SDA dan SCL ke A5/SCL.`);
+      else ctx.warn(`lcd-${part.id}`, t('w.i2cPins', { name: `LCD ${part.id}` }));
     },
     frame() {
       const on = powered(ctx, n(b.vcc), n(b.gnd));

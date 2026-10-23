@@ -1,3 +1,4 @@
+import { phrase } from '../i18n/lessons.js';
 import { createLED } from '../parts/led.js';
 import { createResistor } from '../parts/resistor.js';
 
@@ -17,6 +18,7 @@ export function addLed(kit, { key, col, back = false, color = 'red', pin, gnd, w
 
 /** Tulis teks di LCD virtual mulai kolom col, baris row (seperti lcd.setCursor + lcd.print). */
 export function lcdPrint(state, col, row, text) {
+  text = phrase(text);
   state.lcd ??= ['', ''];
   const line = (state.lcd[row] ?? '').padEnd(16);
   state.lcd[row] = (line.slice(0, col) + text + line.slice(col + text.length)).slice(0, 16);

@@ -1,11 +1,12 @@
+import { t } from '../i18n/index.js';
 import { highlight, escapeHtml } from './highlight.js';
 import { icon } from './icons.js';
 
 const PHASE_LABEL = {
-  idle: 'Berhenti',
-  compiling: 'Mengompilasi',
-  uploading: 'Mengunggah',
-  running: 'Berjalan',
+  idle: t('phase.idle'),
+  compiling: t('phase.compiling'),
+  uploading: t('phase.uploading'),
+  running: t('phase.running'),
 };
 
 /** Kartu "Coba sendiri": kode berwarna, salin, jalankan, dan Serial Monitor. */
@@ -80,7 +81,7 @@ export function createCodeCard(root, { onRun, onParamClick, onSend }) {
       .map((s) =>
         typeof s === 'string'
           ? highlight(s)
-          : `<button class="param${s.key === changedKey ? ' is-flash' : ''}" data-key="${s.key}" title="Klik untuk mengubah">${escapeHtml(s.value)}</button>`
+          : `<button class="param${s.key === changedKey ? ' is-flash' : ''}" data-key="${s.key}" title="${t('code.paramClick')}">${escapeHtml(s.value)}</button>`
       )
       .join('');
     const lines = plain.split('\n');
@@ -143,7 +144,7 @@ export function createCodeCard(root, { onRun, onParamClick, onSend }) {
     root.dataset.state = phase;
     statusEl.textContent = PHASE_LABEL[phase];
     runBtn.innerHTML = icon(phase === 'idle' ? 'run' : 'stop');
-    runBtn.title = phase === 'idle' ? 'Jalankan sketch (Spasi)' : 'Hentikan (Spasi)';
+    runBtn.title = phase === 'idle' ? t('code.run.title') : t('code.stop.title');
     runBtn.setAttribute('aria-label', runBtn.title);
     if (phase !== 'idle') root.classList.add('has-console');
   }

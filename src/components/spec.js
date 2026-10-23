@@ -1,3 +1,4 @@
+import { tr } from '../i18n/parts.js';
 import * as THREE from 'three';
 import { PITCH } from '../parts/lib.js';
 
@@ -29,18 +30,20 @@ import { PITCH } from '../parts/lib.js';
  * komponen yang sama dipakai di pelajaran maupun di sandbox.
  */
 
-export const CATEGORIES = {
-  board: 'Papan',
-  breadboard: 'Breadboard',
-  basic: 'Dasar',
-  input: 'Input',
-  output: 'Output',
-  sensor: 'Sensor',
-  display: 'Tampilan',
-  motor: 'Motor',
-  logic: 'Logika',
-  misc: 'Lain-lain',
-};
+export const CATEGORIES = Object.fromEntries(
+  Object.entries({
+    board: 'Papan',
+    breadboard: 'Breadboard',
+    basic: 'Dasar',
+    input: 'Input',
+    output: 'Output',
+    sensor: 'Sensor',
+    display: 'Tampilan',
+    motor: 'Motor',
+    logic: 'Logika',
+    misc: 'Lain-lain',
+  }).map(([k, v]) => [k, tr(v)])
+);
 
 /**
  * Jenis perilaku dan pin yang wajib disebut (peran → id pin).

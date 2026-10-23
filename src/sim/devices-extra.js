@@ -1,3 +1,4 @@
+import { t } from '../i18n/index.js';
 import { Meter } from './meter.js';
 import { FREQ } from './avr.js';
 import { click } from './audio.js';
@@ -358,7 +359,7 @@ export function a4988Device(part, ctx, n) {
   for (const id of [b.enable, b.sleep, b.reset]) ctx.consumer(n(id));
   ctx.watch(n(b.step), (high) => {
     if (!high || !active()) return;
-    if (ctx.volts(n(b.reset)) === null) ctx.warn(`a4988-${part.id}`, `A4988 ${part.id}: RESET mengambang — sambungkan ke SLEEP agar driver bekerja di rangkaian nyata.`);
+    if (ctx.volts(n(b.reset)) === null) ctx.warn(`a4988-${part.id}`, t('w.a4988Reset', { id: part.id }));
     const ms = b.ms.reduce((acc, id, i) => acc | (fresh(ctx, n(id)) ? 1 << i : 0), 0);
     const micro = MICRO[ms] ?? 1;
     pos += (fresh(ctx, n(b.dir)) ? 1 : -1) * (16 / micro);

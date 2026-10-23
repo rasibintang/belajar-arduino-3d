@@ -1,3 +1,4 @@
+import { t, lang } from '../i18n/index.js';
 import { EEPROMMemoryBackend } from 'avr8js';
 import { AVRRunner, FREQ } from '../sim/avr.js';
 import { Circuit } from '../sim/circuit.js';
@@ -11,12 +12,12 @@ export async function compile(sketch) {
     const res = await fetch(COMPILE_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sketch }),
+      body: JSON.stringify({ sketch, lang }),
     });
-    if (!res.ok) return { ok: false, stderr: `Server kompilasi menjawab ${res.status}.` };
+    if (!res.ok) return { ok: false, stderr: t('sb.compile.status', { status: res.status }) };
     return await res.json();
   } catch {
-    return { ok: false, stderr: 'Server kompilasi tidak dapat dihubungi. Jalankan `npm run dev` (atau server/compile-server.mjs).' };
+    return { ok: false, stderr: t('sb.compile.unreachable') };
   }
 }
 
@@ -84,18 +85,18 @@ export function createSim(deps) {
     const my = ++token;
     setState('compiling');
     serial.clear();
-    serial.sys('Mengompilasi sketch…');
+    serial.sys(t('sim.compiling'));
     const t0 = performance.now();
     const res = await compile(editor.value);
     if (my !== token) return; // dibatalkan
     if (!res.ok) {
       editor.setErrors(res.stderr);
-      serial.err(res.stderr || 'Kompilasi gagal.');
+      serial.err(res.stderr || t('sb.compile.failed'));
       setState('idle');
       return;
     }
     editor.setErrors('');
-    serial.sys(`Berhasil (${res.size ?? '?'} byte, ${Math.round(performance.now() - t0)} ms). Simulasi berjalan.`);
+    serial.sys(t('sb.compile.ok', { size: res.size ?? '?', ms: Math.round(performance.now() - t0) }));
     lines = res.lines ?? [];
     lastLine = 0;
 
@@ -119,7 +120,7 @@ export function createSim(deps) {
     wb.setMode('run');
     circuit = new Circuit(wb.circuitParts(), wb.circuitWires(), { log: (text, kind) => (kind === 'warn' ? serial.warn(text) : serial.sys(text)) });
     circuit.attach(runner);
-    if (!circuit.mcu) serial.warn('Tidak ada Arduino Uno di rangkaian — tambahkan dari menu “+”.');
+    if (!circuit.mcu) serial.warn(t('sb.noUno'));
 
     // interaksi saat berjalan
     for (const part of wb.parts.values()) {

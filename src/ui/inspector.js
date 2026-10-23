@@ -1,3 +1,4 @@
+import { t } from '../i18n/index.js';
 import { icon } from './icons.js';
 
 /**
@@ -38,14 +39,14 @@ export function createInspector({ el, container, getLesson, getParams, setParam,
     const info = el._info;
     el.innerHTML = `
       <header>
-        <div><small>Komponen</small><h3>${info.name}</h3></div>
-        <button class="icon-btn insp-close" aria-label="Tutup">${icon('close')}</button>
+        <div><small>${t('nav.parts')}</small><h3>${info.name}</h3></div>
+        <button class="icon-btn insp-close" aria-label="${t('ui.close')}">${icon('close')}</button>
       </header>
       <p class="insp-desc">${info.desc ?? ''}</p>
       ${defs
         .map((p) => `<div class="insp-row"><label>${p.label}</label>${controlHtml(p, params[p.key])}</div>`)
         .join('')}
-      ${defs.length ? '' : '<p class="insp-empty">Komponen ini tidak punya pengaturan di pelajaran ini.</p>'}`;
+      ${defs.length ? '' : `<p class="insp-empty">${t('insp.empty')}</p>`}`;
   }
 
   /** Cocokkan nilai dari data-value (string) dengan tipe aslinya. */

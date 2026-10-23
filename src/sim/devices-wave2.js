@@ -1,3 +1,4 @@
+import { t } from '../i18n/index.js';
 import { FREQ } from './avr.js';
 import { powered } from './device-utils.js';
 
@@ -11,11 +12,11 @@ export function i2cAttach(ctx, n, b, part, device, label) {
     const sda = ctx.mcuPinOf(n(b.sda));
     const scl = ctx.mcuPinOf(n(b.scl));
     if (sda !== 'A4' || scl !== 'A5') {
-      ctx.warn(`i2c-${part.id}`, `${label} ${part.id}: sambungkan SDA ke A4/SDA dan SCL ke A5/SCL.`);
+      ctx.warn(`i2c-${part.id}`, t('w.i2cPins', { name: `${label} ${part.id}` }));
       return;
     }
     if (runner.i2c.devices.has(device.address)) {
-      ctx.warn(`i2c-dup-${device.address}`, `Dua perangkat I²C memakai alamat 0x${device.address.toString(16)} — salah satunya tidak akan menjawab.`);
+      ctx.warn(`i2c-dup-${device.address}`, t('w.i2cDup', { addr: device.address.toString(16) }));
     }
     runner.i2c.devices.set(device.address, device);
   };
@@ -966,8 +967,8 @@ export function mfrc522Device(part, ctx, n) {
   return {
     attach(runner) {
       spi.attach(runner);
-      if (!spi.hardware) ctx.warn(`rfid-${part.id}`, `RFID ${part.id}: sambungkan SCK ke D13, MOSI ke D11, MISO ke D12.`);
-      else if (ctx.mcuPinOf(n(b.miso)) !== 'D12') ctx.warn(`rfid-miso-${part.id}`, `RFID ${part.id}: MISO harus ke D12.`);
+      if (!spi.hardware) ctx.warn(`rfid-${part.id}`, t('w.spiPins', { name: `RFID ${part.id}` }));
+      else if (ctx.mcuPinOf(n(b.miso)) !== 'D12') ctx.warn(`rfid-miso-${part.id}`, t('w.misoPin', { name: `RFID ${part.id}`, pin: 'MISO' }));
       ud.press = (down) => {
         if (!down) return;
         card = !card;

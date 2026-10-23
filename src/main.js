@@ -1,3 +1,4 @@
+import { t, translateDom, languageSwitch } from './i18n/index.js';
 import '@fontsource/barlow-semi-condensed/500.css';
 import '@fontsource/barlow-semi-condensed/600.css';
 import '@fontsource/barlow-semi-condensed/700.css';
@@ -44,16 +45,20 @@ function partInfo(part, point) {
   return (point && part.userData.partAt?.(point)) || part.userData.part;
 }
 
+translateDom();
+document.querySelector('meta[name="description"]')?.setAttribute('content', t('meta.description'));
+document.querySelectorAll('.topbar [data-icon]').forEach((a) => a.insertAdjacentHTML('afterbegin', icon(a.dataset.icon)));
+$('.top-lang').append(languageSwitch());
 const loader = createLoader($('#loader'));
 document.querySelectorAll('[data-logo]').forEach((el) => (el.innerHTML = LOGO));
 
 boot().catch((err) => {
   console.error(err);
-  loader.fail('Gagal memuat. Pastikan browser mendukung WebGL.');
+  loader.fail(t('load.fail'));
 });
 
 async function boot() {
-  loader.set(0.08, 'Memuat huruf');
+  loader.set(0.08, t('load.fonts'));
   // Huruf harus siap sebelum tulisan di papan digambar ke tekstur
   await Promise.all(
     ['600 20px "Barlow Semi Condensed"', '700 20px "Barlow Semi Condensed"', '800 20px "Barlow Semi Condensed"', '600 20px "IBM Plex Mono"'].map(
@@ -61,7 +66,7 @@ async function boot() {
     )
   ).catch(() => {});
 
-  loader.set(0.2, 'Menyiapkan papan');
+  loader.set(0.2, t('load.board'));
   const stageEl = $('#stage');
   const tip = $('#tip');
 
@@ -193,7 +198,7 @@ async function boot() {
     flyout: $('#flyout'),
     views: {
       lessons: () => `
-        <header><h2>Pelajaran</h2><button class="icon-btn flyout-close" aria-label="Tutup">${icon('close')}</button></header>
+        <header><h2>${t('nav.lessons')}</h2><button class="icon-btn flyout-close" aria-label="${t('ui.close')}">${icon('close')}</button></header>
         ${LEVELS.map(
           (level) => `<h3 class="fly-sub">${level.title}
             <span>${level.lessons.filter((l) => store.isDone(l.id)).length}/${level.lessons.length}</span></h3>
@@ -207,8 +212,8 @@ async function boot() {
             .join('')}</ol>`
         ).join('')}`,
       parts: () => `
-        <header><h2>Komponen</h2><span class="fly-count">${partsInView().length} di layar</span>
-          <button class="icon-btn flyout-close" aria-label="Tutup">${icon('close')}</button></header>
+        <header><h2>${t('nav.parts')}</h2><span class="fly-count">${t('parts.onScreen', { n: partsInView().length })}</span>
+          <button class="icon-btn flyout-close" aria-label="${t('ui.close')}">${icon('close')}</button></header>
         <ul class="fly-parts fly-inview">${partsInView()
           .map(
             (g, i) => `<li><button data-focus="${i}">
@@ -216,7 +221,8 @@ async function boot() {
               <span><b>${g.userData.part.name}</b><small>${g.userData.part.desc ?? ''}</small></span></button></li>`
           )
           .join('')}</ul>
-        <h3 class="fly-sub">Semua komponen</h3>
+        <h3 class="fly-sub">${t('parts.all')}</h3>
+        <a class="fly-catalog" href="/gallery.html">${icon('chip')} ${t('parts.catalog')}</a>
         <ul class="fly-parts">${CATALOG.map((c) => {
           const i = LESSONS.findIndex((l) => l.id === c.lesson);
           const l = LESSONS[i];
@@ -225,23 +231,24 @@ async function boot() {
               <span><b>${c.name}</b><small>${c.desc}</small><em>${levelOf(l).title} ${l.num} · ${l.title}</em></span></button></li>`;
         }).join('')}</ul>`,
       settings: () => `
-        <header><h2>Pengaturan</h2><button class="icon-btn flyout-close" aria-label="Tutup">${icon('close')}</button></header>
+        <header><h2>${t('nav.settings')}</h2><button class="icon-btn flyout-close" aria-label="${t('ui.close')}">${icon('close')}</button></header>
         <div class="fly-settings">
+          <div class="fly-lang"><span class="feat-icon">${icon('community')}</span><span>${t('lang.label')}</span></div>
           ${[
-            ['sound', 'Suara buzzer', 'volume'],
-            ['labels', 'Kartu keterangan', 'tag'],
-            ['outline', 'Garis tepi ilustrasi', 'gear'],
-            ['autoRotate', 'Putar otomatis saat diam', 'rotRight'],
-            ['reducedMotion', 'Kurangi animasi', 'clock'],
+            ['sound', t('set.sound'), 'volume'],
+            ['labels', t('set.labels'), 'tag'],
+            ['outline', t('set.outline'), 'gear'],
+            ['autoRotate', t('set.autoRotate'), 'rotRight'],
+            ['reducedMotion', t('set.reducedMotion'), 'clock'],
           ]
             .map(
               ([key, label, ic]) => `<button class="toggle" data-setting="${key}" role="switch" aria-checked="${settings[key]}">
                 <span class="feat-icon">${icon(ic)}</span><span>${label}</span><span class="switch"></span></button>`
             )
             .join('')}
-          <button class="btn-text" data-action="reset">${icon('reset')} Ulang progres</button>
-          <p class="fly-note">Pintasan: WASD geser · Q/E putar · +/− zoom · R reset · Spasi jalankan · [ ] pindah pelajaran</p>
-          <p class="fly-note">Desain terinspirasi dari <a href="https://learn-arduino-red.vercel.app/" target="_blank" rel="noopener noreferrer">Learn Arduino</a> karya Dilum Sanjaya.</p>
+          <button class="btn-text" data-action="reset">${icon('reset')} ${t('set.reset')}</button>
+          <p class="fly-note">${t('set.shortcuts')}</p>
+          <p class="fly-note">${t('set.credit')}</p>
         </div>`,
     },
     onNav(name) {
@@ -253,6 +260,9 @@ async function boot() {
       } else if (name === 'sandbox') {
         location.href = 'sandbox.html';
       }
+    },
+    onOpen(name, el) {
+      if (name === 'settings') el.querySelector('.fly-lang')?.append(languageSwitch());
     },
     onFlyoutClick(e, { close, refresh }) {
       const focusBtn = e.target.closest('[data-focus]');
@@ -277,7 +287,7 @@ async function boot() {
         refresh();
         return;
       }
-      if (e.target.closest('[data-action="reset"]') && confirm('Hapus semua progres dan pengaturan pelajaran?')) {
+      if (e.target.closest('[data-action="reset"]') && confirm(t('set.resetConfirm'))) {
         store.resetProgress();
         strip.refreshDone();
         showProgress();
@@ -414,7 +424,7 @@ async function boot() {
     if (runner.active) {
       if (force === true) return;
       runner.stop();
-      code.log('Sketch dihentikan.', 'sys');
+      code.log(t('sim.stopped'), 'sys');
       app.lesson.apply?.(app.params, app.parts, false);
       return;
     }
@@ -465,14 +475,14 @@ async function boot() {
   strip.refreshDone();
   openLesson(Math.min(store.lesson ?? 0, LESSONS.length - 1), { instant: true });
 
-  loader.set(0.45, 'Menggambar pelajaran');
+  loader.set(0.45, t('load.thumbs'));
   try {
     const urls = await renderThumbs(LESSONS, { onProgress: (f) => loader.set(0.45 + f * 0.5) });
     strip.setThumbs(urls);
   } catch (err) {
-    console.warn('Thumbnail gagal dibuat', err);
+    console.warn('Thumbnails failed', err);
   }
-  loader.set(1, 'Siap');
+  loader.set(1, t('load.ready'));
   loader.done();
   callouts.measure();
 

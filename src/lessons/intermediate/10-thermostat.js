@@ -1,3 +1,4 @@
+import { phrase } from '../../i18n/lessons.js';
 import * as THREE from 'three';
 import { createDHT } from '../../parts/dht.js';
 import { createLCD } from '../../parts/lcd.js';
@@ -21,7 +22,7 @@ export default {
   thumb: () => {
     const lcd = createLCD();
     lcd.userData.setBacklight(true);
-    lcd.userData.setText(['Suhu: 29.0 C', 'Kipas: NYALA']);
+    lcd.userData.setText(['Suhu: 29.0 C', 'Kipas: NYALA'].map(phrase));
     return lcd;
   },
   summary:

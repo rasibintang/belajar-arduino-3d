@@ -1,3 +1,4 @@
+import { tr } from '../i18n/parts.js';
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 
@@ -139,7 +140,8 @@ export function anchor(parent, x, y, z) {
  * info: { key, name, desc }
  */
 export function markPart(group, info) {
-  group.userData.part = info;
+  // nama & keterangan ditulis dalam bahasa Indonesia; tr() menerjemahkan bila perlu
+  group.userData.part = { ...info, name: tr(info.name), desc: tr(info.desc) };
   return group;
 }
 

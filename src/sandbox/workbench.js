@@ -1,3 +1,4 @@
+import { t } from '../i18n/index.js';
 import * as THREE from 'three';
 import { COMPONENT_BY_TYPE, instantiate, resolvePins } from '../components/index.js';
 import { createWire } from '../parts/wire.js';
@@ -390,7 +391,7 @@ export function createWorkbench(stage, hooks = {}) {
     const span = a.distanceTo(b);
     const g = createWire(a, b, wire.color, { lift: span < 30 ? -4 : 0 });
     g.userData.wireId = wire.id;
-    markPart(g, { key: 'wire', name: `Kabel ${wire.from} → ${wire.to}`, desc: 'Klik untuk memilih; Delete untuk menghapus.', lift: false });
+    markPart(g, { key: 'wire', name: t('sb.wireName', { from: wire.from, to: wire.to }), desc: t('sb.wireDesc'), lift: false });
     g.traverse((o) => {
       if (o.isMesh) o.castShadow = true;
     });
@@ -582,7 +583,7 @@ export function createWorkbench(stage, hooks = {}) {
     }
     for (const w of d.wires ?? []) {
       if (pinWorld(w.from) && pinWorld(w.to)) addWire(w.from, w.to, w.color);
-      else problems.push(`Kabel ${w.from} → ${w.to}: pin tidak ditemukan`);
+      else problems.push(t('sb.wireMissing', { from: w.from, to: w.to }));
     }
     changed();
     return problems;

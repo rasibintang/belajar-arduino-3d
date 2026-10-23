@@ -31,21 +31,24 @@ import eeprom from './expert/06-eeprom.js';
 import neopixel from './expert/07-neopixel.js';
 import stateMachine from './expert/08-state.js';
 import robot from './expert/09-robot.js';
+import { t } from '../i18n/index.js';
+import { localizeLesson, registerLessonRuntime } from '../i18n/lessons.js';
 
 /**
  * Level pelajaran. Untuk menambah pelajaran: buat file baru lalu daftarkan di
  * level yang sesuai. Untuk menambah level: tambahkan objek baru di sini.
  */
 export const LEVELS = [
-  { id: 'basic', title: 'Dasar', lessons: [board, blink, button, knob, rgb, light, distance, sound, motor, servo, project] },
-  { id: 'intermediate', title: 'Menengah', lessons: [millis, debounce, lcd, dht, arrays, shift, keypad, joystick, relay, thermostat] },
-  { id: 'expert', title: 'Mahir', lessons: [interrupt, stepper, hbridge, serialCmd, rtc, eeprom, neopixel, stateMachine, robot] },
+  { id: 'basic', title: t('level.basic'), lessons: [board, blink, button, knob, rgb, light, distance, sound, motor, servo, project] },
+  { id: 'intermediate', title: t('level.intermediate'), lessons: [millis, debounce, lcd, dht, arrays, shift, keypad, joystick, relay, thermostat] },
+  { id: 'expert', title: t('level.expert'), lessons: [interrupt, stepper, hbridge, serialCmd, rtc, eeprom, neopixel, stateMachine, robot] },
 ];
 
 /** Semua pelajaran berurutan; tiap pelajaran tahu level & nomornya di level itu. */
 export const LESSONS = LEVELS.flatMap((level) =>
-  level.lessons.map((lesson, i) => Object.assign(lesson, { level: level.id, num: i + 1 }))
+  level.lessons.map((lesson, i) => Object.assign(localizeLesson(lesson), { level: level.id, num: i + 1 }))
 );
+registerLessonRuntime();
 
 export const levelOf = (lesson) => LEVELS.find((l) => l.id === lesson.level);
 

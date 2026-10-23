@@ -1,3 +1,4 @@
+import { t } from '../i18n/index.js';
 // Menyimpan, membuka, dan membagikan proyek sandbox.
 // Proyek = { name, sketch, diagram, eeprom? }
 
@@ -84,7 +85,7 @@ export function pickFile() {
         const data = JSON.parse(await file.text());
         resolve(data.diagram ? data : { name: file.name.replace(/\.json$/, ''), diagram: data });
       } catch {
-        resolve({ error: 'File bukan JSON yang valid.' });
+        resolve({ error: t('sb.badFile') });
       }
     };
     input.click();

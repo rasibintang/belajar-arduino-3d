@@ -1,3 +1,5 @@
+import { t, isEN } from '../i18n/index.js';
+import { EXAMPLES_EN } from '../i18n/en/examples.js';
 // Proyek contoh untuk sandbox. Komponen breadboard memakai `hole`: pin pertamanya
 // ditancapkan ke lubang itu (rot 180 = kaki menghadap ke kiri).
 import { MORE_EXAMPLES } from './examples-more.js';
@@ -262,17 +264,28 @@ void loop() {
 
 EXAMPLES.push(...MORE_EXAMPLES, ...WAVE1_EXAMPLES, ...WAVE2_EXAMPLES, ...WAVE3_EXAMPLES);
 
+// judul, keterangan, dan teks di kode dalam bahasa aktif
+if (isEN) {
+  for (const ex of EXAMPLES) {
+    const o = EXAMPLES_EN[ex.id];
+    if (!o) continue;
+    ex.title = o.title ?? ex.title;
+    ex.desc = o.desc ?? ex.desc;
+    for (const [from, to] of o.replace ?? []) ex.sketch = typeof from === 'string' ? ex.sketch.split(from).join(to) : ex.sketch.replace(from, to);
+  }
+}
+
 /** Proyek kosong: hanya Arduino Uno. */
 export const BLANK = {
-  title: 'Proyek baru',
+  title: t('sb.newProject'),
   diagram: { parts: [{ ...UNO, x: -34, z: 27 }], wires: [] },
   sketch: `void setup() {
-  // dijalankan sekali saat mulai
+  // ${t('sb.blank.setup')}
   Serial.begin(9600);
 }
 
 void loop() {
-  // diulang terus-menerus
+  // ${t('sb.blank.loop')}
 }
 `,
 };

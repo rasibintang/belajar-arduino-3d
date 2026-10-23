@@ -1,6 +1,7 @@
+import { t } from '../i18n/index.js';
 import { icon } from './icons.js';
 
-const MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MEI', 'JUN', 'JUL', 'AGU', 'SEP', 'OKT', 'NOV', 'DES'];
+const MONTHS = t('clock.months').split(' ');
 const pad = (n) => String(n).padStart(2, '0');
 
 /** Jam digital di pojok kanan atas. */
@@ -56,7 +57,7 @@ export function createLoader(root) {
  * Sidebar kiri + panel flyout.
  * views: { lessons: () => html, parts: () => html, settings: () => html }
  */
-export function createSidebar({ nav, flyout, views, onNav, onFlyoutClick }) {
+export function createSidebar({ nav, flyout, views, onNav, onFlyoutClick, onOpen }) {
   nav.querySelectorAll('[data-nav]').forEach((a) => {
     a.querySelector('.nav-icon').innerHTML = icon(a.dataset.icon);
   });
@@ -75,10 +76,14 @@ export function createSidebar({ nav, flyout, views, onNav, onFlyoutClick }) {
   function setActive(name) {
     nav.querySelectorAll('[data-nav]').forEach((a) => a.parentElement.classList.toggle('is-active', a.dataset.nav === name));
   }
+  function render(name) {
+    flyout.innerHTML = views[name]();
+    onOpen?.(name, flyout);
+  }
   function show(name) {
     if (open === name) return close();
     open = name;
-    flyout.innerHTML = views[name]();
+    render(name);
     flyout.hidden = false;
     setActive(name);
   }
@@ -96,7 +101,7 @@ export function createSidebar({ nav, flyout, views, onNav, onFlyoutClick }) {
   });
   flyout.addEventListener('click', (e) => {
     if (e.target.closest('.flyout-close')) return close();
-    onFlyoutClick(e, { close, refresh: () => open && (flyout.innerHTML = views[open]()) });
+    onFlyoutClick(e, { close, refresh: () => open && render(open) });
   });
   document.addEventListener('pointerdown', (e) => {
     if (open && !flyout.contains(e.target) && !nav.contains(e.target)) close();

@@ -1,12 +1,16 @@
 // Pasang arduino-cli portabel + core AVR + library ke folder tools/ (untuk server kompilasi).
 //   npm run setup:arduino
+// Folder tujuan bisa diganti dengan TOOLS_DIR (mis. .vercel-toolchain saat build di Vercel).
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, writeFileSync, existsSync, rmSync } from 'node:fs';
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const TOOLS = join(ROOT, 'tools');
+const TOOLS = resolve(ROOT, process.env.TOOLS_DIR ?? 'tools');
+// versi dipatok agar hasil build (mis. di Vercel) sama dengan yang sudah diuji
+const CLI_VERSION = '1.5.1';
+const AVR_CORE = 'arduino:avr@1.8.8';
 const CLI_DIR = join(TOOLS, 'arduino-cli');
 const WIN = process.platform === 'win32';
 const CLI = join(CLI_DIR, WIN ? 'arduino-cli.exe' : 'arduino-cli');
@@ -29,13 +33,14 @@ function assetName() {
 
 async function downloadCli() {
   if (existsSync(CLI)) return console.log('✓ arduino-cli sudah ada');
-  const rel = await (await fetch('https://api.github.com/repos/arduino/arduino-cli/releases/latest')).json();
-  const asset = rel.assets.find((a) => a.name.endsWith(assetName()));
-  if (!asset) throw new Error(`Tidak ada arduino-cli untuk ${process.platform}/${process.arch}`);
-  console.log(`↓ ${asset.name}`);
+  // server unduhan resmi Arduino (tanpa API GitHub yang dibatasi 60 permintaan/jam per IP)
+  const name = `arduino-cli_${CLI_VERSION}_${assetName()}`;
+  console.log(`↓ ${name}`);
   mkdirSync(CLI_DIR, { recursive: true });
-  const file = join(TOOLS, asset.name);
-  writeFileSync(file, Buffer.from(await (await fetch(asset.browser_download_url)).arrayBuffer()));
+  const res = await fetch(`https://downloads.arduino.cc/arduino-cli/${name}`);
+  if (!res.ok) throw new Error(`Gagal mengunduh ${name}: HTTP ${res.status}`);
+  const file = join(TOOLS, name);
+  writeFileSync(file, Buffer.from(await res.arrayBuffer()));
   execFileSync('tar', ['-xf', file, '-C', CLI_DIR], { stdio: 'inherit' });
   rmSync(file);
 }
@@ -56,6 +61,6 @@ await downloadCli();
 const p = (s) => s.replace(/\\/g, '/');
 writeFileSync(CONFIG, `directories:\n  data: ${p(join(TOOLS, 'arduino-data'))}\n  downloads: ${p(join(TOOLS, 'arduino-data', 'staging'))}\n  user: ${p(join(TOOLS, 'arduino-user'))}\n`);
 cli(['core', 'update-index']);
-cli(['core', 'install', 'arduino:avr']);
+cli(['core', 'install', AVR_CORE]);
 for (const lib of LIBRARIES) cli(['lib', 'install', lib]);
 console.log('\n✓ Server kompilasi siap. Jalankan `npm run dev` (atau `npm run compile-server`).');

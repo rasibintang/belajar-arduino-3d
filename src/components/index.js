@@ -1,3 +1,4 @@
+import { localizeSpec } from '../i18n/components.js';
 import arduinoUno from './arduino-uno.js';
 import breadboard, { breadboardFull, breadboardMini } from './breadboard.js';
 import led from './led.js';
@@ -99,6 +100,9 @@ export const COMPONENTS = [
   ...WAVE2,
   ...WAVE3,
 ];
+
+// nama, keterangan, pin, dan props dalam bahasa aktif
+COMPONENTS.forEach(localizeSpec);
 
 export const COMPONENT_BY_TYPE = Object.fromEntries(COMPONENTS.map((c) => [c.type, c]));
 

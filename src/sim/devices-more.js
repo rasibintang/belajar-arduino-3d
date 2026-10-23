@@ -1,3 +1,4 @@
+import { t } from '../i18n/index.js';
 import { Meter } from './meter.js';
 import { FREQ } from './avr.js';
 import { click } from './audio.js';
@@ -376,7 +377,7 @@ export function rtcDevice(part, ctx, n) {
       const sda = ctx.mcuPinOf(n(b.sda));
       const scl = ctx.mcuPinOf(n(b.scl));
       if (sda === 'A4' && scl === 'A5') runner.i2c.devices.set(b.address, device);
-      else ctx.warn(`rtc-${part.id}`, `RTC ${part.id}: sambungkan SDA ke A4/SDA dan SCL ke A5/SCL.`);
+      else ctx.warn(`rtc-${part.id}`, t('w.i2cPins', { name: `RTC ${part.id}` }));
     },
   };
 }

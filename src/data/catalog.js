@@ -1,3 +1,5 @@
+import { isEN } from '../i18n/index.js';
+import { CATALOG_EN } from '../i18n/en/catalog.js';
 // Daftar di menu "Komponen". lesson = id pelajaran tempat komponen pertama kali dipakai.
 export const CATALOG = [
   // Dasar
@@ -32,3 +34,6 @@ export const CATALOG = [
   { icon: 'rgb', name: 'NeoPixel ring', desc: '12 LED RGB yang diatur lewat satu kabel data.', lesson: 'neopixel' },
   { icon: 'car', name: 'Sasis robot', desc: 'Dua roda bermotor, roda bebas, dan Arduino di atasnya.', lesson: 'robot' },
 ];
+
+// nama & keterangan dalam bahasa aktif (urutan sama dengan CATALOG)
+if (isEN) CATALOG.forEach((c, i) => Object.assign(c, CATALOG_EN[i]));

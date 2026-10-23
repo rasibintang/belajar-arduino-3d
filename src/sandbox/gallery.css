@@ -1,0 +1,321 @@
+/* ---------------- Katalog komponen (gallery.html) ---------------- */
+body.cat {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--paper);
+}
+.cat-top {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--line);
+  background: var(--card);
+}
+.cat-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink);
+  text-decoration: none;
+}
+.cat-brand [data-logo] .logo,
+.cat-brand svg {
+  width: 40px;
+}
+.cat-brand b {
+  font: 700 15px var(--f-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.cat-top h1 {
+  margin: 0;
+  padding-left: 16px;
+  border-left: 1px solid var(--line-2);
+  font: 700 18px var(--f-display);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.cat-search {
+  flex: 1;
+  min-width: 140px;
+  max-width: 360px;
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--line-2);
+  border-radius: 7px;
+  background: #fff;
+  color: var(--ink);
+  font: 500 14px var(--f-body);
+}
+.cat-search:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 1px;
+}
+.cat-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.cat-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 10px 18px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--line);
+}
+.cat-tabs button {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--line-2);
+  border-radius: 16px;
+  background: var(--card);
+  color: var(--ink-2);
+  font: 600 13px var(--f-display);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.cat-tabs button span {
+  font: 600 11.5px var(--f-mono);
+  color: var(--muted);
+}
+.cat-tabs button[aria-selected='true'] {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--card);
+}
+.cat-tabs button[aria-selected='true'] span {
+  color: var(--line-2);
+}
+.cat-main {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 400px;
+}
+.cat-stage {
+  position: relative;
+  min-width: 0;
+}
+.cat-stage canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.cat-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 6px 12px;
+  border-radius: 14px;
+  background: rgba(251, 246, 236, 0.85);
+  color: var(--muted);
+  font: 600 11.5px var(--f-display);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.cat-panel {
+  overflow-y: auto;
+  padding: 14px 16px 30px;
+  border-left: 1px solid var(--line);
+  background: var(--card);
+}
+.cat-count {
+  margin: 0 0 8px;
+  font: 600 12px var(--f-display);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.cat-card {
+  width: 100%;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 6px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #fff;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+.cat-card:hover,
+.cat-card.is-on {
+  border-color: var(--teal);
+}
+.cat-card.is-on {
+  box-shadow: 0 0 0 2px var(--teal-soft);
+}
+.cat-card > span:last-child {
+  min-width: 0;
+}
+.cat-card b {
+  display: block;
+  font: 700 14.5px var(--f-display);
+  letter-spacing: 0.04em;
+}
+.cat-card small {
+  display: block;
+  margin-top: 2px;
+  color: var(--ink-2);
+  font-size: 13px;
+  line-height: 1.4;
+}
+.cat-card em {
+  display: block;
+  margin-top: 4px;
+  font: normal 600 11.5px var(--f-display);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--teal-ink);
+}
+.cat-dev {
+  font-family: var(--f-mono) !important;
+  font-size: 11.5px !important;
+}
+.cat-errors {
+  margin: 4px 0 0;
+  padding-left: 16px;
+  color: #9b2a20;
+  font-size: 12px;
+}
+
+/* detail komponen terpilih */
+.cat-detail {
+  margin-bottom: 14px;
+  padding: 14px;
+  border: 1px solid var(--teal);
+  border-radius: 8px;
+  background: #fff;
+}
+.cat-detail header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.cat-detail header > div {
+  flex: 1;
+  min-width: 0;
+}
+.cat-detail small {
+  font: 600 11.5px var(--f-display);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.cat-detail h2 {
+  margin: 2px 0 0;
+  font: 700 19px var(--f-display);
+  letter-spacing: 0.04em;
+}
+.cat-detail > p {
+  margin: 10px 0 12px;
+  color: var(--ink-2);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.cat-detail h3 {
+  margin: 16px 0 6px;
+  font: 700 12.5px var(--f-display);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.cat-try {
+  border: 0;
+  cursor: pointer;
+}
+.cat-pins {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.cat-pins td {
+  padding: 5px 6px;
+  border-top: 1px solid var(--line);
+  vertical-align: top;
+}
+.cat-pins td:first-child {
+  width: 1%;
+  white-space: nowrap;
+}
+.cat-props {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+}
+.cat-props li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 5px 0;
+  border-top: 1px solid var(--line);
+}
+.cat-props span {
+  color: var(--ink-2);
+  text-align: right;
+}
+.cat-note {
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+@media (max-width: 960px) {
+  body.cat {
+    position: static;
+    display: block;
+  }
+  .cat-top {
+    flex-wrap: wrap;
+  }
+  .cat-top h1 {
+    border: 0;
+    padding: 0;
+  }
+  .cat-search {
+    order: 3;
+    max-width: none;
+    flex-basis: 100%;
+  }
+  .cat-main {
+    display: block;
+  }
+  .cat-stage {
+    height: 55vh;
+  }
+  .cat-hint {
+    width: calc(100% - 32px);
+    white-space: normal;
+    text-align: center;
+  }
+  .cat-panel {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+  .top-btn span {
+    display: inline;
+  }
+}
+.cat-card[hidden],
+.cat-detail[hidden] {
+  display: none;
+}

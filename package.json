@@ -8,7 +8,9 @@
     "build": "vite build",
     "preview": "vite preview",
     "setup:arduino": "node scripts/setup-arduino.mjs",
-    "compile-server": "node server/compile-server.mjs"
+    "compile-server": "node server/compile-server.mjs",
+    "slim:toolchain": "node scripts/slim-toolchain.mjs",
+    "vercel-build": "TOOLS_DIR=.vercel-toolchain node scripts/setup-arduino.mjs && node scripts/slim-toolchain.mjs .vercel-toolchain && vite build"
   },
   "dependencies": {
     "@fontsource/barlow": "^5.3.0",

@@ -3,7 +3,8 @@
 Kursus Arduino interaktif dengan papan 3D — 30 pelajaran (Dasar, Menengah, Mahir) — plus
 **sandbox** untuk merakit rangkaian sendiri seperti Wokwi: kode C++ sungguhan dikompilasi
 oleh `arduino-cli` lalu dijalankan emulator ATmega328P (`avr8js`) di browser.
-Dibangun dengan **Vite + Three.js** (JavaScript biasa, tanpa framework UI).
+Dibangun dengan **Vite + Three.js** (JavaScript biasa, tanpa framework UI). Tersedia dalam
+**bahasa Indonesia dan Inggris** (tombol ID / EN di setiap halaman).
 
 Desain terinspirasi dari [Learn Arduino](https://learn-arduino-red.vercel.app/) karya Dilum Sanjaya.
 Kode, model 3D, dan teks pelajaran di repo ini ditulis ulang dari awal.
@@ -13,7 +14,7 @@ Kode, model 3D, dan teks pelajaran di repo ini ditulis ulang dari awal.
 ```bash
 npm install
 npm run setup:arduino   # sekali saja: unduh arduino-cli + core AVR + library ke tools/
-npm run dev             # http://localhost:5173  (pelajaran)  ·  /sandbox.html  ·  /gallery.html
+npm run dev             # http://localhost:5173  (pelajaran)  ·  /sandbox.html  ·  /gallery.html (katalog)
 npm run build           # hasil di dist/
 ```
 
@@ -27,7 +28,7 @@ akan melaporkan bahwa server kompilasi belum terpasang.
   `diagram.json`, daftar library. Kanan: meja kerja 3D + Serial Monitor dua arah.
 - **+** membuka katalog komponen (85 komponen, 10 kategori). Seret komponen; komponen
   breadboard otomatis menancap ke lubang. Klik pin → klik pin lain = kabel. `R` putar, `Delete` hapus.
-- 21 contoh proyek. Disimpan otomatis di browser; **Unduh/Buka** file `.json`; **Bagikan** = tautan
+- 38 contoh proyek. Disimpan otomatis di browser; **Unduh/Buka** file `.json`; **Bagikan** = tautan
   berisi seluruh proyek (dikompres di hash URL).
 - Setiap pelajaran punya tombol **Buka di sandbox** (kecuali H-bridge & robot): rangkaian setara
   dari komponen standar + kode pelajaran dengan parameter terpilih.
@@ -45,10 +46,45 @@ browser: avr8js (CPU, timer/PWM, ADC, USART, I²C, EEPROM)
          sim/devices*.js — perilaku tiap komponen (LED, servo, LCD HD44780, DHT11, WS2812, …)
 ```
 
-### Server kompilasi untuk produksi
+## Katalog komponen (`gallery.html`)
 
-Situs statis (Vercel/Netlify) tidak bisa menjalankan `arduino-cli`, jadi server kompilasi
-dijalankan terpisah (VPS kecil / layanan kontainer):
+Semua komponen di satu meja 3D: cari, saring per kategori, lihat pin & pengaturannya, lalu
+**Coba di sandbox** (Arduino + komponen itu langsung terpasang). `?dev` menampilkan hasil
+`validateSpec()`, tipe, dan perilaku tiap komponen (untuk pengembang).
+
+## Dua bahasa (`src/i18n/`)
+
+- Teks sumber ditulis dalam bahasa Indonesia; bahasa Inggris berupa *overlay*:
+  `ui.js` (teks antarmuka, dipakai lewat `t('kunci')` / atribut `data-i18n`),
+  `en/lessons-*.js` (pelajaran, termasuk kode & teks Serial/LCD simulasinya),
+  `en/parts.js` (nama/keterangan model 3D, spesifikasi komponen, pin),
+  `en/examples.js` (contoh sandbox), `en/catalog.js` (menu Komponen).
+- Bahasa: `?lang=en` → pilihan tersimpan → bahasa browser. Mengganti bahasa memuat ulang halaman.
+- Mode dev mencatat teks yang belum diterjemahkan di `globalThis.__i18nMissing` (console browser).
+
+## Deploy
+
+### Semua di Vercel (frontend + fungsi kompilasi)
+
+`vercel.json` sudah disiapkan: `npm run vercel-build` memasang toolchain Linux
+(`arduino-cli` 1.5.1, core `arduino:avr@1.8.8`, semua library) ke `.vercel-toolchain/`,
+merampingkannya dengan `scripts/slim-toolchain.mjs` (± 490 MB → ± 200 MB: hanya multilib
+`avr5` untuk ATmega328P, tanpa contoh/dokumentasi library), lalu membangun situs.
+Fungsi `api/compile.js` membawa toolchain itu (`includeFiles`) dan menulis semua berkas
+sementara ke `/tmp`.
+
+```bash
+npm i -g vercel
+vercel          # pratinjau
+vercel --prod   # produksi
+```
+
+Catatan: kompilasi pertama setelah fungsi lama tidak dipakai (cold start) bisa beberapa detik
+lebih lama; batas fungsi Vercel 250 MB (toolchain ramping ± 200 MB).
+
+### Server kompilasi terpisah (alternatif)
+
+Bila tidak memakai fungsi Vercel, jalankan server kompilasi sendiri (VPS kecil / kontainer):
 
 ```bash
 docker build -t learn-arduino-compiler .
@@ -56,6 +92,9 @@ docker run -p 8787:8787 -e CORS_ORIGIN=https://situsmu.vercel.app learn-arduino-
 # lalu build frontend dengan alamatnya:
 VITE_COMPILE_URL=https://compiler.situsmu.com/api/compile npm run build
 ```
+
+Uji perampingan secara lokal: `TOOLS_DIR=.slimtest/tools` setelah menyalin `tools/` ke sana dan
+menjalankan `node scripts/slim-toolchain.mjs .slimtest/tools`.
 
 Keamanan: server menolak `#include` dengan path absolut atau `..`, membatasi ukuran sketch
 (100 KB) dan waktu kompilasi (90 detik), mengompilasi satu per satu, dan menyimpan cache

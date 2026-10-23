@@ -1,3 +1,4 @@
+import { t, isEN, translateDom, languageSwitch } from '../i18n/index.js';
 import '@fontsource/barlow-semi-condensed/500.css';
 import '@fontsource/barlow-semi-condensed/600.css';
 import '@fontsource/barlow-semi-condensed/700.css';
@@ -23,17 +24,38 @@ import { loadLocal, saveLocal, shareUrl, fromHash, download, pickFile } from './
 
 const $ = (s) => document.querySelector(s);
 document.querySelectorAll('[data-logo]').forEach((el) => (el.innerHTML = LOGO));
+translateDom();
+$('.sb-lang').append(languageSwitch());
 
 const LIBRARIES = [
-  ['Servo', 'Mengendalikan motor servo (pulsa 1–2 ms).'],
-  ['LiquidCrystal I2C', 'LCD karakter lewat modul I²C PCF8574.'],
-  ['Wire', 'Komunikasi I²C (bawaan Arduino).'],
-  ['DHT sensor library', 'Sensor suhu & kelembapan DHT11/DHT22.'],
-  ['Adafruit NeoPixel', 'LED RGB berantai WS2812.'],
-  ['Keypad', 'Keypad matriks 3×4 / 4×4.'],
-  ['RTClib', 'Jam real-time DS1307/DS3231.'],
-  ['Stepper', 'Motor stepper (bawaan Arduino).'],
-  ['EEPROM', 'Memori 1 KB yang tidak hilang (bawaan).'],
+  // [nama, keterangan ID, keterangan EN]
+  ['Servo', 'Mengendalikan motor servo (pulsa 1–2 ms).', 'Drives servo motors (1–2 ms pulses).'],
+  ['Wire', 'Komunikasi I²C (bawaan Arduino).', 'I²C communication (built into Arduino).'],
+  ['SPI', 'Bus SPI perangkat keras (bawaan Arduino).', 'Hardware SPI bus (built into Arduino).'],
+  ['EEPROM', 'Memori 1 KB yang tidak hilang (bawaan).', '1 KB memory that survives power-off (built in).'],
+  ['Stepper', 'Motor stepper (bawaan Arduino).', 'Stepper motors (built into Arduino).'],
+  ['LiquidCrystal', 'LCD karakter paralel (4/8 bit).', 'Parallel character LCDs (4/8-bit).'],
+  ['LiquidCrystal I2C', 'LCD karakter lewat modul I²C PCF8574.', 'Character LCDs through a PCF8574 I²C module.'],
+  ['DHT sensor library', 'Sensor suhu & kelembapan DHT11/DHT22.', 'DHT11/DHT22 temperature & humidity sensors.'],
+  ['Adafruit NeoPixel', 'LED RGB berantai WS2812.', 'Chained WS2812 RGB LEDs.'],
+  ['Keypad', 'Keypad matriks 3×4 / 4×4.', '3×4 / 4×4 matrix keypads.'],
+  ['RTClib', 'Jam real-time DS1307/DS3231.', 'DS1307/DS3231 real-time clocks.'],
+  ['Adafruit SSD1306 + GFX', 'OLED 128×64 dan fungsi gambar (teks, bentuk).', '128×64 OLED and drawing functions (text, shapes).'],
+  ['U8g2', 'Banyak layar monokrom, termasuk SH1107 128×128 (mode halaman).', 'Many monochrome displays, incl. SH1107 128×128 (page mode).'],
+  ['Adafruit SH110X', 'OLED SH1106/SH1107.', 'SH1106/SH1107 OLEDs.'],
+  ['Adafruit PCD8544', 'LCD Nokia 5110.', 'Nokia 5110 LCD.'],
+  ['Adafruit ILI9341 + FT6206', 'TFT warna 240×320 + layar sentuh kapasitif.', '240×320 color TFT + capacitive touch.'],
+  ['GxEPD2', 'Layar e-Paper (mis. GxEPD2_290_T94).', 'e-Paper displays (e.g. GxEPD2_290_T94).'],
+  ['TM1637', 'Display 4 digit TM1637Display.', 'TM1637Display 4-digit displays.'],
+  ['LedControl', 'MAX7219 lewat shiftOut.', 'MAX7219 via shiftOut.'],
+  ['MD_MAX72XX + MD_Parola', 'Matriks MAX7219 berantai & teks berjalan.', 'Chained MAX7219 matrices & scrolling text.'],
+  ['OneWire + DallasTemperature', 'Sensor suhu DS18B20.', 'DS18B20 temperature sensors.'],
+  ['Adafruit MPU6050', 'Akselerometer & giroskop.', 'Accelerometer & gyroscope.'],
+  ['Adafruit BMP085', 'Sensor tekanan BMP180/BMP085.', 'BMP180/BMP085 pressure sensors.'],
+  ['HX711', 'Penguat sel beban (timbangan).', 'Load-cell amplifier (scales).'],
+  ['IRremote', 'Penerima remote IR (NEC dll.).', 'IR remote receivers (NEC etc.).'],
+  ['MFRC522', 'Pembaca kartu RFID.', 'RFID card readers.'],
+  ['SD', 'Kartu SD/microSD (FAT16).', 'SD/microSD cards (FAT16).'],
 ];
 
 await Promise.all(
@@ -43,7 +65,7 @@ await Promise.all(
 ).catch(() => {});
 
 // ------------------------------------------------------------------ proyek
-let project = { name: 'Proyek baru', sketch: BLANK.sketch, diagram: BLANK.diagram, eeprom: null };
+let project = { name: t('sb.newProject'), sketch: BLANK.sketch, diagram: BLANK.diagram, eeprom: null };
 const fromLink = await fromHash();
 const stored = loadLocal();
 if (fromLink?.diagram) project = { ...project, ...fromLink };
@@ -83,7 +105,7 @@ wb = createWorkbench(stage, {
     tip.style.transform = `translate(${x - box.left + 16}px, ${y - box.top + 18}px)`;
   },
   onWiring: (on) => {
-    setHint(on ? 'Klik pin tujuan untuk memasang kabel · Esc batal' : null);
+    setHint(on ? t('sb.hint.wiring') : null);
     if (on) {
       wb.select(null); // panel tidak boleh menutupi pin tujuan
       showPanel(null);
@@ -110,7 +132,7 @@ $('#apply-diagram').addEventListener('click', () => {
   try {
     const d = JSON.parse(diagramEditor.value);
     loadDiagram(d);
-    serial.sys('Diagram diterapkan.');
+    serial.sys(t('sb.diagramApplied'));
   } catch (err) {
     serial.err(`diagram.json tidak valid: ${err.message}`);
   }
@@ -123,8 +145,8 @@ document.querySelectorAll('.sb-tabs [data-tab]').forEach((b) =>
     if (b.dataset.tab === 'diagram') refreshDiagramTab();
   })
 );
-$('.sb-libs').innerHTML = `<p>Library yang terpasang di server kompilasi — cukup <code>#include</code>:</p><ul>${LIBRARIES.map(
-  ([n, d]) => `<li><b>${n}</b><span>${d}</span></li>`
+$('.sb-libs').innerHTML = `<p>${t('sb.libsIntro')}</p><ul>${LIBRARIES.map(
+  ([n, id, en]) => `<li><b>${n}</b><span>${isEN ? en : id}</span></li>`
 ).join('')}</ul>`;
 
 // ------------------------------------------------------------------ serial monitor
@@ -140,9 +162,9 @@ function serialLine(text, cls) {
   return el;
 }
 const serial = {
-  sys: (t) => serialLine(t, 'cl-sys'),
-  warn: (t) => serialLine(t, 'cl-warn'),
-  err: (t) => serialLine(t, 'cl-err'),
+  sys: (text) => serialLine(text, 'cl-sys'),
+  warn: (text) => serialLine(text, 'cl-warn'),
+  err: (text) => serialLine(text, 'cl-err'),
   out(text, done) {
     if (!partial) partial = serialLine('', '');
     partial.textContent = text;
@@ -162,7 +184,7 @@ $('#serial-form').addEventListener('submit', (e) => {
   if (sim.send(input.value + '\n')) {
     serialLine(`> ${input.value}`, 'cl-in');
     input.value = '';
-  } else serial.warn('Jalankan simulasi dulu untuk mengirim teks.');
+  } else serial.warn(t('sb.runFirst'));
 });
 $('#serial-input').addEventListener('keydown', (e) => e.stopPropagation());
 
@@ -181,11 +203,11 @@ const sim = createSim({
     run.innerHTML = icon(state === 'idle' ? 'run' : 'stop');
     run.classList.toggle('is-busy', state === 'compiling');
     run.classList.toggle('is-running', state === 'running');
-    run.title = state === 'idle' ? 'Jalankan (Ctrl+Enter)' : 'Hentikan (Ctrl+Enter)';
-    $('#serial-status').textContent = { idle: 'Berhenti', compiling: 'Mengompilasi', running: 'Berjalan' }[state];
+    run.title = state === 'idle' ? t('sb.run.title') : t('sb.stop.title');
+    $('#serial-status').textContent = { idle: t('phase.idle'), compiling: t('phase.compiling'), running: t('phase.running') }[state];
     $('#serial-dot').dataset.state = state;
     document.body.classList.toggle('is-running', state === 'running');
-    setHint(state === 'running' ? 'Simulasi berjalan — klik komponen untuk berinteraksi' : null);
+    setHint(state === 'running' ? t('sb.hint.running') : null);
     if (state === 'idle') $('#speed').textContent = '';
     showPanel(null);
   },
@@ -199,7 +221,7 @@ stage.onUpdate((dt) => {
   speedTimer += dt;
   if (sim.state === 'running' && speedTimer > 0.5) {
     speedTimer = 0;
-    $('#speed').textContent = `Kecepatan simulasi ${Math.min(100, Math.round(sim.speed * 100))}%`;
+    $('#speed').textContent = t('sb.speed', { n: Math.min(100, Math.round(sim.speed * 100)) });
   }
 });
 
@@ -207,7 +229,7 @@ stage.onUpdate((dt) => {
 $('#btn-add').innerHTML = icon('plus');
 $('#btn-fit').innerHTML = icon('focus');
 $('#btn-fit').addEventListener('click', () => fit(false));
-let hintDefault = 'Seret komponen untuk memindah · klik pin untuk menarik kabel · R putar · Delete hapus';
+let hintDefault = t('sb.hint.edit');
 function setHint(text) {
   $('#hint').textContent = text ?? hintDefault;
 }
@@ -250,12 +272,12 @@ function showPanel(sel) {
     panel.dataset.kind = 'wire';
     panel.dataset.id = sel.id;
     panel.innerHTML = `
-      <header><div><small>Kabel</small><h3>${escapeHtml(w.from)} → ${escapeHtml(w.to)}</h3></div>
+      <header><div><small>${t('sb.wire')}</small><h3>${escapeHtml(w.from)} → ${escapeHtml(w.to)}</h3></div>
         <button class="icon-btn" data-act="close" aria-label="Tutup">${icon('close')}</button></header>
-      <div class="insp-row"><label>Warna</label><div class="swatches">${Object.entries(WIRE_COLORS)
+      <div class="insp-row"><label>${t('sb.color')}</label><div class="swatches">${Object.entries(WIRE_COLORS)
         .map(([name, hex]) => `<button class="swatch${name === w.color ? ' is-on' : ''}" data-color="${name}" title="${name}" style="--c:${hex}"></button>`)
         .join('')}</div></div>
-      <div class="sb-panel-actions"><button class="sb-btn sb-danger" data-act="delete">Hapus kabel</button></div>`;
+      <div class="sb-panel-actions"><button class="sb-btn sb-danger" data-act="delete">${t('sb.deleteWire')}</button></div>`;
     panel.hidden = false;
     return;
   }
@@ -272,7 +294,7 @@ function showPanel(sel) {
       .filter((p) => editing || !p.rebuild)
       .map((p) => `<div class="insp-row"><label>${p.label}</label>${control(p, part.props[p.key])}</div>`)
       .join('')}
-    ${editing ? `<div class="sb-panel-actions"><button class="sb-btn" data-act="rotate">${icon('rotRight')} Putar</button><button class="sb-btn sb-danger" data-act="delete">Hapus</button></div>` : ''}`;
+    ${editing ? `<div class="sb-panel-actions"><button class="sb-btn" data-act="rotate">${icon('rotRight')} ${t('sb.rotate')}</button><button class="sb-btn sb-danger" data-act="delete">${t('sb.delete')}</button></div>` : ''}`;
   panel.hidden = false;
 }
 
@@ -320,7 +342,7 @@ panel.addEventListener('input', (e) => {
 const modal = $('#add-modal');
 let activeCat = 'all';
 $('#add-close').innerHTML = icon('close');
-$('#part-cats').innerHTML = [['all', 'Semua'], ...Object.entries(CATEGORIES)]
+$('#part-cats').innerHTML = [['all', t('sb.all')], ...Object.entries(CATEGORIES)]
   .filter(([k]) => k === 'all' || COMPONENTS.some((c) => c.category === k))
   .map(([k, v]) => `<button data-cat="${k}" class="${k === 'all' ? 'is-on' : ''}">${v}</button>`)
   .join('');
@@ -406,22 +428,22 @@ menu.addEventListener('click', (e) => {
   openProject({ name: ex.title, sketch: ex.sketch, diagram: ex.diagram });
 });
 $('#btn-new').addEventListener('click', () => {
-  if (confirm('Mulai proyek baru? Proyek sekarang akan diganti (unduh dulu jika ingin menyimpannya).')) openProject({ ...BLANK, name: 'Proyek baru' });
+  if (confirm(t('sb.newConfirm'))) openProject({ ...BLANK, name: t('sb.newProject') });
 });
 $('#btn-save').addEventListener('click', () => download(project));
 $('#btn-open').addEventListener('click', async () => {
   const data = await pickFile();
   if (!data) return;
   if (data.error) return serial.err(data.error);
-  openProject({ name: data.name ?? 'Proyek', sketch: data.sketch ?? project.sketch, diagram: data.diagram });
+  openProject({ name: data.name ?? t('sb.project'), sketch: data.sketch ?? project.sketch, diagram: data.diagram });
 });
 $('#btn-share').addEventListener('click', async () => {
   const url = await shareUrl(project);
   try {
     await navigator.clipboard.writeText(url);
-    flashSaved('Tautan disalin ✓');
+    flashSaved(t('sb.linkCopied'));
   } catch {
-    prompt('Salin tautan ini:', url);
+    prompt(t('sb.copyLink'), url);
   }
 });
 const nameInput = $('#project-name');
@@ -461,7 +483,7 @@ let saveTimer = 0;
 function persist() {
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => {
-    if (saveLocal(project)) flashSaved('Tersimpan');
+    if (saveLocal(project)) flashSaved(t('sb.saved'));
   }, 400);
 }
 function flashSaved(text) {
@@ -483,7 +505,7 @@ function loadDiagram(d) {
 
 function openProject(p) {
   sim.stop();
-  project = { name: p.name ?? 'Proyek', sketch: p.sketch ?? '', diagram: p.diagram ?? { parts: [], wires: [] }, eeprom: p.eeprom ?? null };
+  project = { name: p.name ?? t('sb.project'), sketch: p.sketch ?? '', diagram: p.diagram ?? { parts: [], wires: [] }, eeprom: p.eeprom ?? null };
   nameInput.value = project.name;
   document.title = `${project.name} · Learn Arduino`;
   editor.value = project.sketch;
@@ -495,7 +517,7 @@ function openProject(p) {
 }
 
 openProject(project);
-if (fromLink) serial.sys('Proyek dibuka dari tautan.');
+if (fromLink) serial.sys(t('sb.fromLink'));
 showPanel(null);
 
 // akses untuk pengujian otomatis (hanya saat pengembangan)

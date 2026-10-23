@@ -1,3 +1,4 @@
+import { t } from '../i18n/index.js';
 import { FREQ } from './avr.js';
 import { powered } from './device-utils.js';
 import { spiSlave, i2cAttach } from './devices-wave2.js';
@@ -131,12 +132,12 @@ export function ili9341Device(part, ctx, n) {
       return touchRegs[ptr++ & 0xff];
     },
   };
-  const attachTouch = b.touch ? i2cAttach(ctx, n, b, part, touchDevice, 'Layar sentuh') : null;
+  const attachTouch = b.touch ? i2cAttach(ctx, n, b, part, touchDevice, t('w.touchName')) : null;
 
   return {
     attach(runner) {
       spi.attach(runner);
-      if (!spi.hardware && ctx.mcuPinOf(n(b.sck)) === null) ctx.warn(`tft-${part.id}`, `TFT ${part.id}: sambungkan SCK ke D13 dan MOSI ke D11.`);
+      if (!spi.hardware && ctx.mcuPinOf(n(b.sck)) === null) ctx.warn(`tft-${part.id}`, t('w.tftPins', { id: part.id }));
       if (attachTouch) {
         attachTouch(runner);
         ud.press = (down, point) => {
@@ -471,7 +472,7 @@ export function microsdDevice(part, ctx, n) {
         const name = String.fromCharCode(...blk.slice(e, e + 8)).trim();
         const ext = String.fromCharCode(...blk.slice(e + 8, e + 11)).trim();
         const size = blk[e + 28] | (blk[e + 29] << 8) | (blk[e + 30] << 16) | (blk[e + 31] << 24);
-        files.push(attr & 0x10 ? `${name}/` : `${ext ? `${name}.${ext}` : name} (${size} byte)`);
+        files.push(attr & 0x10 ? `${name}/` : `${ext ? `${name}.${ext}` : name} (${size} B)`);
       }
     }
     return files;
@@ -480,8 +481,8 @@ export function microsdDevice(part, ctx, n) {
   return {
     attach(runner) {
       spi.attach(runner);
-      if (!spi.hardware) ctx.warn(`sd-${part.id}`, `microSD ${part.id}: sambungkan SCK ke D13, DI ke D11, DO ke D12.`);
-      else if (ctx.mcuPinOf(n(b.miso)) !== 'D12') ctx.warn(`sd-miso-${part.id}`, `microSD ${part.id}: DO harus ke D12 (MISO).`);
+      if (!spi.hardware) ctx.warn(`sd-${part.id}`, t('w.sdPins', { id: part.id }));
+      else if (ctx.mcuPinOf(n(b.miso)) !== 'D12') ctx.warn(`sd-miso-${part.id}`, t('w.misoPin', { name: `microSD ${part.id}`, pin: 'DO' }));
     },
     frame(dt) {
       activity = Math.max(0, activity - dt);
@@ -490,7 +491,7 @@ export function microsdDevice(part, ctx, n) {
     stop() {
       ud.setActive(false);
       const files = listFiles();
-      ctx.log(`Isi kartu SD ${part.id}: ${files.length ? files.join(', ') : '(kosong)'}`);
+      ctx.log(t('w.sdFiles', { id: part.id, files: files.length ? files.join(', ') : t('w.sdEmpty') }));
     },
   };
 }

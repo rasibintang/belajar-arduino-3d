@@ -1,0 +1,6 @@
+# toolchain lokal (Windows) & salinan uji: di Vercel toolchain Linux dipasang saat build
+tools/
+.slimtest/
+.vercel-toolchain/
+dist/
+node_modules/

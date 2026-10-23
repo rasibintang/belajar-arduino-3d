@@ -1,11 +1,12 @@
+import { t } from '../i18n/index.js';
 import { icon } from './icons.js';
 import { WIRE_COLORS } from '../parts/wire.js';
 
 const TABS = [
-  ['overview', 'Ikhtisar'],
-  ['pinout', 'Pinout'],
-  ['example', 'Contoh'],
-  ['specs', 'Spesifikasi'],
+  ['overview', t('info.overview')],
+  ['pinout', t('info.pinout')],
+  ['example', t('info.example')],
+  ['specs', t('info.specs')],
 ];
 
 /** Panel kanan: ikhtisar, pinout, penjelasan kode, dan spesifikasi. */
@@ -35,7 +36,7 @@ export function createInfoCard(root) {
         .map((f) => `<li><span class="feat-icon">${icon(f.icon)}</span><span>${f.html}</span></li>`)
         .join('')}</ul>`,
     pinout: (l) => `
-      <h2>Sambungan</h2>
+      <h2>${t('info.wiring')}</h2>
       <table class="pinout">${l.pinout
         .map(
           (p) => `<tr>
@@ -44,7 +45,7 @@ export function createInfoCard(root) {
         )
         .join('')}</table>`,
     example: (l) => `
-      <h2>Cara kerja kode</h2>
+      <h2>${t('info.howItWorks')}</h2>
       <ol class="explain">${l.explain.map((x) => `<li>${x}</li>`).join('')}</ol>
       ${l.tip ? `<div class="tipbox">${icon('bulb')}<p>${l.tip}</p></div>` : ''}`,
     specs: (l) => `

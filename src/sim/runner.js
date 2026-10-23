@@ -1,4 +1,6 @@
 import { playTone, stopTone } from './audio.js';
+import { t } from '../i18n/index.js';
+import { phrase, markText, inputText } from '../i18n/lessons.js';
 
 const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
@@ -47,7 +49,7 @@ export class Runner {
   /** Kirim satu baris dari Serial Monitor ke sketch. */
   send(text) {
     if (!this.running) return false;
-    this.rx.push(text);
+    this.rx.push(inputText(text)); // perintah bahasa Inggris → perintah yang dikenal simulasi
     this.onSerial?.(`> ${text}`, 'in');
     return true;
   }
@@ -84,7 +86,7 @@ export class Runner {
     this.params = params;
     this.ctx = ctx;
     this.setPhase('compiling');
-    this.onSerial?.('Mengompilasi sketch…', 'sys');
+    this.onSerial?.(t('sim.compiling'), 'sys');
   }
 
   stop(silent = false) {
@@ -109,7 +111,7 @@ export class Runner {
     // pin yang pesannya ditulis sendiri oleh pelajaran lewat io.log)
     const quiet = new Set(lesson.quietPins ?? []);
     const label = (pin) => (typeof pin === 'number' ? `D${pin}` : pin);
-    const log = (text) => self.onSerial?.(text, 'pin');
+    const log = (text) => self.onSerial?.(phrase(text), 'pin');
     const lastRead = {};
     const lastPwm = {};
     let lastServo = null;
@@ -150,7 +152,7 @@ export class Runner {
       random: (a, b) => (b === undefined ? Math.floor(Math.random() * a) : a + Math.floor(Math.random() * (b - a))),
       digitalRead(pin) {
         const v = read(pin) ? 1 : 0;
-        if (lastRead[pin] !== v && !quiet.has(pin)) log(`${label(pin)} → ${v ? 'HIGH (ditekan)' : 'LOW'}`);
+        if (lastRead[pin] !== v && !quiet.has(pin)) log(`${label(pin)} → ${v ? t('sim.highPressed') : 'LOW'}`);
         lastRead[pin] = v;
         return v;
       },
@@ -159,7 +161,7 @@ export class Runner {
       millis: () => self.time,
       println(v) {
         self.txUntil = self.time + 60;
-        self.onSerial?.(String(v));
+        self.onSerial?.(phrase(String(v)));
       },
       /** Catatan bebas dari pelajaran (mis. "gelap, lampu malam NYALA"). */
       log,
@@ -181,7 +183,7 @@ export class Runner {
       },
       /** Sorot baris kode yang memuat `text` (kemunculan ke-nth) di kartu kode. */
       mark(text, nth = 0) {
-        self.onTrace?.(text, nth);
+        self.onTrace?.(markText(text), nth);
       },
     };
   }
@@ -211,13 +213,13 @@ export class Runner {
     if (this.phase === 'compiling') {
       if (this.phaseTime > 700) {
         this.setPhase('uploading');
-        this.onSerial?.('Mengunggah ke Arduino Uno…', 'sys');
+        this.onSerial?.(t('sim.uploading'), 'sys');
       }
       return;
     }
     if (this.phase === 'uploading') {
       if (this.phaseTime > 1300) {
-        this.onSerial?.('Selesai mengunggah.', 'sys');
+        this.onSerial?.(t('sim.uploaded'), 'sys');
         this.setPhase('running');
         this.io = this.makeIO();
         this.gen = this.lesson.sketch.setup?.(this.io, this.params) ?? null;

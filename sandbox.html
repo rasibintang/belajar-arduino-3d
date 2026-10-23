@@ -10,23 +10,24 @@
   </head>
   <body class="sb">
     <header class="sb-top">
-      <a class="sb-brand" href="./" title="Kembali ke pelajaran"><span data-logo></span><b>Learn Arduino</b><i>Sandbox</i></a>
-      <input class="sb-name" id="project-name" aria-label="Nama proyek" maxlength="60" />
+      <a class="sb-brand" href="./" title="Kembali ke pelajaran" data-i18n-title="sb.back.title"><span data-logo></span><b>Learn Arduino</b><i>Sandbox</i></a>
+      <input class="sb-name" id="project-name" aria-label="Nama proyek" data-i18n-aria="sb.projectName" maxlength="60" />
       <div class="sb-actions">
         <div class="sb-menu">
-          <button class="sb-btn" id="btn-examples" aria-haspopup="true">Contoh ▾</button>
+          <button class="sb-btn" id="btn-examples" aria-haspopup="true" data-i18n="sb.examples">Contoh ▾</button>
           <div class="sb-dropdown" id="examples-menu" hidden></div>
         </div>
-        <button class="sb-btn" id="btn-new">Baru</button>
-        <button class="sb-btn" id="btn-open">Buka</button>
-        <button class="sb-btn" id="btn-save">Unduh</button>
-        <button class="sb-btn sb-primary" id="btn-share">Bagikan</button>
-        <a class="sb-btn" href="./">← Pelajaran</a>
+        <button class="sb-btn" id="btn-new" data-i18n="sb.new">Baru</button>
+        <button class="sb-btn" id="btn-open" data-i18n="sb.open">Buka</button>
+        <button class="sb-btn" id="btn-save" data-i18n="sb.save">Unduh</button>
+        <button class="sb-btn sb-primary" id="btn-share" data-i18n="sb.share">Bagikan</button>
+        <a class="sb-btn" href="./" data-i18n="sb.lessons">← Pelajaran</a>
+        <div class="sb-lang"></div>
       </div>
     </header>
 
     <main class="sb-main">
-      <section class="sb-code" aria-label="Kode">
+      <section class="sb-code" aria-label="Kode" data-i18n-aria="sb.code">
         <nav class="sb-tabs" role="tablist">
           <button role="tab" data-tab="sketch" aria-selected="true">sketch.ino</button>
           <button role="tab" data-tab="diagram" aria-selected="false">diagram.json</button>
@@ -36,47 +37,47 @@
         <div class="sb-pane" data-pane="sketch"><div class="sb-editor" id="editor"></div></div>
         <div class="sb-pane" data-pane="diagram" hidden>
           <div class="sb-editor" id="diagram-editor"></div>
-          <div class="sb-pane-bar"><span>Ubah lalu terapkan untuk memperbarui rangkaian.</span><button class="sb-btn" id="apply-diagram">Terapkan</button></div>
+          <div class="sb-pane-bar"><span data-i18n="sb.diagramHint">Ubah lalu terapkan untuk memperbarui rangkaian.</span><button class="sb-btn" id="apply-diagram" data-i18n="sb.apply">Terapkan</button></div>
         </div>
         <div class="sb-pane sb-libs" data-pane="libs" hidden></div>
       </section>
 
-      <section class="sb-sim" aria-label="Simulasi">
+      <section class="sb-sim" aria-label="Simulasi" data-i18n-aria="sb.sim">
         <div class="sb-toolbar">
-          <button class="sb-round sb-run" id="btn-run" title="Jalankan (Ctrl+Enter)" aria-label="Jalankan"></button>
-          <button class="sb-round sb-add" id="btn-add" title="Tambah komponen (A)" aria-label="Tambah komponen"></button>
-          <button class="sb-round" id="btn-fit" title="Paskan tampilan" aria-label="Paskan tampilan"></button>
+          <button class="sb-round sb-run" id="btn-run" title="Jalankan (Ctrl+Enter)" aria-label="Jalankan" data-i18n-title="sb.run.title" data-i18n-aria="sb.run"></button>
+          <button class="sb-round sb-add" id="btn-add" title="Tambah komponen (A)" aria-label="Tambah komponen" data-i18n-title="sb.add.title" data-i18n-aria="sb.add"></button>
+          <button class="sb-round" id="btn-fit" title="Paskan tampilan" aria-label="Paskan tampilan" data-i18n-title="sb.fit" data-i18n-aria="sb.fit"></button>
           <span class="sb-hint" id="hint"></span>
           <span class="sb-speed" id="speed"></span>
         </div>
         <div class="sb-stage" id="stage">
-          <canvas id="canvas" aria-label="Meja kerja 3D"></canvas>
+          <canvas id="canvas" aria-label="Meja kerja 3D" data-i18n-aria="sb.canvas"></canvas>
           <div class="tip" id="tip" role="tooltip" hidden><b></b><span></span></div>
           <div class="sb-panel" id="panel" hidden></div>
-          <div class="sb-empty" id="empty" hidden>Meja kosong — klik <b>+</b> untuk menambah komponen.</div>
+          <div class="sb-empty" id="empty" hidden data-i18n="sb.empty">Meja kosong — klik <b>+</b> untuk menambah komponen.</div>
         </div>
         <div class="sb-serial">
           <div class="sb-serial-head">
             <span class="console-dot" id="serial-dot"></span>
             <b>Serial Monitor</b>
-            <span id="serial-status">Berhenti</span>
-            <button class="sb-link" id="serial-clear">Bersihkan</button>
+            <span id="serial-status" data-i18n="phase.idle">Berhenti</span>
+            <button class="sb-link" id="serial-clear" data-i18n="sb.clear">Bersihkan</button>
           </div>
           <div class="sb-serial-lines" id="serial-lines" aria-live="polite"></div>
           <form class="sb-serial-input" id="serial-form" autocomplete="off">
-            <input id="serial-input" placeholder="Kirim teks ke Arduino (Enter)" aria-label="Kirim ke Serial" />
-            <button class="sb-btn" type="submit">Kirim</button>
+            <input id="serial-input" placeholder="Kirim teks ke Arduino (Enter)" aria-label="Kirim ke Serial" data-i18n-placeholder="sb.serialInput" data-i18n-aria="code.send.aria" />
+            <button class="sb-btn" type="submit" data-i18n="code.send">Kirim</button>
           </form>
         </div>
       </section>
     </main>
 
     <div class="sb-modal" id="add-modal" hidden>
-      <div class="sb-dialog" role="dialog" aria-label="Tambah komponen">
+      <div class="sb-dialog" role="dialog" aria-label="Tambah komponen" data-i18n-aria="sb.add">
         <header>
-          <h2>Tambah komponen</h2>
-          <input id="part-search" placeholder="Cari komponen…" aria-label="Cari komponen" />
-          <button class="icon-btn" id="add-close" aria-label="Tutup"></button>
+          <h2 data-i18n="sb.add">Tambah komponen</h2>
+          <input id="part-search" placeholder="Cari komponen…" aria-label="Cari komponen" data-i18n-placeholder="sb.search" data-i18n-aria="sb.search.aria" />
+          <button class="icon-btn" id="add-close" aria-label="Tutup" data-i18n-aria="ui.close"></button>
         </header>
         <nav class="sb-cats" id="part-cats"></nav>
         <div class="sb-catalog" id="part-list"></div>

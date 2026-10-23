@@ -1,3 +1,4 @@
+import { phrase } from '../../i18n/lessons.js';
 import { createLCD } from '../../parts/lcd.js';
 import { lcdPrint, showLCD } from '../helpers.js';
 
@@ -10,7 +11,7 @@ export default {
   thumb: () => {
     const lcd = createLCD();
     lcd.userData.setBacklight(true);
-    lcd.userData.setText(['Halo, dunia!', 'Detik: 42']);
+    lcd.userData.setText(['Halo, dunia!', 'Detik: 42'].map(phrase));
     return lcd;
   },
   summary:

@@ -1,3 +1,4 @@
+import { t } from '../i18n/index.js';
 import { icon } from './icons.js';
 
 /**
@@ -31,7 +32,7 @@ export function createLessonStrip(root, { lessons, levels, onSelect, onLevel, is
           <span class="thumb"><img alt="" /></span>
           <span class="lesson-name">${l.num}. ${l.title}</span>
           <span class="lesson-go">${icon('chevron')}</span>
-          <span class="lesson-check" title="Selesai">${icon('check')}</span>
+          <span class="lesson-check" title="${t('strip.done')}">${icon('check')}</span>
         </button>
       </li>`
     )

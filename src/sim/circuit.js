@@ -1,3 +1,4 @@
+import { t } from '../i18n/index.js';
 import * as THREE from 'three';
 import { PinState, UNO_PINS } from './avr.js';
 import { createDevice } from './devices.js';
@@ -339,7 +340,7 @@ export class Circuit {
     }
     for (let r = 0; r < n; r++) {
       if (conflict[r]) {
-        this.warn(`short-${r}`, 'Hubungan pendek: dua sumber berbeda tegangan tersambung langsung!');
+        this.warn(`short-${r}`, t('w.short'));
         strong[r] = 0;
       }
     }
