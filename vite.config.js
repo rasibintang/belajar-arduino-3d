@@ -15,7 +15,7 @@ export default defineConfig({
     // Three.js sendiri ± 600 kB; peringatan default (500 kB) tidak berguna di sini
     chunkSizeWarningLimit: 1000,
     rollupOptions: {
-      input: { main: 'index.html', sandbox: 'sandbox.html', gallery: 'gallery.html' },
+      input: { main: 'index.html', sandbox: 'sandbox.html', gallery: 'gallery.html', admin: 'admin.html' },
     },
   },
 });

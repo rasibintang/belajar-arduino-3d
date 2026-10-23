@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Halaman Pengelola · Learn Arduino</title>
+    <meta name="robots" content="noindex" />
+    <meta name="theme-color" content="#f5ecdc" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body class="adm">
+    <header class="cat-top">
+      <a class="cat-brand" href="./" data-i18n-title="sb.back.title"><span data-logo></span><b>Learn Arduino</b></a>
+      <h1 data-i18n="adm.title">Halaman pengelola</h1>
+      <div class="cat-actions">
+        <a class="top-btn" href="/sandbox.html" data-i18n="top.sandbox">Sandbox</a>
+        <div class="account-slot"></div>
+        <div class="cat-lang"></div>
+      </div>
+    </header>
+    <main class="adm-main">
+      <p class="adm-state" id="state" role="status"></p>
+      <section id="panel" hidden>
+        <nav class="adm-tabs" role="tablist">
+          <button role="tab" data-tab="requests" aria-selected="true" data-i18n="adm.tab.requests">Laporan komponen</button>
+          <button role="tab" data-tab="projects" aria-selected="false" data-i18n="adm.tab.projects">Proyek pengguna</button>
+          <button role="tab" data-tab="users" aria-selected="false" data-i18n="adm.tab.users">Pengguna</button>
+          <button role="tab" data-tab="settings" aria-selected="false" data-i18n="adm.tab.settings">Pengaturan</button>
+        </nav>
+        <div class="adm-pane" id="pane"></div>
+      </section>
+    </main>
+    <script type="module" src="/src/admin/main.js"></script>
+  </body>
+</html>
