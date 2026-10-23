@@ -6,3 +6,8 @@ tools/
 .vercel-toolchain/
 .vercel/
 .superpowers/
+
+# kunci lokal (jangan di-commit)
+.env
+.env.local
+.env.*.local
