@@ -10,7 +10,8 @@
     "setup:arduino": "node scripts/setup-arduino.mjs",
     "compile-server": "node server/compile-server.mjs",
     "slim:toolchain": "node scripts/slim-toolchain.mjs",
-    "vercel-build": "TOOLS_DIR=.vercel-toolchain node scripts/setup-arduino.mjs && node scripts/slim-toolchain.mjs .vercel-toolchain && vite build"
+    "vercel-build": "TOOLS_DIR=.vercel-toolchain node scripts/setup-arduino.mjs && node scripts/slim-toolchain.mjs .vercel-toolchain && vite build",
+    "test": "node --test \"tests/**/*.test.js\""
   },
   "dependencies": {
     "@fontsource/barlow": "^5.3.0",

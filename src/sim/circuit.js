@@ -1,34 +1,10 @@
 import { t } from '../i18n/index.js';
-import * as THREE from 'three';
 import { PinState, UNO_PINS } from './avr.js';
 import { createDevice } from './devices.js';
+import { buildNetlist } from './netlist.js';
 
 const PULLUP_OHMS = 37000; // pull-up internal ATmega328P
-const SNAP = 0.9; // mm: jarak maksimum kaki ke lubang breadboard agar dianggap tertancap
 const LOGIC_HIGH = 2.5;
-
-/** Union-find sederhana. */
-class DSU {
-  constructor() {
-    this.parent = new Map();
-  }
-  find(x) {
-    if (!this.parent.has(x)) this.parent.set(x, x);
-    let r = x;
-    while (this.parent.get(r) !== r) r = this.parent.get(r);
-    while (this.parent.get(x) !== r) {
-      const next = this.parent.get(x);
-      this.parent.set(x, r);
-      x = next;
-    }
-    return r;
-  }
-  union(a, b) {
-    const ra = this.find(a);
-    const rb = this.find(b);
-    if (ra !== rb) this.parent.set(ra, rb);
-  }
-}
 
 /**
  * Rangkaian yang bisa disimulasikan.
@@ -52,103 +28,20 @@ export class Circuit {
 
   // ---------------------------------------------------------------- netlist
   build(wires) {
-    const dsu = new DSU();
-    const nodes = new Set();
-    const add = (n) => {
-      nodes.add(n);
-      dsu.find(n);
-    };
-    const tmp = new THREE.Vector3();
+    const net = buildNetlist(this.parts, wires);
+    this.pinWorld = net.pinWorld;
+    this.inserted = net.inserted; // node kaki -> node lubang
+    this.nodeGroup = net.nodeGroup;
+    this.groupNodes = net.groupNodes;
+    this.groupCount = net.groupNodes.length;
 
-    // posisi dunia semua pin
-    this.pinWorld = new Map();
-    for (const part of this.parts) {
-      part.group.updateMatrixWorld(true);
-      for (const pin of part.group.userData.component.pins) {
-        const node = `${part.id}:${pin.id}`;
-        add(node);
-        this.pinWorld.set(node, part.group.localToWorld(tmp.copy(pin.at)).clone());
-      }
-    }
-
-    // kabel
-    for (const w of wires) {
-      if (nodes.has(w.from) && nodes.has(w.to)) dsu.union(w.from, w.to);
-    }
-
-    // breadboard: jalur tembaga internal + kaki komponen yang tertancap
-    const boards = this.parts.filter((p) => p.spec.behavior.kind === 'breadboard');
-    const holeGrid = new Map(); // kunci kisi -> [node]
-    const key = (v) => `${Math.round(v.x / 1.27)}|${Math.round(v.z / 1.27)}`;
-    for (const bb of boards) {
-      const strips = new Map();
-      for (const pin of bb.group.userData.component.pins) {
-        const node = `${bb.id}:${pin.id}`;
-        const strip = `${bb.id}#${bb.spec.behavior.strip(pin.id)}`;
-        if (strips.has(strip)) dsu.union(node, strips.get(strip));
-        else strips.set(strip, node);
-        const pos = this.pinWorld.get(node);
-        const k = key(pos);
-        if (!holeGrid.has(k)) holeGrid.set(k, []);
-        holeGrid.get(k).push(node);
-      }
-    }
-    this.inserted = new Map(); // node kaki -> node lubang
-    for (const part of this.parts) {
-      if (part.spec.surface !== 'breadboard') continue;
-      for (const pin of part.group.userData.component.pins) {
-        const node = `${part.id}:${pin.id}`;
-        const pos = this.pinWorld.get(node);
-        let best = null;
-        let bestD = SNAP;
-        const [gx, gz] = key(pos).split('|').map(Number);
-        for (let dx = -1; dx <= 1; dx++) {
-          for (let dz = -1; dz <= 1; dz++) {
-            for (const hole of holeGrid.get(`${gx + dx}|${gz + dz}`) ?? []) {
-              const hp = this.pinWorld.get(hole);
-              const d = Math.hypot(hp.x - pos.x, hp.z - pos.z);
-              if (d < bestD && Math.abs(hp.y - pos.y) < 3) {
-                best = hole;
-                bestD = d;
-              }
-            }
-          }
-        }
-        if (best) {
-          dsu.union(node, best);
-          this.inserted.set(node, best);
-        }
-      }
-    }
-
-    // sambungan tetap di dalam komponen (papan Uno, sisi tombol, dll.)
-    this.mcu = null;
+    // sumber tegangan papan Uno
+    this.mcu = this.parts.find((p) => p.spec.behavior.kind === 'mcu') ?? null;
     this.sources = []; // { node, volts }
-    for (const part of this.parts) {
-      const b = part.spec.behavior;
-      const n = (pin) => `${part.id}:${pin}`;
-      if (b.kind === 'mcu') {
-        this.mcu = part;
-        for (const g of ['GND.1', 'GND.2']) dsu.union(n('GND'), n(g));
-        dsu.union(n('SDA'), n('A4'));
-        dsu.union(n('SCL'), n('A5'));
-        dsu.union(n('5V'), n('IOREF'));
-        this.sources.push({ node: n('GND'), volts: 0 }, { node: n('5V'), volts: 5 }, { node: n('3V3'), volts: 3.3 }, { node: n('VIN'), volts: 5 });
-      }
-      for (const [a, c] of b.always ?? []) dsu.union(n(a), n(c));
+    if (this.mcu) {
+      const n = (pin) => `${this.mcu.id}:${pin}`;
+      this.sources.push({ node: n('GND'), volts: 0 }, { node: n('5V'), volts: 5 }, { node: n('3V3'), volts: 3.3 }, { node: n('VIN'), volts: 5 });
     }
-
-    // grup statis
-    this.nodeGroup = new Map();
-    const roots = new Map();
-    for (const node of nodes) {
-      const r = dsu.find(node);
-      if (!roots.has(r)) roots.set(r, roots.size);
-      this.nodeGroup.set(node, roots.get(r));
-    }
-    this.groupCount = roots.size;
-    this.groupNodes = Array.from({ length: this.groupCount }, () => []);
-    for (const [node, g] of this.nodeGroup) this.groupNodes[g].push(node);
 
     // pin MCU (tanpa duplikat SDA/SCL)
     this.mcuPins = [];
