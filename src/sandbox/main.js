@@ -17,6 +17,7 @@ import { icon, LOGO } from '../ui/icons.js';
 import { escapeHtml } from '../ui/highlight.js';
 import { renderThumbs } from '../ui/thumbs.js';
 import { createWorkbench } from './workbench.js';
+import { createGuide } from './guide.js';
 import { createCodeEditor } from './code-editor.js';
 import { createSim } from './sim.js';
 import { EXAMPLES, BLANK } from './examples.js';
@@ -104,8 +105,13 @@ wb = createWorkbench(stage, {
     tip.hidden = false;
     tip.style.transform = `translate(${x - box.left + 16}px, ${y - box.top + 18}px)`;
   },
-  onWiring: (on) => {
+  onWiring: (on, node) => {
     setHint(on ? t('sb.hint.wiring') : null);
+    if (on) guide.startWiring(node);
+    else guide.stopWiring();
+    guideLabel.textContent = guide.labelText;
+    guideLabel.hidden = !guide.labelText;
+    if (!guideLabel.hidden) placeGuideLabel();
     if (on) {
       wb.select(null); // panel tidak boleh menutupi pin tujuan
       showPanel(null);
@@ -113,6 +119,28 @@ wb = createWorkbench(stage, {
   },
 });
 $('#canvas').addEventListener('pointermove', (e) => wb.pointerMove(e.clientX, e.clientY));
+
+// ------------------------------------------------------------------ panduan kabel
+const guide = createGuide({ wb, root: wb.root, t });
+const guideLabel = $('#guide-label');
+const pointer = { x: 0, y: 0 };
+function placeGuideLabel() {
+  const box = $('#stage').getBoundingClientRect();
+  guideLabel.style.transform = `translate(${pointer.x - box.left + 16}px, ${pointer.y - box.top - 34}px)`; // di atas kursor: tooltip pin ada di bawahnya
+}
+$('#stage').addEventListener('pointermove', (e) => {
+  pointer.x = e.clientX;
+  pointer.y = e.clientY;
+  if (!guideLabel.hidden) placeGuideLabel();
+});
+const guideBtn = $('#btn-guide');
+guideBtn.innerHTML = icon('compass');
+guideBtn.setAttribute('aria-pressed', String(guide.enabled));
+guideBtn.addEventListener('click', () => {
+  guide.setEnabled(!guide.enabled);
+  guideBtn.setAttribute('aria-pressed', String(guide.enabled));
+  if (!guide.enabled) guideLabel.hidden = true;
+});
 
 // ------------------------------------------------------------------ editor
 const editor = createCodeEditor($('#editor'), {
@@ -521,4 +549,4 @@ if (fromLink) serial.sys(t('sb.fromLink'));
 showPanel(null);
 
 // akses untuk pengujian otomatis (hanya saat pengembangan)
-if (import.meta.env.DEV) window.__sb = { wb, sim, stage, editor, openProject, EXAMPLES };
+if (import.meta.env.DEV) window.__sb = { wb, sim, stage, editor, openProject, EXAMPLES, guide };

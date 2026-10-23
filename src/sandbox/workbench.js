@@ -3,6 +3,8 @@ import * as THREE from 'three';
 import { COMPONENT_BY_TYPE, instantiate, resolvePins } from '../components/index.js';
 import { createWire } from '../parts/wire.js';
 import { markPart, noOutline } from '../parts/lib.js';
+import { insertedLegs } from '../sim/netlist.js';
+import { snapshotFromTopology } from '../sim/wiring/snapshot.js';
 
 const PIN_LAYER = 2; // titik pin: tidak dirender, hanya untuk dipilih pointer
 const SNAP_RANGE = 5; // mm: jarak maksimum untuk menancap ke breadboard
@@ -21,6 +23,7 @@ const hitMat = new THREE.MeshBasicMaterial();
  *   onSelect(sel)             — { kind: 'part' | 'wire', id } atau null
  *   onPartClick(part, x, y)   — klik komponen saat simulasi berjalan
  *   onHover(info, x, y)       — { name, desc } atau null (tooltip)
+ *   onWiring(on, fromNode)    — mulai/selesai menarik kabel dari sebuah pin
  */
 export function createWorkbench(stage, hooks = {}) {
   const root = new THREE.Group();
@@ -445,7 +448,7 @@ export function createWorkbench(stage, hooks = {}) {
     startMarker.visible = true;
     rubber.visible = true;
     updateRubber(p);
-    hooks.onWiring?.(true);
+    hooks.onWiring?.(true, node);
   }
 
   function cancelWiring() {
@@ -460,6 +463,16 @@ export function createWorkbench(stage, hooks = {}) {
     const a = pinWorld(wiring.from);
     rubber.geometry.setFromPoints([a, to]);
     rubber.computeLineDistances();
+  }
+
+  /** Snapshot topologi untuk panduan kabel (lihat sim/wiring/snapshot.js). */
+  function snapshot() {
+    const list = [...parts.values()];
+    return snapshotFromTopology({
+      parts: list.map((p) => ({ id: p.id, type: p.spec.type, pinIds: p.pins.map((q) => q.id) })),
+      wires: [...wires.values()].map((w) => ({ id: w.id, from: w.from, to: w.to })),
+      inserted: insertedLegs(list),
+    });
   }
 
   // ------------------------------------------------------------ seleksi
@@ -631,6 +644,7 @@ export function createWorkbench(stage, hooks = {}) {
     clear,
     bounds,
     pinWorld,
+    snapshot,
     /** Bagian sederhana untuk Circuit: [{ id, spec, props, group }] */
     circuitParts: () => [...parts.values()],
     circuitWires: () => [...wires.values()].map((w) => ({ from: w.from, to: w.to })),

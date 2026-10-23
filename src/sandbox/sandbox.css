@@ -696,3 +696,24 @@ body.sb {
   outline: 2px solid var(--teal);
   outline-offset: 1px;
 }
+
+/* panduan kabel */
+.sb-guide[aria-pressed='true'] {
+  background: #2fd27a;
+  color: #10301f;
+}
+.sb-guide-label {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 13;
+  max-width: 260px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: #10301f;
+  color: #d9f7e6;
+  font: 600 13px var(--f-display);
+  letter-spacing: 0.02em;
+  pointer-events: none;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+}
