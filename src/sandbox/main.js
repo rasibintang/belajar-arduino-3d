@@ -1,4 +1,5 @@
 import { t, isEN, translateDom, languageSwitch } from '../i18n/index.js';
+import { mountAccount } from '../account/ui.js';
 import '@fontsource/barlow-semi-condensed/500.css';
 import '@fontsource/barlow-semi-condensed/600.css';
 import '@fontsource/barlow-semi-condensed/700.css';
@@ -28,6 +29,7 @@ const $ = (s) => document.querySelector(s);
 document.querySelectorAll('[data-logo]').forEach((el) => (el.innerHTML = LOGO));
 translateDom();
 $('.sb-lang').append(languageSwitch());
+const account = mountAccount($('.account-slot'), { buttonClass: 'sb-btn' });
 
 const LIBRARIES = [
   // [nama, keterangan ID, keterangan EN]

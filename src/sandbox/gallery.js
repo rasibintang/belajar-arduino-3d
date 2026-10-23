@@ -9,6 +9,7 @@ import './gallery.css';
 
 import * as THREE from 'three';
 import { t, translateDom, languageSwitch } from '../i18n/index.js';
+import { mountAccount } from '../account/ui.js';
 import { createStage } from '../core/stage.js';
 import { markPart } from '../parts/lib.js';
 import { COMPONENTS, CATEGORIES, BEHAVIORS, instantiate, validateSpec } from '../components/index.js';
@@ -31,6 +32,7 @@ translateDom();
 document.title = `${t('top.catalog')} · Learn Arduino`;
 document.querySelectorAll('.cat-actions [data-icon]').forEach((a) => a.insertAdjacentHTML('afterbegin', icon(a.dataset.icon)));
 $('.cat-lang').append(languageSwitch());
+mountAccount($('.account-slot'));
 
 await Promise.all(['700 20px "Barlow Semi Condensed"', '800 20px "Barlow Semi Condensed"', '600 20px "IBM Plex Mono"'].map((f) => document.fonts.load(f)));
 

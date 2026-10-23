@@ -1,4 +1,5 @@
 import { t, translateDom, languageSwitch } from './i18n/index.js';
+import { mountAccount } from './account/ui.js';
 import '@fontsource/barlow-semi-condensed/500.css';
 import '@fontsource/barlow-semi-condensed/600.css';
 import '@fontsource/barlow-semi-condensed/700.css';
@@ -49,6 +50,7 @@ translateDom();
 document.querySelector('meta[name="description"]')?.setAttribute('content', t('meta.description'));
 document.querySelectorAll('.topbar [data-icon]').forEach((a) => a.insertAdjacentHTML('afterbegin', icon(a.dataset.icon)));
 $('.top-lang').append(languageSwitch());
+mountAccount($('.account-slot'));
 const loader = createLoader($('#loader'));
 document.querySelectorAll('[data-logo]').forEach((el) => (el.innerHTML = LOGO));
 
