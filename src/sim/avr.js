@@ -15,6 +15,8 @@ import {
   adcConfig,
   AVRTWI,
   twiConfig,
+  AVRSPI,
+  spiConfig,
   AVREEPROM,
   EEPROMMemoryBackend,
   AVRClock,
@@ -69,6 +71,26 @@ class I2CBus {
 }
 
 /**
+ * Bus SPI perangkat keras (D11 = MOSI, D12 = MISO, D13 = SCK).
+ * Perangkat: { selected() -> bool (CS aktif), transfer(byte) -> byte balasan }
+ */
+class SPIBus {
+  constructor(spi) {
+    this.spi = spi;
+    this.devices = [];
+    spi.onByte = (value) => {
+      let reply = 0xff;
+      for (const d of this.devices) {
+        if (!d.selected()) continue;
+        const r = d.transfer(value);
+        if (r !== undefined && r !== null) reply &= r;
+      }
+      spi.cpu.addClockEvent(() => spi.completeTransfer(reply & 0xff), spi.transferCycles);
+    };
+  }
+}
+
+/**
  * ATmega328P teremulasi (avr8js) dengan semua periferal yang dipakai Arduino Uno.
  *
  * Kait (hooks) yang bisa diisi:
@@ -97,6 +119,8 @@ export class AVRRunner {
     this.eeprom = new AVREEPROM(cpu, this.eepromMemory);
     this.i2c = new I2CBus(this.twi);
     this.twi.eventHandler = this.i2c;
+    this.spiPeripheral = new AVRSPI(cpu, spiConfig, FREQ);
+    this.spi = new SPIBus(this.spiPeripheral);
 
     for (const [name, port] of Object.entries(this.ports)) {
       port.addListener(() => this.hooks.onPortChange?.(name));
@@ -119,11 +143,11 @@ export class AVRRunner {
 
   /** Mulai ulang dari awal (tombol RESET); program & EEPROM tetap. */
   reset() {
-    const { hooks, i2c } = this;
-    const devices = i2c.devices;
+    const { hooks, i2c, spi } = this;
     this.build();
     this.hooks = hooks;
-    this.i2c.devices = devices;
+    this.i2c.devices = i2c.devices;
+    this.spi.devices = spi.devices;
   }
 
   get cycles() {

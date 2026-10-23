@@ -102,15 +102,18 @@ export function createSim(deps) {
     const saved = deps.getEeprom?.();
     if (saved) eeprom.memory.set(saved);
     runner = new AVRRunner(res.hex, { eeprom });
-    let pending = '';
+    // byte serial dikumpulkan per baris lalu dibaca sebagai UTF-8 (agar "°", "é", dll. tampil benar)
+    let pending = [];
+    const utf8 = new TextDecoder();
+    const text = () => utf8.decode(new Uint8Array(pending)).replace(/�$/, ''); // byte UTF-8 yang belum lengkap
     runner.hooks.onSerial = (b) => {
       if (b === 13) return;
       if (b === 10) {
-        serial.out(pending, true);
-        pending = '';
+        serial.out(text(), true);
+        pending = [];
       } else {
-        pending += String.fromCharCode(b);
-        serial.out(pending, false);
+        pending.push(b);
+        serial.out(text(), false);
       }
     };
     wb.setMode('run');
@@ -124,7 +127,7 @@ export function createSim(deps) {
       if (part.spec.type === 'arduino-uno') {
         ud.onReset = () => {
           runner.reset();
-          pending = '';
+          pending = [];
           serial.sys('— reset —');
           circuit.solve();
           sample();

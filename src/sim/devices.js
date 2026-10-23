@@ -39,6 +39,20 @@ import {
   bipolarDevice,
   seg7muxDevice,
 } from './devices-extra.js';
+import {
+  oledDevice,
+  pcd8544Device,
+  tm1637Device,
+  max7219Device,
+  logicAnalyzerDevice,
+  mpu6050Device,
+  bmp180Device,
+  ds18b20Device,
+  hx711Device,
+  irRemoteDevice,
+  irReceiverDevice,
+  mfrc522Device,
+} from './devices-wave2.js';
 
 /**
  * Perangkat simulasi untuk setiap jenis perilaku komponen (spec.behavior.kind).
@@ -97,6 +111,18 @@ const FACTORIES = {
   a4988: a4988Device,
   bipolar: bipolarDevice,
   seg7mux: seg7muxDevice,
+  oled: oledDevice,
+  pcd8544: pcd8544Device,
+  tm1637: tm1637Device,
+  max7219: max7219Device,
+  'logic-analyzer': logicAnalyzerDevice,
+  mpu6050: mpu6050Device,
+  bmp180: bmp180Device,
+  ds18b20: ds18b20Device,
+  hx711: hx711Device,
+  'ir-remote': irRemoteDevice,
+  'ir-receiver': irReceiverDevice,
+  mfrc522: mfrc522Device,
 };
 
 export function createDevice(part, ctx) {

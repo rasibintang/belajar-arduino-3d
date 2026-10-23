@@ -90,6 +90,18 @@ export const BEHAVIORS = {
   a4988: { roles: ['step', 'dir', 'enable', 'sleep', 'reset', 'vdd', 'gnd'], desc: 'Tiap pulsa STEP memajukan arus kumparan satu (mikro)langkah.' },
   bipolar: { roles: [], desc: 'Motor stepper bipolar: urutan polaritas kumparan A dan B memutar poros.' },
   seg7mux: { roles: [], desc: 'Beberapa digit 7-segment yang berbagi jalur segmen (multipleks).' },
+  oled: { roles: ['sda', 'scl', 'vcc', 'gnd'], desc: 'Layar grafis monokrom I²C (SSD1306 / SH1107).' },
+  pcd8544: { roles: ['rst', 'ce', 'dc', 'din', 'clk', 'vcc', 'gnd'], desc: 'Layar Nokia 5110 lewat SPI.' },
+  tm1637: { roles: ['clk', 'dio', 'vcc', 'gnd'], desc: 'Protokol 2 kabel mirip I²C (LSB dulu) untuk 4 digit.' },
+  max7219: { roles: ['vcc', 'gnd', 'din', 'cs', 'clk'], desc: 'Bingkai 16 bit (register, data) dikunci saat CS naik; bisa berantai.' },
+  'logic-analyzer': { roles: ['gnd'], desc: 'Merekam tepi sinyal inputs untuk ditampilkan.' },
+  mpu6050: { roles: ['sda', 'scl', 'vcc', 'gnd'], desc: 'Register akselerometer/giroskop lewat I²C.' },
+  bmp180: { roles: ['sda', 'scl', 'vcc', 'gnd'], desc: 'Register kalibrasi + hasil ukur tekanan/suhu lewat I²C.' },
+  ds18b20: { roles: ['dq', 'vdd', 'gnd'], desc: 'Protokol OneWire: reset/presence, slot baca/tulis, scratchpad.' },
+  hx711: { roles: ['vcc', 'gnd', 'dt', 'sck'], desc: '24 bit keluar di DT, satu bit per pulsa SCK.' },
+  'ir-receiver': { roles: ['dat', 'vcc', 'gnd'], desc: 'Keluaran LOW aktif mengikuti pulsa NEC dari remote.' },
+  'ir-remote': { roles: [], desc: 'Memancarkan kode NEC ke semua penerima IR.' },
+  mfrc522: { roles: ['cs', 'sck', 'mosi', 'miso', 'vcc', 'gnd'], desc: 'Register MFRC522 lewat SPI + kartu ISO 14443A.' },
 };
 
 /** Field perilaku berisi daftar pin yang juga harus diperiksa. */

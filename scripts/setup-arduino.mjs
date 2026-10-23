@@ -11,7 +11,12 @@ const CLI_DIR = join(TOOLS, 'arduino-cli');
 const WIN = process.platform === 'win32';
 const CLI = join(CLI_DIR, WIN ? 'arduino-cli.exe' : 'arduino-cli');
 const CONFIG = join(CLI_DIR, 'arduino-cli.yaml');
-const LIBRARIES = ['Servo', 'LiquidCrystal', 'LiquidCrystal I2C', 'DHT sensor library', 'Adafruit Unified Sensor', 'Adafruit NeoPixel', 'Keypad', 'RTClib', 'Stepper'];
+const LIBRARIES = [
+  'Servo', 'LiquidCrystal', 'LiquidCrystal I2C', 'DHT sensor library', 'Adafruit Unified Sensor', 'Adafruit NeoPixel', 'Keypad', 'RTClib', 'Stepper',
+  // gelombang 2
+  'Adafruit SSD1306', 'Adafruit GFX Library', 'Adafruit SH110X', 'MFRC522', 'IRremote', 'OneWire', 'DallasTemperature', 'Adafruit MPU6050',
+  'Adafruit BMP085 Library', 'TM1637', 'LedControl', 'MD_MAX72XX', 'MD_Parola', 'Adafruit PCD8544 Nokia 5110 LCD library', 'HX711', 'U8g2',
+];
 
 function assetName() {
   const arch = { x64: '64bit', arm64: 'ARM64', arm: 'ARMv7' }[process.arch] ?? '64bit';
