@@ -822,3 +822,63 @@ body.sb {
     display: none;
   }
 }
+
+/* proyek di akun */
+.sb-cloud {
+  padding: 3px 8px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.75);
+  font: 600 11px var(--f-display);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.sb-cloud.is-cloud {
+  background: rgba(47, 210, 122, 0.18);
+  color: #9ff0c4;
+}
+.sb-dialog-sm {
+  width: min(620px, 94vw);
+  height: auto;
+  max-height: min(640px, 88vh);
+}
+.sb-projects {
+  margin: 0;
+  padding: 8px 16px 16px;
+  list-style: none;
+  overflow: auto;
+}
+.sb-projects li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+.sb-projects li > div {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+.sb-projects b {
+  font: 600 15px var(--f-body);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sb-projects small {
+  color: var(--muted);
+  font: 500 12px var(--f-mono);
+}
+.sb-projects .sb-projects-empty {
+  display: block;
+  color: var(--muted);
+  border: 0;
+}
+@media (max-width: 760px) {
+  .sb-cloud {
+    display: none;
+  }
+}

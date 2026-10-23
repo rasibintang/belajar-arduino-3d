@@ -1,5 +1,6 @@
 import { t, isEN, translateDom, languageSwitch } from '../i18n/index.js';
-import { mountAccount } from '../account/ui.js';
+import { mountAccount, toast } from '../account/ui.js';
+import { saveToAccount, openFromAccount, createAutosave } from '../account/cloud-projects.js';
 import '@fontsource/barlow-semi-condensed/500.css';
 import '@fontsource/barlow-semi-condensed/600.css';
 import '@fontsource/barlow-semi-condensed/700.css';
@@ -29,7 +30,7 @@ const $ = (s) => document.querySelector(s);
 document.querySelectorAll('[data-logo]').forEach((el) => (el.innerHTML = LOGO));
 translateDom();
 $('.sb-lang').append(languageSwitch());
-const account = mountAccount($('.account-slot'), { buttonClass: 'sb-btn' });
+const account = mountAccount($('.account-slot'), { buttonClass: 'sb-btn', menuItems: () => accountMenu() });
 
 const LIBRARIES = [
   // [nama, keterangan ID, keterangan EN]
@@ -620,7 +621,148 @@ function persist() {
   saveTimer = setTimeout(() => {
     if (saveLocal(project)) flashSaved(t('sb.saved'));
   }, 400);
+  if (ownsCloud()) cloud.autosave?.schedule(project);
 }
+
+// ------------------------------------------------------------------ proyek di akun (bila masuk)
+const cloud = { backend: null, user: null, autosave: null };
+/** Proyek terbuka tersimpan di akun pengguna yang sedang masuk (bukan akun lain / salinan). */
+const ownsCloud = () => !!(cloud.user && project.cloudId && project.cloudOwner === cloud.user.id);
+
+function updateCloudBadge() {
+  const badge = $('#cloud-badge');
+  badge.hidden = !cloud.user;
+  badge.textContent = ownsCloud() ? t('proj.badge.cloud') : t('proj.badge.local');
+  badge.classList.toggle('is-cloud', ownsCloud());
+}
+
+function accountMenu() {
+  if (!cloud.user) return [];
+  return [
+    { label: ownsCloud() ? t('proj.saveNow') : t('proj.save'), onClick: saveCloud },
+    { label: t('proj.mine'), onClick: openProjects },
+  ];
+}
+
+async function saveCloud() {
+  try {
+    const saved = await saveToAccount(cloud.backend, ownsCloud() ? project : { ...project, cloudId: undefined });
+    project.cloudId = saved.cloudId;
+    project.cloudOwner = cloud.user.id;
+    saveLocal(project);
+    updateCloudBadge();
+    flashSaved(t('proj.savedCloud'));
+  } catch (err) {
+    toast(err.code === 'network' ? t('acct.offline') : err.message, 'error');
+  }
+}
+
+async function openCloud(id, { copy = false } = {}) {
+  try {
+    const p = await openFromAccount(cloud.backend, id, { copy, copyName: (name) => t('proj.copyName', { name }) });
+    openProject(copy ? p : { ...p, cloudOwner: cloud.user.id });
+    if (copy) toast(t('proj.copyOpened'));
+  } catch (err) {
+    toast(err.code === 'network' ? t('acct.offline') : t('proj.notFound'), 'error');
+  }
+}
+
+const projectsModal = $('#projects-modal');
+$('#projects-close').innerHTML = icon('close');
+$('#projects-close').addEventListener('click', () => (projectsModal.hidden = true));
+projectsModal.addEventListener('click', (e) => {
+  if (e.target === projectsModal) projectsModal.hidden = true;
+});
+projectsModal.addEventListener('keydown', (e) => {
+  e.stopPropagation();
+  if (e.key === 'Escape') projectsModal.hidden = true;
+});
+
+async function openProjects() {
+  const list = $('#projects-list');
+  projectsModal.hidden = false;
+  let rows;
+  try {
+    rows = await cloud.backend.projects.list();
+  } catch (err) {
+    projectsModal.hidden = true;
+    return toast(err.code === 'network' ? t('acct.offline') : err.message, 'error');
+  }
+  if (!rows.length) {
+    list.innerHTML = `<li class="sb-projects-empty">${escapeHtml(t('proj.empty'))}</li>`;
+    return;
+  }
+  const when = new Intl.DateTimeFormat(isEN ? 'en' : 'id', { dateStyle: 'medium', timeStyle: 'short' });
+  list.replaceChildren(
+    ...rows.map((r) => {
+      const li = document.createElement('li');
+      li.innerHTML = `<div><b></b><small></small></div>
+        <button class="sb-btn" data-act="open">${t('proj.open')}</button>
+        <button class="sb-btn" data-act="rename">${t('proj.rename')}</button>
+        <button class="sb-btn sb-danger" data-act="delete">${t('proj.delete')}</button>`;
+      li.querySelector('b').textContent = r.name;
+      li.querySelector('small').textContent = t('proj.updated', { time: when.format(new Date(r.updatedAt)) });
+      li.addEventListener('click', async (e) => {
+        const act = e.target.closest('[data-act]')?.dataset.act;
+        try {
+          if (act === 'open') {
+            projectsModal.hidden = true;
+            await openCloud(r.id);
+          } else if (act === 'rename') {
+            const name = prompt(t('proj.renamePrompt'), r.name);
+            if (!name || name === r.name) return;
+            await cloud.backend.projects.rename(r.id, name);
+            if (project.cloudId === r.id) {
+              project.name = nameInput.value = name.trim();
+              saveLocal(project);
+            }
+            openProjects();
+          } else if (act === 'delete') {
+            if (!confirm(t('proj.deleteConfirm', { name: r.name }))) return;
+            await cloud.backend.projects.remove(r.id);
+            if (project.cloudId === r.id) {
+              delete project.cloudId;
+              delete project.cloudOwner;
+              saveLocal(project);
+              updateCloudBadge();
+            }
+            openProjects();
+          }
+        } catch (err) {
+          toast(err.code === 'network' ? t('acct.offline') : err.message, 'error');
+        }
+      });
+      return li;
+    })
+  );
+}
+
+account.then(async (acc) => {
+  if (!acc.backend) return;
+  cloud.backend = acc.backend;
+  cloud.user = acc.user();
+  cloud.autosave = createAutosave(acc.backend, {
+    onError: () => toast(t('proj.autosaveFail'), 'error'),
+    onSaved: () => flashSaved(t('proj.savedCloud')),
+  });
+  acc.onChange((user) => {
+    cloud.user = user;
+    updateCloudBadge();
+  });
+  updateCloudBadge();
+  // ?project=<id>[&copy=1]: buka proyek dari akun (halaman pengelola membuka salinan)
+  const params = new URLSearchParams(location.search);
+  const id = params.get('project');
+  if (id) {
+    params.delete('project');
+    const copy = params.get('copy') === '1';
+    params.delete('copy');
+    history.replaceState(null, '', `${location.pathname}${params.size ? `?${params}` : ''}`);
+    if (!cloud.user) toast(t('proj.needSignIn'), 'error');
+    else await openCloud(id, { copy });
+  }
+});
+window.addEventListener('pagehide', () => cloud.autosave?.flush());
 function flashSaved(text) {
   const note = $('#saved-note');
   note.textContent = text;
@@ -642,6 +784,8 @@ function loadDiagram(d) {
 function openProject(p) {
   sim.stop();
   project = { name: p.name ?? t('sb.project'), sketch: p.sketch ?? '', diagram: p.diagram ?? { parts: [], wires: [] }, eeprom: p.eeprom ?? null };
+  // proyek dari akun membawa id & pemiliknya; contoh, file, dan tautan selalu proyek baru di browser
+  if (p.cloudId) Object.assign(project, { cloudId: p.cloudId, cloudOwner: p.cloudOwner });
   nameInput.value = project.name;
   document.title = `${project.name} · Learn Arduino`;
   editor.value = project.sketch;
@@ -649,7 +793,8 @@ function openProject(p) {
   loadDiagram(project.diagram);
   refreshDiagramTab();
   persist();
-  if (location.hash) history.replaceState(null, '', location.pathname);
+  if (cloud.backend) updateCloudBadge();
+  if (location.hash) history.replaceState(null, '', location.pathname + location.search);
 }
 
 openProject(project);
@@ -657,4 +802,4 @@ if (fromLink) serial.sys(t('sb.fromLink'));
 showPanel(null);
 
 // akses untuk pengujian otomatis (hanya saat pengembangan)
-if (import.meta.env.DEV) window.__sb = { wb, sim, stage, editor, openProject, EXAMPLES, guide };
+if (import.meta.env.DEV) window.__sb = { wb, sim, stage, editor, openProject, EXAMPLES, guide, cloud, get project() { return project; } };

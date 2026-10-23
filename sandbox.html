@@ -12,6 +12,7 @@
     <header class="sb-top">
       <a class="sb-brand" href="./" title="Kembali ke pelajaran" data-i18n-title="sb.back.title"><span data-logo></span><b>Learn Arduino</b><i>Sandbox</i></a>
       <input class="sb-name" id="project-name" aria-label="Nama proyek" data-i18n-aria="sb.projectName" maxlength="60" />
+      <span class="sb-cloud" id="cloud-badge" hidden></span>
       <div class="sb-actions">
         <div class="sb-menu">
           <button class="sb-btn" id="btn-examples" aria-haspopup="true" data-i18n="sb.examples">Contoh ▾</button>
@@ -85,6 +86,16 @@
         </div>
       </section>
     </main>
+
+    <div class="sb-modal" id="projects-modal" hidden>
+      <div class="sb-dialog sb-dialog-sm" role="dialog" aria-label="Proyek saya" data-i18n-aria="proj.mine">
+        <header>
+          <h2 data-i18n="proj.mine">Proyek saya</h2>
+          <button class="icon-btn" id="projects-close" aria-label="Tutup" data-i18n-aria="ui.close"></button>
+        </header>
+        <ul class="sb-projects" id="projects-list"></ul>
+      </div>
+    </div>
 
     <div class="sb-modal" id="add-modal" hidden>
       <div class="sb-dialog" role="dialog" aria-label="Tambah komponen" data-i18n-aria="sb.add">
