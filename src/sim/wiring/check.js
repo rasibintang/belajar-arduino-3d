@@ -1,12 +1,14 @@
 import { mcuPinInfo } from './pin-functions.js';
 import { view, pinOf, partOf } from './snapshot.js';
+import { recommend } from './recommend.js';
 
 /**
  * Pemeriksaan kabel yang sudah terpasang. Hanya net yang memuat pin Arduino atau simbol catu yang
- * dinilai, sehingga rangkaian yang masih setengah jadi tidak dihakimi.
+ * dinilai, sehingga rangkaian yang masih setengah jadi tidak dihakimi. Pengecualian sempit: kabel yang
+ * berakhir di jalur kosong tepat di sebelah lubang yang disarankan ("meleset", mis. seberang parit).
  */
 
-export const ISSUE_CODES = ['short', 'power-reversed', 'power-on-signal', 'vcc33-on-5v', 'i2c-pin', 'spi-pin', 'analog-pin', 'pwm-pin', 'serial-pin', 'led-resistor'];
+export const ISSUE_CODES = ['short', 'power-reversed', 'power-on-signal', 'vcc33-on-5v', 'i2c-pin', 'spi-pin', 'analog-pin', 'pwm-pin', 'serial-pin', 'led-resistor', 'wire-misplaced'];
 
 const POWER = ['mcu-5v', 'mcu-3v3', 'mcu-vin', 'supply-5v'];
 const GROUND = ['mcu-gnd', 'supply-gnd'];
@@ -103,7 +105,41 @@ export function checkCircuit(s) {
       issues.push(issue);
     }
   });
+  issues.push(...misplacedWires(s));
   return issues;
+}
+
+const ROWS = 'abcdefghij';
+const hole = (id) => {
+  const m = /^([a-j])(\d+)$/.exec(id);
+  return m && { row: ROWS.indexOf(m[1]), col: Number(m[2]) };
+};
+
+/**
+ * Kabel dari pin Arduino/catu yang berakhir di jalur breadboard tanpa komponen, padahal lubang yang
+ * disarankan untuk pin itu ada di kolom yang sama (seberang parit) atau satu kolom di sebelahnya.
+ */
+function misplacedWires(s) {
+  const v = view(s);
+  const out = [];
+  for (const w of s.wires) {
+    for (const [end, other] of [['to', 'from'], ['from', 'to']]) {
+      const at = w[end];
+      const src = w[other];
+      if (v.kind(at) !== 'breadboard' || !['mcu', 'source'].includes(v.kind(src))) continue;
+      const h = hole(pinOf(at));
+      const net = s.nets[v.netOf(at)];
+      if (!h || net.some((n) => v.isComponent(n) && v.kind(n) !== 'none')) continue;
+      const near = recommend(s, src)
+        .targets.filter((n) => partOf(n) === partOf(at))
+        .map((n) => ({ n, t: hole(pinOf(n)) }))
+        .filter(({ t }) => t && Math.abs(t.col - h.col) <= 1)
+        .sort((a, b) => Math.abs(a.t.col - h.col) - Math.abs(b.t.col - h.col) || Math.abs(a.t.row - h.row) - Math.abs(b.t.row - h.row))[0];
+      if (!near) continue;
+      out.push({ severity: 'warn', code: 'wire-misplaced', net: v.netOf(at), nodes: [src, at], suggest: near.n, fix: { wireId: w.id, end, to: near.n } });
+    }
+  }
+  return out;
 }
 
 /** Anoda di net pin digital/5V dan katoda (kaki LED yang sama) langsung di net ground. */
@@ -121,6 +157,7 @@ function ledWithoutResistor(s, anode, anodeFns) {
  * dan baru semua kabel di net bila keduanya tidak berkabel langsung.
  */
 export function issueWires(issue, s) {
+  if (issue.fix) return [issue.fix.wireId];
   for (const node of issue.nodes) {
     const ids = s.wires.filter((w) => w.from === node || w.to === node).map((w) => w.id);
     if (ids.length) return ids;

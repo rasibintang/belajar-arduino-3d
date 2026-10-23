@@ -19,6 +19,10 @@ nomor versi mengikuti [SemVer](https://semver.org/lang/id/).
   - Aturan: hubungan pendek, VCC/GND terbalik, pin daya di pin sinyal, modul 3,3 V diberi 5V,
     I²C bukan di A4/A5, SPI bukan di D11–D13, keluaran analog di pin tanpa ADC, servo di pin
     non-PWM, memakai D0/D1 (Serial), LED / 7-segment tanpa resistor.
+  - **Kabel meleset:** ujung kabel dari Arduino yang jatuh di jalur kosong tepat di sebelah lubang
+    yang benar (mis. GND ke `j13` padahal katoda LED di `b13`, di seberang parit) ditandai dengan
+    saran lubang terdekat dan tombol pindah. Kabel ke jalur kosong yang jauh dari komponen tetap
+    tidak dinilai.
   - Dua bahasa (ID/EN). Tidak pernah memblokir; rangkaian setengah jadi tidak dinilai.
 - Tes otomatis `npm test` (`node --test`) untuk netlist, fungsi pin, rekomendasi, pemeriksaan,
   dan kelengkapan teks ID/EN.

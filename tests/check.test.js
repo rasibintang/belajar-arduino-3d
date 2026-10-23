@@ -83,3 +83,24 @@ test('lewat breadboard: kabel dari pin komponen yang menyala', () => {
   const s = snap({ uno: 'arduino-uno', bb: 'breadboard', o: 'oled-ssd1306' }, [['o:SDA', 'bb:a3'], ['bb:b3', 'uno:A2']]);
   assert.deepEqual(issueWires(checkCircuit(s)[0], s), ['w1']);
 });
+
+const LED_PARTS = { uno: 'arduino-uno', bb: 'breadboard', r1: 'resistor', led1: 'led' };
+const LED_LEGS = [['r1:1', 'bb:d8'], ['r1:2', 'bb:d12'], ['led1:A', 'bb:b12'], ['led1:K', 'bb:b13']];
+test('GND di seberang parit (j13, katoda di b13) → wire-misplaced dengan saran e13', () => {
+  const s = snap(LED_PARTS, [['uno:D13', 'bb:c8'], ['uno:GND.1', 'bb:j13']], LED_LEGS);
+  const [i, ...rest] = checkCircuit(s);
+  assert.equal(rest.length, 0);
+  assert.equal(i.code, 'wire-misplaced'); assert.equal(i.severity, 'warn');
+  assert.deepEqual(i.nodes, ['uno:GND.1', 'bb:j13']);
+  assert.deepEqual(i.fix, { wireId: 'w2', end: 'to', to: 'bb:e13' });
+  assert.deepEqual(issueWires(i, s), ['w2']);
+});
+test('D13 meleset satu kolom (c7, resistor di kolom 8) → saran c8', () => {
+  const s = snap(LED_PARTS, [['uno:D13', 'bb:c7'], ['uno:GND.1', 'bb:a13']], LED_LEGS);
+  const issues = checkCircuit(s);
+  assert.deepEqual(issues.map((i) => [i.code, i.suggest]), [['wire-misplaced', 'bb:c8']]);
+});
+test('kabel ke jalur kosong yang jauh dari apa pun → diam (rangkaian setengah jadi)', () => {
+  const s = snap(LED_PARTS, [['uno:GND.1', 'bb:j25']], LED_LEGS);
+  assert.deepEqual(checkCircuit(s), []);
+});

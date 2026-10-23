@@ -233,6 +233,7 @@ const id = {
   'guide.issue.pwm-pin': '{pin} butuh pin PWM (~), {target} bukan PWM. Pakai {suggest}.',
   'guide.issue.serial-pin': '{pin} memakai {target}, yang dipakai Serial (USB). Pakai {suggest}.',
   'guide.issue.led-resistor': '{pin} tersambung ke {target} tanpa resistor — pada rangkaian nyata LED bisa rusak. Tambahkan resistor 220 Ω.',
+  'guide.issue.wire-misplaced': 'Kabel {pin} berakhir di lubang {target}, yang tidak tersambung ke komponen mana pun. Sepertinya maksudnya {suggest} — ingat, lubang a–e dan f–j dipisah parit tengah, dan tiap kolom terpisah dari kolom sebelahnya.',
 };
 
 const en = {
@@ -454,6 +455,7 @@ const en = {
   'guide.issue.pwm-pin': '{pin} needs a PWM pin (~), {target} is not PWM. Use {suggest}.',
   'guide.issue.serial-pin': '{pin} uses {target}, which Serial (USB) needs. Use {suggest}.',
   'guide.issue.led-resistor': '{pin} is connected to {target} without a resistor — in a real circuit the LED could burn out. Add a 220 Ω resistor.',
+  'guide.issue.wire-misplaced': 'The {pin} wire ends at hole {target}, which is not connected to any component. You probably meant {suggest} — remember, holes a–e and f–j are split by the center gap, and each column is separate from its neighbors.',
 };
 
 export const UI = { id, en };
