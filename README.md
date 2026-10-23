@@ -9,20 +9,21 @@ Dibangun dengan **Vite + Three.js** (JavaScript biasa, tanpa framework UI). Ters
 Desain terinspirasi dari [Learn Arduino](https://learn-arduino-red.vercel.app/) karya Dilum Sanjaya.
 Kode, model 3D, dan teks pelajaran di repo ini ditulis ulang dari awal.
 
-**Versi terbaru: 0.6.0** — lihat [Riwayat pembaharuan](#riwayat-pembaharuan) atau [CHANGELOG.md](CHANGELOG.md).
+**Versi terbaru: 0.8.0** — lihat [Riwayat pembaharuan](#riwayat-pembaharuan) atau [CHANGELOG.md](CHANGELOG.md).
 
 | Halaman | Isi |
 |---|---|
 | `/` | 30 pelajaran interaktif (Dasar, Menengah, Mahir) |
 | `/sandbox.html` | Rakit rangkaian sendiri + kode C++ sungguhan di emulator |
 | `/gallery.html` | Katalog 85 komponen: pin, pengaturan, coba di sandbox |
+| `/admin.html` | Halaman pengelola (hanya akun pengelola; lihat [Akun & data](#akun--data)) |
 
 ## Menjalankan
 
 ```bash
 npm install
 npm run setup:arduino   # sekali saja: unduh arduino-cli + core AVR + library ke tools/
-npm test                # tes aturan panduan kabel & netlist (node --test)
+npm test                # tes panduan kabel, netlist, akun, dan skema database (node --test)
 npm run dev             # http://localhost:5173  (pelajaran)  ·  /sandbox.html  ·  /gallery.html (katalog)
 npm run build           # hasil di dist/
 ```
@@ -92,6 +93,41 @@ Semua komponen di satu meja 3D: cari, saring per kategori, lihat pin & pengatura
 - Bahasa: `?lang=en` → pilihan tersimpan → bahasa browser. Mengganti bahasa memuat ulang halaman.
 - Mode dev mencatat teks yang belum diterjemahkan di `globalThis.__i18nMissing` (console browser).
 
+## Akun & data
+
+Masuk dengan Google (Supabase) membuka fitur tambahan; tanpa login semua tetap bekerja.
+
+- **Proyek di akun** (sandbox → menu akun): *Simpan ke akun*, *Proyek saya* (buka, ubah nama,
+  hapus), lalu proyek itu tersimpan otomatis ke akun. Simpanan di browser tetap ada.
+- **Progres pelajaran** ikut akun; saat pertama masuk, progres di browser dan di akun digabung.
+- **Halaman pengelola** (`/admin.html`, hanya untuk email di tabel `admins`): laporan komponen
+  yang belum tersedia (dari fitur AI), proyek semua pengguna (dibuka sebagai **salinan** di
+  sandbox — milik pengguna tidak berubah), daftar pengguna & pemakaian AI, batas AI per hari.
+- Akses data dijaga **Row Level Security** (`supabase/migrations/`): pengguna hanya melihat
+  miliknya; pengelola membaca semua tetapi tidak bisa mengubah milik orang lain. Diuji dengan
+  PGlite (Postgres di Node) di `tests/db/`.
+- Tanpa `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` tombol masuk tidak tampil dan pustaka
+  Supabase tidak diunduh.
+- Saat pengembangan, `?fakeauth=1` (belum masuk), `?fakeauth=admin` (pengelola), atau
+  `?fakeauth=offline` (server tidak bisa dihubungi) memakai akun palsu di memori — tanpa
+  Supabase dan tanpa Google.
+
+### Langkah pemilik (sekali)
+
+1. **Google Cloud Console** → APIs & Services → Credentials → *OAuth client ID* (Web application).
+   Authorized redirect URI: `https://gsjpkjolxielseltvhnn.supabase.co/auth/v1/callback`.
+2. **Supabase** → Authentication → Providers → **Google**: aktifkan, isi Client ID & Client Secret.
+3. Supabase → Authentication → URL Configuration: *Site URL* = domain produksi; *Redirect URLs*
+   tambahkan `http://localhost:5173/**` dan `https://<domain-anda>/**`.
+4. Supabase → SQL Editor: jalankan isi `supabase/migrations/20261024000000_akun_dan_data.sql`,
+   lalu tandai diri sebagai pengelola:
+   `insert into public.admins (email) values ('<email Google Anda>');`
+5. Supabase → Project Settings → API: salin **anon key** ke `.env.local` (lihat `.env.example`)
+   dan ke Vercel (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`). **service_role key** hanya
+   di Vercel (`SUPABASE_SERVICE_ROLE_KEY`, untuk fitur AI) — jangan di `.env` berawalan
+   `VITE_` dan jangan di-commit.
+6. Ganti password database Supabase (sempat tertulis di percakapan). Aplikasi tidak memakainya.
+
 ## Deploy
 
 ### Semua di Vercel (frontend + fungsi kompilasi)
@@ -133,7 +169,8 @@ hasil. Jalankan di kontainer sebagai pengguna biasa (sudah diatur di `Dockerfile
 ## Struktur
 
 ```
-index.html sandbox.html gallery.html   Tiga halaman (pelajaran, sandbox, katalog)
+index.html sandbox.html gallery.html admin.html   Halaman: pelajaran, sandbox, katalog, pengelola
+supabase/migrations/    Skema database + Row Level Security (jalankan di Supabase)
 api/compile.js          Fungsi Vercel: kompilasi sketch
 server/
   compile.mjs           Kompilasi dengan arduino-cli (cache, antrean, peta baris DWARF)
@@ -155,6 +192,8 @@ src/
     devices*.js         Perilaku tiap komponen (LED, servo, LCD, OLED, TFT, kartu SD, …)
     runner.js           Simulasi JS untuk pelajaran
   sandbox/              Sandbox (main, workbench, sim, guide, contoh proyek) & katalog (gallery.js)
+  account/              Akun: backend Supabase (dimuat malas) / memori, tombol masuk, proyek di akun, progres
+  admin/                Halaman pengelola
   i18n/                 Dua bahasa: ui.js (antarmuka) + en/ (pelajaran, komponen, contoh)
   ui/                   Panel info, kartu kode, callout, inspektor, strip, sidebar, ikon
   data/catalog.js       Daftar di menu "Komponen"
@@ -280,7 +319,9 @@ Rincian lengkap ada di [CHANGELOG.md](CHANGELOG.md).
 
 | Versi | Tanggal | Isi utama |
 |---|---|---|
-| **0.6.0** | 2026-10-23 | Dua bahasa (Indonesia/Inggris), katalog komponen, tombol Sandbox & Katalog di halaman utama, persiapan deploy penuh di Vercel |
+| **0.8.0** | 2026-10-24 | Akun & data: masuk dengan Google (Supabase), proyek sandbox di akun, progres pelajaran ikut akun, halaman pengelola |
+| 0.7.0 | 2026-10-23 | Panduan kabel di sandbox (sorotan tujuan, tanda !, daftar Periksa rangkaian), seret ujung kabel, bilah kamera |
+| 0.6.0 | 2026-10-23 | Dua bahasa (Indonesia/Inggris), katalog komponen, tombol Sandbox & Katalog di halaman utama, persiapan deploy penuh di Vercel |
 | 0.5.0 | 2026-10-23 | TFT ILI9341 (+ layar sentuh), e-Paper, kartu microSD, NLSF595 — total 85 komponen; komponen ikut saat breadboard dipindah |
 | 0.4.0 | 2026-10-23 | Bus SPI; OLED, Nokia 5110, TM1637, MAX7219, logic analyzer, MPU6050, BMP180, DS18B20, HX711, IR, RFID — total 80 |
 | 0.3.0 | 2026-10-23 | 41 komponen ala Wokwi (breadboard, input, sensor, LCD, NeoPixel, logika, motor) — total 67 |

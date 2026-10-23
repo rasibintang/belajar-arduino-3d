@@ -3,6 +3,28 @@
 Semua perubahan penting pada proyek ini. Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/);
 nomor versi mengikuti [SemVer](https://semver.org/lang/id/).
 
+## [0.8.0] — 2026-10-24 · Akun & data
+
+### Ditambahkan
+- **Masuk dengan Google** (Supabase) di halaman pelajaran, sandbox, katalog, dan pengelola. Tanpa
+  login semua tetap bekerja; saat pertama masuk ada pemberitahuan bahwa proyek di akun dapat
+  dilihat pengelola situs.
+- **Proyek sandbox di akun:** *Simpan ke akun*, *Proyek saya* (buka, ubah nama, hapus), simpan
+  otomatis ke akun, dan penanda "Tersimpan di akun / Hanya di browser ini". Simpanan di browser
+  tetap ada.
+- **Progres pelajaran ikut akun** — digabung dengan progres di browser saat pertama masuk.
+- **Halaman pengelola** `/admin.html`: laporan komponen yang belum tersedia, proyek semua
+  pengguna (dibuka sebagai salinan), pengguna & pemakaian AI, batas permintaan AI per hari
+  (awal 1).
+- Skema database + Row Level Security (`supabase/migrations/`) beserta tes di Node (PGlite):
+  pengguna hanya mengakses miliknya; pengelola membaca semua tanpa bisa mengubah milik orang lain.
+- Mode pengembangan `?fakeauth=1|admin|offline` (akun palsu di memori).
+
+### Catatan
+- Fitur akun aktif setelah `VITE_SUPABASE_URL` dan `VITE_SUPABASE_ANON_KEY` dipasang; pustaka
+  Supabase dimuat malas sehingga tanpa konfigurasi tidak ada yang diunduh. Langkah pemilik ada
+  di README bagian *Akun & data*.
+
 ## [0.7.0] — 2026-10-23 · Panduan kabel
 
 ### Ditambahkan
