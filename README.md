@@ -9,6 +9,14 @@ Dibangun dengan **Vite + Three.js** (JavaScript biasa, tanpa framework UI). Ters
 Desain terinspirasi dari [Learn Arduino](https://learn-arduino-red.vercel.app/) karya Dilum Sanjaya.
 Kode, model 3D, dan teks pelajaran di repo ini ditulis ulang dari awal.
 
+**Versi terbaru: 0.6.0** — lihat [Riwayat pembaharuan](#riwayat-pembaharuan) atau [CHANGELOG.md](CHANGELOG.md).
+
+| Halaman | Isi |
+|---|---|
+| `/` | 30 pelajaran interaktif (Dasar, Menengah, Mahir) |
+| `/sandbox.html` | Rakit rangkaian sendiri + kode C++ sungguhan di emulator |
+| `/gallery.html` | Katalog 85 komponen: pin, pengaturan, coba di sandbox |
+
 ## Menjalankan
 
 ```bash
@@ -103,27 +111,28 @@ hasil. Jalankan di kontainer sebagai pengguna biasa (sudah diatur di `Dockerfile
 ## Struktur
 
 ```
+index.html sandbox.html gallery.html   Tiga halaman (pelajaran, sandbox, katalog)
+api/compile.js          Fungsi Vercel: kompilasi sketch
+server/
+  compile.mjs           Kompilasi dengan arduino-cli (cache, antrean, peta baris DWARF)
+  compile-server.mjs    Server kompilasi mandiri (Docker / VPS)
+scripts/
+  setup-arduino.mjs     Pasang arduino-cli + core AVR + library
+  slim-toolchain.mjs    Rampingkan toolchain untuk serverless
 src/
-  main.js               Menyatukan semuanya: memuat pelajaran, parameter, Run/Stop, keyboard
-  core/
-    stage.js            Renderer, cahaya, bayangan, klik/hover/seret komponen
-    rig.js              Kamera isometrik: geser, putar 45°, zoom, bingkai otomatis
-    toon.js             Garis tepi gaya ilustrasi (deteksi tepi dari normal + depth)
-  parts/                Model 3D, semuanya dibuat dari kode (satuan: mm)
-    lib.js              Helper: box, cyl, rod, bentRod, canvasTexture, glowSprite, …
-    arduino.js          Arduino Uno R3 (posisi pin akurat)
-    breadboard.js       Breadboard 400 lubang; hole('c', 12) -> posisi lubang
-    wire.js             Kabel jumper melengkung
-    led.js resistor.js button.js potentiometer.js rgbled.js ldr.js lamp.js
-    ultrasonic.js buzzer.js transistor.js motor.js servo.js trafficlight.js obstacles.js
-  lessons/
-    index.js            Daftar pelajaran + pengisi template kode
-    kit.js              Alat bantu merakit: board(), breadboard(), place(), wire()
-    01-board.js … 11-project.js
+  main.js               Halaman pelajaran: memuat pelajaran, parameter, Run/Stop, keyboard
+  core/                 stage.js (renderer, hover/klik/seret), rig.js (kamera), toon.js (garis tepi), tween.js
+  parts/                Model 3D dari kode (satuan: mm): arduino, breadboard, LED, sensor, layar, …
+  lessons/              30 pelajaran (Dasar di akar, intermediate/, expert/) + kit.js + helpers.js
+  components/           Spesifikasi 85 komponen sandbox (model + pin + props + perilaku)
   sim/
-    runner.js           Menjalankan sketch (generator JS) dengan waktu simulasi
-    audio.js            Bunyi buzzer (Web Audio)
-  ui/                   Panel info, kartu kode, callout, inspektor, strip, sidebar, dll.
+    avr.js              Emulator ATmega328P (avr8js) + bus I²C & SPI
+    circuit.js          Netlist & pemecah tegangan rangkaian
+    devices*.js         Perilaku tiap komponen (LED, servo, LCD, OLED, TFT, kartu SD, …)
+    runner.js           Simulasi JS untuk pelajaran
+  sandbox/              Sandbox (main, workbench, sim, contoh proyek) & katalog (gallery.js)
+  i18n/                 Dua bahasa: ui.js (antarmuka) + en/ (pelajaran, komponen, contoh)
+  ui/                   Panel info, kartu kode, callout, inspektor, strip, sidebar, ikon
   data/catalog.js       Daftar di menu "Komponen"
   styles/app.css
 ```
@@ -162,6 +171,8 @@ Fitur simulasi tambahan yang bisa dipakai pelajaran:
    - `read(pin, view)` — nilai untuk `digitalRead`/`analogRead`/`pulseIn`.
    - `callouts`, `summary`, `features`, `explain`, `pinout`, `specs` — teks panel.
 3. Daftarkan di level yang sesuai pada `LEVELS` di `src/lessons/index.js`.
+4. Tambahkan terjemahan Inggris di `src/i18n/en/lessons-*.js` (kunci = `id` pelajaran): teks panel,
+   kode bila ada komentar/teks, dan `phrases` untuk teks Serial/LCD yang dicetak simulasi.
 
 ## Membuat komponen baru
 
@@ -194,25 +205,27 @@ export default {
 ```
 
 - Daftarkan di `src/components/index.js`.
-- Perilaku listriknya (`behavior.kind`) dijalankan oleh `src/sim/devices.js` /
-  `devices-more.js`: satu fungsi per jenis, memakai `ctx.resistor`, `ctx.switch`, `ctx.drive`,
+- Perilaku listriknya (`behavior.kind`) dijalankan oleh `src/sim/devices*.js`
+  (didaftarkan di `FACTORIES` pada `devices.js`): satu fungsi per jenis, memakai `ctx.resistor`, `ctx.switch`, `ctx.drive`,
   `ctx.watch` (tepi sinyal dengan stempel siklus CPU), `ctx.volts`, `ctx.schedule`.
-- Buka **http://localhost:5173/gallery.html** untuk melihat semua komponen beserta titik
+- Buka **http://localhost:5173/gallery.html?dev** untuk melihat semua komponen beserta titik
   pinnya, dan hasil `validateSpec()` (pin di kisi 2,54 mm, peran perilaku menunjuk pin yang ada, dll.).
+- Tambahkan terjemahan Inggris nama/keterangan/pin di `src/i18n/en/parts.js`.
 - Komponen tersedia (85):
-  - Papan & breadboard: Arduino Uno; breadboard full, half, dan mini.
-  - Dasar: resistor, transistor TIP120, 74HC595.
+  - Papan & breadboard: Arduino Uno R3; breadboard full, half, dan mini.
+  - Dasar: resistor, transistor TIP120, 74HC595, driver LED RGB NLSF595.
   - Output: LED, LED RGB, modul 8 LED, lampu lalu lintas, buzzer, relay modul & DPDT, NeoPixel (ring/tunggal/strip).
-  - Input: push button (6 warna) & 6 mm, saklar geser, DIP switch 8, potensiometer putar & geser, joystick, keypad 4×4, rotary encoder.
-  - Sensor: LDR, NTC, PIR, MQ2, HC-SR04, DHT11/DHT22, RTC DS3231/DS1307.
-  - Tampilan: 7-segment 1 & 4 digit, LCD 16×2/20×4 (I²C dan paralel), NeoPixel matrix 8×8 & bar 10.
+  - Input: push button (6 warna) & 6 mm, saklar geser, DIP switch 8, potensiometer putar & geser, joystick,
+    keypad 4×4, rotary encoder, remote IR.
+  - Sensor: LDR, NTC, PIR, MQ2, HC-SR04, DHT11/DHT22, RTC DS3231/DS1307, MPU6050, BMP180, DS18B20,
+    HX711 + load cell, penerima IR, RFID MFRC522.
+  - Tampilan: 7-segment 1 & 4 digit, LCD 16×2/20×4 (I²C dan paralel), NeoPixel matrix 8×8 & bar 10,
+    OLED SSD1306 128×64 & SH1107 128×128, LCD Nokia 5110, TM1637, matriks MAX7219 (1/2/4 modul),
+    TFT ILI9341 240×320 (± layar sentuh FT6206), e-Paper 2,9".
   - Motor: servo SG90, motor DC, stepper 28BYJ-48 + ULN2003, NEMA 17, stepper biaxial, driver A4988.
-  - Logika: gerbang NOT/AND/OR/XOR/NAND/NOR/XNOR, MUX 2:1, flip-flop D (+R, +S/R), generator clock, 74HC165, CD74HC4067.
-  - Lain-lain: simbol VCC/GND, junction, teks.
-  - Gelombang 2: OLED SSD1306 128×64 & SH1107 128×128, LCD Nokia 5110, TM1637, matriks MAX7219 (1/2/4 modul),
-    logic analyzer, MPU6050, BMP180, DS18B20, HX711 + load cell, penerima & remote IR, RFID MFRC522.
-  - Gelombang 3: TFT ILI9341 240×320 (± layar sentuh FT6206), e-Paper 2,9" (SSD1680), kartu microSD 32 MB (FAT16),
-    driver LED RGB NLSF595.
+  - Logika: gerbang NOT/AND/OR/XOR/NAND/NOR/XNOR, MUX 2:1, flip-flop D (+R, +S/R), generator clock,
+    74HC165, CD74HC4067, logic analyzer 8 kanal.
+  - Lain-lain: simbol VCC/GND, junction, teks, kartu microSD 32 MB (FAT16).
 - Bus yang diemulasikan: I²C (TWI), SPI perangkat keras (D11/D12/D13) maupun bit-bang, OneWire, protokol 2 kabel TM1637, NEC IR, kartu SD mode SPI.
 
 ## Animasi
@@ -233,4 +246,18 @@ export default {
 
 ## Pintasan
 
-WASD geser · Q/E putar · +/− zoom · R reset kamera · Spasi jalankan · `[` `]` pindah pelajaran · Esc tutup panel
+- Pelajaran: WASD geser · Q/E putar · +/− zoom · R reset kamera · Spasi jalankan · `[` `]` pindah pelajaran · Esc tutup panel
+- Sandbox: Ctrl+Enter jalankan/hentikan · A tambah komponen · R putar · Delete hapus · Esc batal
+
+## Riwayat pembaharuan
+
+Rincian lengkap ada di [CHANGELOG.md](CHANGELOG.md).
+
+| Versi | Tanggal | Isi utama |
+|---|---|---|
+| **0.6.0** | 2026-10-23 | Dua bahasa (Indonesia/Inggris), katalog komponen, tombol Sandbox & Katalog di halaman utama, persiapan deploy penuh di Vercel |
+| 0.5.0 | 2026-10-23 | TFT ILI9341 (+ layar sentuh), e-Paper, kartu microSD, NLSF595 — total 85 komponen; komponen ikut saat breadboard dipindah |
+| 0.4.0 | 2026-10-23 | Bus SPI; OLED, Nokia 5110, TM1637, MAX7219, logic analyzer, MPU6050, BMP180, DS18B20, HX711, IR, RFID — total 80 |
+| 0.3.0 | 2026-10-23 | 41 komponen ala Wokwi (breadboard, input, sensor, LCD, NeoPixel, logika, motor) — total 67 |
+| 0.2.0 | 2026-10-22 | Sandbox: editor rangkaian 3D, emulator ATmega328P, kompilasi `arduino-cli`, 26 komponen |
+| 0.1.0 | 2026-10-22 | Kursus Arduino 3D: 30 pelajaran (Dasar, Menengah, Mahir) |

@@ -1,0 +1,102 @@
+# Riwayat pembaharuan
+
+Semua perubahan penting pada proyek ini. Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/);
+nomor versi mengikuti [SemVer](https://semver.org/lang/id/).
+
+## [0.6.0] — 2026-10-23 · Dua bahasa, katalog komponen, siap Vercel
+
+### Ditambahkan
+- **Dua bahasa: Indonesia & Inggris.** Tombol **ID / EN** di semua halaman; pilihan tersimpan
+  (urutan: `?lang=` di URL → pilihan tersimpan → bahasa browser).
+  - Diterjemahkan: antarmuka situs, sandbox, dan katalog; 30 pelajaran (ringkasan, callout,
+    penjelasan, pinout, spesifikasi, parameter); 85 komponen beserta pin & pengaturannya;
+    38 contoh proyek; peringatan simulasi; pesan server kompilasi.
+  - Kode pelajaran & contoh ikut diterjemahkan (komentar, teks Serial/LCD, beberapa nama
+    variabel). Simulasi pelajaran menyesuaikan: keluaran Serial/LCD berbahasa Inggris,
+    sorotan baris tetap tepat, dan perintah Serial bahasa Inggris (`red`, `off`, …) dikenali.
+- **Katalog komponen** (`gallery.html`, sebelumnya alat pengembang): pencarian, tab kategori,
+  meja 3D yang tersusun ulang sesuai filter, panel detail (keterangan, tabel pin, pengaturan),
+  dan tombol **Coba di sandbox** yang membuka sandbox berisi Arduino + komponen itu
+  (komponen breadboard otomatis ditancapkan). Info validasi hanya dengan `?dev`.
+- **Bilah atas di halaman utama:** tombol **Sandbox**, **Katalog komponen**, dan pilihan bahasa.
+  Menu Komponen kini punya tautan ke katalog lengkap; menu Pengaturan punya pilihan bahasa.
+- **Persiapan deploy penuh di Vercel:** fungsi `api/compile.js`, `vercel.json`,
+  skrip `npm run vercel-build`, dan `scripts/slim-toolchain.mjs` yang merampingkan toolchain
+  ± 490 MB → ± 200 MB (di bawah batas fungsi 250 MB). Diuji lokal: 93 kompilasi (38 contoh +
+  30 pelajaran beserta variannya) berhasil dengan toolchain ramping.
+- Daftar **Library** di sandbox kini memuat semua library yang terpasang (27 entri).
+
+### Diubah
+- `server/compile.mjs`: konfigurasi `arduino-cli` dibuat saat berjalan (path bisa berbeda antara
+  saat dipasang dan saat dipakai), semua berkas sementara di folder temp, cadangan izin eksekusi
+  untuk serverless, dukungan `req.body` Vercel.
+- `scripts/setup-arduino.mjs`: folder tujuan lewat `TOOLS_DIR`; `arduino-cli` 1.5.1 dan
+  `arduino:avr@1.8.8` dipatok dan diunduh dari `downloads.arduino.cc`.
+
+### Diperbaiki
+- Gema perintah di Serial Monitor menampilkan teks yang diketik pengguna.
+
+## [0.5.0] — 2026-10-23 · Sandbox gelombang 3 (total 85 komponen)
+
+### Ditambahkan
+- **TFT 2,8" ILI9341** 240×320 (CASET/PASET/RAMWR, 4 rotasi, BGR) dan varian dengan
+  **layar sentuh FT6206** (klik-tahan layar saat simulasi).
+- **e-Paper 2,9"** (SSD1680, untuk GxEPD2): refresh dengan BUSY, gambar tetap tampil setelah
+  simulasi berhenti.
+- **Kartu microSD 32 MB**: kartu SD mode SPI dengan sistem file FAT16 (berisi `HALO.TXT`);
+  isi kartu bertahan selama halaman terbuka, daftar berkas tampil saat simulasi berhenti.
+- **Driver LED RGB NLSF595**.
+- Library server: Adafruit ILI9341, Adafruit FT6206, SD, GxEPD2. 5 contoh proyek baru.
+
+### Diperbaiki
+- Komponen yang tertancap di breadboard kini ikut saat breadboard digeser atau diputar.
+
+## [0.4.0] — 2026-10-23 · Sandbox gelombang 2 (total 80 komponen)
+
+### Ditambahkan
+- **SPI** di emulator (perangkat keras D11/D12/D13 dan bit-bang).
+- Layar: **OLED SSD1306** 128×64, **OLED SH1107** 128×128 (lewat U8g2), **Nokia 5110**,
+  **TM1637** 4 digit, **matriks LED MAX7219** (1/2/4 modul, cocok untuk MD_Parola),
+  **logic analyzer** 8 kanal.
+- Sensor & input: **MPU6050**, **BMP180**, **DS18B20** (OneWire lengkap), **HX711 + load cell**,
+  **penerima & remote IR** (NEC), **RFID MFRC522**.
+- 16 library baru di server kompilasi; 7 contoh proyek baru.
+
+### Diperbaiki
+- Serial Monitor membaca UTF-8 (karakter seperti `°` tampil benar).
+
+## [0.3.0] — 2026-10-23 · Sandbox gelombang 1 (total 67 komponen)
+
+### Ditambahkan
+- 41 komponen ala Wokwi: breadboard full/half/mini; push button 6 warna & 6 mm, saklar geser,
+  DIP switch 8, potensiometer geser; sensor NTC, PIR, MQ2, DHT22, RTC DS1307; LCD 16×2/20×4
+  (paralel & I²C), 7-segment 4 digit, NeoPixel tunggal/strip/matrix/bar; 7 gerbang logika,
+  MUX 2:1, flip-flop D, generator clock, 74HC165, CD74HC4067; relay DPDT, driver A4988,
+  stepper bipolar NEMA 17 & biaxial; simbol VCC/GND, junction, teks.
+- 5 contoh proyek baru; library LiquidCrystal di server kompilasi.
+
+## [0.2.0] — 2026-10-22 · Sandbox (rakit rangkaian sendiri)
+
+### Ditambahkan
+- Standar spesifikasi komponen (`src/components/`) dan galeri pengembang.
+- Editor rangkaian 3D (pindah, tancap ke breadboard, putar, kabel) dan emulator ATmega328P
+  (`avr8js`): timer/PWM, ADC, USART, I²C, EEPROM.
+- Kompilasi sungguhan dengan `arduino-cli` (`/api/compile`), sorotan baris yang sedang
+  berjalan, penanda error compiler.
+- 26 komponen dengan perilaku simulasi; 21 contoh proyek; simpan/buka/bagikan proyek.
+- Tombol **Buka di sandbox** di pelajaran; skrip setup dan Docker untuk server kompilasi.
+
+## [0.1.0] — 2026-10-22 · Kursus Arduino 3D
+
+### Ditambahkan
+- Situs kursus interaktif dengan papan Arduino 3D (Vite + Three.js), terinspirasi dari
+  Learn Arduino karya Dilum Sanjaya; kode, model, dan teks ditulis ulang dari awal.
+- 30 pelajaran: Dasar (11), Menengah (10), Mahir (9), dengan simulasi, Serial Monitor,
+  parameter yang bisa diubah, dan animasi.
+
+[0.6.0]: https://github.com/rasibintang/belajar-arduino-3d/compare/5e8a2c0...a4287d9
+[0.5.0]: https://github.com/rasibintang/belajar-arduino-3d/compare/9d36218...5e8a2c0
+[0.4.0]: https://github.com/rasibintang/belajar-arduino-3d/compare/4467aca...9d36218
+[0.3.0]: https://github.com/rasibintang/belajar-arduino-3d/compare/e0b8779...4467aca
+[0.2.0]: https://github.com/rasibintang/belajar-arduino-3d/compare/db949dd...e0b8779
+[0.1.0]: https://github.com/rasibintang/belajar-arduino-3d/commit/db949dd
