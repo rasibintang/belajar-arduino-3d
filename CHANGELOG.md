@@ -19,10 +19,12 @@ nomor versi mengikuti [SemVer](https://semver.org/lang/id/).
   - Aturan: hubungan pendek, VCC/GND terbalik, pin daya di pin sinyal, modul 3,3 V diberi 5V,
     I²C bukan di A4/A5, SPI bukan di D11–D13, keluaran analog di pin tanpa ADC, servo di pin
     non-PWM, memakai D0/D1 (Serial), LED / 7-segment tanpa resistor.
-  - **Kabel meleset:** ujung kabel dari Arduino yang jatuh di jalur kosong tepat di sebelah lubang
-    yang benar (mis. GND ke `j13` padahal katoda LED di `b13`, di seberang parit) ditandai dengan
-    saran lubang terdekat dan tombol pindah. Kabel ke jalur kosong yang jauh dari komponen tetap
-    tidak dinilai.
+  - **Kabel meleset / salah jalur:** ujung kabel dari Arduino yang jatuh di jalur kosong padahal
+    komponen yang cocok sudah ada di breadboard (mis. GND ke `a11` atau `j13` padahal katoda LED
+    di kolom 13), atau di jalur yang fungsinya tidak cocok (GND ke anoda LED, GND ke rel +), ditandai
+    dengan saran lubang terdekat di jalur komponen yang benar dan tombol pindah. Jalur tombol,
+    resistor biasa, dan masukan yang boleh diikat ke 5V/GND (mis. SLEEP/RESET A4988) tidak dinilai;
+    begitu pula kabel ke breadboard yang belum berisi komponen yang cocok.
   - **LED kurang satu kabel:** anoda sudah ke Arduino tetapi katoda belum ke GND, padahal rel − di
     breadboard sudah tersambung GND → tanda ! di kaki katoda dengan tombol **Tambahkan kabel**
     (mis. `a13 → bn14`).
