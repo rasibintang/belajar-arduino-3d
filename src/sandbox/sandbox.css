@@ -812,3 +812,13 @@ body.sb {
   right: auto;
   left: 12px;
 }
+
+/* bilah kamera: di tengah bawah meja, di atas daftar masalah bila sempit */
+.sb-viewbar {
+  bottom: 12px;
+}
+@media (max-width: 900px) {
+  .sb-viewbar .view-hint {
+    display: none;
+  }
+}

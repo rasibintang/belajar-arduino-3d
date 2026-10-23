@@ -56,6 +56,16 @@
           <div class="tip" id="tip" role="tooltip" hidden><b></b><span></span></div>
           <div class="sb-guide-label" id="guide-label" role="status" hidden></div>
           <section class="sb-issues" id="guide-issues" aria-live="polite" hidden><h3></h3><ul></ul></section>
+          <div class="viewbar sb-viewbar" id="viewbar" role="toolbar" aria-label="Tampilan 3D" data-i18n-aria="view.aria">
+            <p class="view-hint" data-i18n="sb.view.hint">Seret / panah geser · Q / E putar · Scroll zoom</p>
+            <button data-view="left" data-icon="rotLeft" title="Putar kiri (Q)" aria-label="Putar kiri" data-i18n-title="view.left.title" data-i18n-aria="view.left"></button>
+            <button data-view="right" data-icon="rotRight" title="Putar kanan (E)" aria-label="Putar kanan" data-i18n-title="view.right.title" data-i18n-aria="view.right"></button>
+            <span class="viewbar-sep"></span>
+            <button data-view="out" data-icon="minus" title="Perkecil (−)" aria-label="Perkecil" data-i18n-title="view.out.title" data-i18n-aria="view.out"></button>
+            <button data-view="in" data-icon="plus" title="Perbesar (+)" aria-label="Perbesar" data-i18n-title="view.in.title" data-i18n-aria="view.in"></button>
+            <span class="viewbar-sep"></span>
+            <button data-view="reset" data-icon="compass" class="compass" title="Kembalikan tampilan" aria-label="Kembalikan tampilan" data-i18n-title="sb.view.reset.title" data-i18n-aria="view.reset"></button>
+          </div>
           <div class="sb-panel" id="panel" hidden></div>
           <div class="sb-empty" id="empty" hidden data-i18n="sb.empty">Meja kosong — klik <b>+</b> untuk menambah komponen.</div>
         </div>

@@ -271,7 +271,8 @@ export default {
 ## Pintasan
 
 - Pelajaran: WASD geser · Q/E putar · +/− zoom · R reset kamera · Spasi jalankan · `[` `]` pindah pelajaran · Esc tutup panel
-- Sandbox: Ctrl+Enter jalankan/hentikan · A tambah komponen · R putar · Delete hapus · Esc batal
+- Sandbox: Ctrl+Enter jalankan/hentikan · A tambah komponen · R putar · Delete hapus · Esc batal ·
+  panah geser kamera · Q/E putar kamera · +/− zoom
 
 ## Riwayat pembaharuan
 

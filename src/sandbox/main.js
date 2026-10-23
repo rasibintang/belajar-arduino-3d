@@ -317,6 +317,32 @@ function setHint(text) {
 }
 setHint(null);
 
+// ------------------------------------------------------------------ bilah kamera (sama seperti halaman pelajaran)
+const viewbar = $('#viewbar');
+viewbar.querySelectorAll('[data-view]').forEach((b) => (b.innerHTML = icon(b.dataset.icon)));
+viewbar.addEventListener('click', (e) => {
+  const v = e.target.closest('[data-view]')?.dataset.view;
+  if (v === 'left') stage.rig.rotate(-1);
+  if (v === 'right') stage.rig.rotate(1);
+  if (v === 'in') stage.rig.zoomBy(1.25);
+  if (v === 'out') stage.rig.zoomBy(0.8);
+  if (v === 'reset') fit(false);
+});
+const needle = viewbar.querySelector('.needle');
+const panKeys = new Set(); // tombol panah yang sedang ditekan (WASD dipakai pintasan lain di sandbox)
+const PAN = { arrowleft: [1, 0], arrowright: [-1, 0], arrowup: [0, 1], arrowdown: [0, -1] };
+window.addEventListener('keyup', (e) => panKeys.delete(e.key.toLowerCase()));
+window.addEventListener('blur', () => panKeys.clear());
+stage.onUpdate((dt) => {
+  if (panKeys.size) {
+    let dx = 0;
+    let dy = 0;
+    for (const k of panKeys) (dx += PAN[k][0]), (dy += PAN[k][1]);
+    stage.rig.pan(dx * 420 * dt, dy * 420 * dt);
+  }
+  needle.style.transform = `rotate(${-stage.rig.heading}deg)`;
+});
+
 function fit(instant) {
   const box = wb.bounds();
   if (box.isEmpty()) return;
@@ -556,6 +582,19 @@ window.addEventListener('keydown', (e) => {
     return sim.state === 'idle' ? sim.start() : sim.stop();
   }
   const sel = wb.selection;
+  const key = e.key.toLowerCase();
+  if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+    if (key in PAN) {
+      e.preventDefault();
+      panKeys.add(key);
+      stage.touch?.();
+      return;
+    }
+    if (key === 'q') return stage.rig.rotate(-1);
+    if (key === 'e') return stage.rig.rotate(1);
+    if (key === '+' || key === '=') return stage.rig.zoomBy(1.25);
+    if (key === '-' || key === '_') return stage.rig.zoomBy(0.8);
+  }
   if (e.key === 'Escape') {
     if (!modal.hidden) return closeAdd();
     wb.cancelWiring();

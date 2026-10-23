@@ -31,6 +31,9 @@ nomor versi mengikuti [SemVer](https://semver.org/lang/id/).
 - **Pindahkan ujung kabel tanpa menghapusnya:** pilih kabel, lalu seret titik oranye di salah satu
   ujungnya ke pin/lubang lain. Panduan kabel menyorot tujuan yang cocok selama menyeret. Panel
   kabel menyingkir ke kiri bila menutupi ujung kabel.
+- **Bilah kamera di sandbox** (sama seperti di halaman pelajaran): putar kiri/kanan, perkecil/perbesar,
+  dan kompas untuk kembali ke tampilan awal. Keyboard: Q/E putar, +/− zoom, tombol panah geser
+  (WASD tidak dipakai karena A = tambah komponen).
   - Dua bahasa (ID/EN). Tidak pernah memblokir; rangkaian setengah jadi tidak dinilai.
 - Tes otomatis `npm test` (`node --test`) untuk netlist, fungsi pin, rekomendasi, pemeriksaan,
   dan kelengkapan teks ID/EN.
