@@ -13,9 +13,9 @@ const toUser = (u) =>
     avatarUrl: u.user_metadata?.avatar_url ?? null,
   };
 
-/** Backend Supabase (lihat antarmuka di memory-backend.js). */
-export async function createSupabaseBackend({ url, anonKey }) {
-  const client = createClient(url, anonKey, { auth: { persistSession: true, detectSessionInUrl: true, flowType: 'pkce' } });
+/** Backend Supabase (lihat antarmuka di memory-backend.js). deps.createClient hanya untuk tes. */
+export async function createSupabaseBackend({ url, anonKey }, deps = {}) {
+  const client = (deps.createClient ?? createClient)(url, anonKey, { auth: { persistSession: true, detectSessionInUrl: true, flowType: 'pkce' } });
   const listeners = new Set();
   let current = null;
   let admin = null; // cache is_admin() per pengguna
@@ -31,7 +31,11 @@ export async function createSupabaseBackend({ url, anonKey }) {
     if (next?.id === current?.id) return;
     current = next;
     admin = null;
-    for (const fn of listeners) fn(current && { ...current });
+    // pendengar memanggil Supabase lagi (touch, is_admin); di dalam callback ini supabase-js bisa
+    // macet (deadlock), jadi diteruskan setelah callback selesai
+    setTimeout(() => {
+      for (const fn of listeners) fn(current && { ...current });
+    }, 0);
   });
 
   /** Jalankan kueri supabase-js; error apa pun → AccountError. */
