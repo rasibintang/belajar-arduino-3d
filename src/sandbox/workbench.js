@@ -194,6 +194,24 @@ export function createWorkbench(stage, hooks = {}) {
     return false;
   }
 
+  /** Komponen yang semua kakinya tertancap di lubang breadboard `board` (ikut saat papan dipindah/diputar). */
+  function riders(board) {
+    if (board.spec.behavior.kind !== 'breadboard') return [];
+    board.group.updateMatrixWorld(true);
+    const list = board.pins.map((pin) => board.group.localToWorld(pin.at.clone()));
+    const out = [];
+    for (const p of parts.values()) {
+      if (p === board || p.spec.surface !== 'breadboard' || !p.pins.length) continue;
+      p.group.updateMatrixWorld(true);
+      const inserted = p.pins.every((pin) => {
+        const w = p.group.localToWorld(pin.at.clone());
+        return list.some((h) => Math.hypot(h.x - w.x, h.z - w.z) < 0.3 && Math.abs(h.y - w.y) < 0.5);
+      });
+      if (inserted) out.push(p);
+    }
+    return out;
+  }
+
   /** Taruh komponen baru di tengah pandangan, bergeser sampai tidak menimpa yang lain. */
   function placeFree(part) {
     const center = stage.rig.state.target.clone();
@@ -235,10 +253,20 @@ export function createWorkbench(stage, hooks = {}) {
   function rotatePart(id) {
     const part = parts.get(id);
     if (!part) return;
+    const carried = riders(part);
+    const c = part.group.position.clone();
     part.rot = (part.rot + 90) % 360;
     applyTransform(part, part.group.position.x, part.group.position.z);
     settle(part);
     refreshWires(id);
+    // putar 90° (searah rotasi papan) di sekitar posisi papan
+    for (const r of carried) {
+      const dx = r.group.position.x - c.x;
+      const dz = r.group.position.z - c.z;
+      r.rot = (r.rot + 90) % 360;
+      applyTransform(r, part.group.position.x + dz, part.group.position.z - dx);
+      refreshWires(r.id);
+    }
     changed();
   }
 
@@ -277,22 +305,38 @@ export function createWorkbench(stage, hooks = {}) {
     const g = part.group;
     let offset = null;
     let cache = null;
+    let carried = []; // [{ part, dx, dz }] komponen yang tertancap di breadboard ini
     const handler = {
       start(point) {
         offset = new THREE.Vector3(g.position.x - point.x, 0, g.position.z - point.z);
         cache = holes();
+        carried = riders(part).map((r) => ({ part: r, dx: r.group.position.x - g.position.x, dz: r.group.position.z - g.position.z }));
         select({ kind: 'part', id: part.id });
       },
       drag(p) {
         applyTransform(part, p.x + offset.x, p.z + offset.z);
-        settle(part, cache);
+        if (carried.length) {
+          // breadboard berdiri di lantai: tidak perlu settle, cukup bawa penumpangnya
+          for (const r of carried) {
+            applyTransform(r.part, g.position.x + r.dx, g.position.z + r.dz);
+            scheduleRefresh(r.part.id);
+          }
+        } else settle(part, cache);
         scheduleRefresh(part.id);
       },
       end(moved) {
         if (moved) {
+          if (carried.length) {
+            settle(part);
+            for (const r of carried) {
+              applyTransform(r.part, g.position.x + r.dx, g.position.z + r.dz);
+              refreshWires(r.part.id);
+            }
+          }
           refreshWires(part.id);
           changed();
         }
+        carried = [];
       },
     };
     // sub-bagian yang bisa diklik (chip, port, … di papan Uno) ikut memindahkan komponen
