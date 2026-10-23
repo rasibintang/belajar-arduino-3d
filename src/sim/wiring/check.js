@@ -1,0 +1,113 @@
+import { mcuPinInfo } from './pin-functions.js';
+import { view, pinOf, partOf } from './snapshot.js';
+
+/**
+ * Pemeriksaan kabel yang sudah terpasang. Hanya net yang memuat pin Arduino atau simbol catu yang
+ * dinilai, sehingga rangkaian yang masih setengah jadi tidak dihakimi.
+ */
+
+export const ISSUE_CODES = ['short', 'power-reversed', 'power-on-signal', 'vcc33-on-5v', 'i2c-pin', 'spi-pin', 'analog-pin', 'pwm-pin', 'serial-pin', 'led-resistor'];
+
+const POWER = ['mcu-5v', 'mcu-3v3', 'mcu-vin', 'supply-5v'];
+const GROUND = ['mcu-gnd', 'supply-gnd'];
+const SIGNAL = ['mcu-digital', 'mcu-analog'];
+const PWM_ORDER = ['D3', 'D5', 'D6', 'D9', 'D10', 'D11'];
+const DIGITAL_ORDER = ['D2', 'D3', 'D4', 'D5', 'D6', 'D7', 'D8', 'D9', 'D10', 'D11', 'D12', 'D13'];
+const ANALOG_ORDER = ['A0', 'A1', 'A2', 'A3', 'A4', 'A5'];
+const SPI_PIN = { mosi: 'D11', miso: 'D12', sck: 'D13' };
+
+/** Masalah untuk satu pin komponen di net yang tersambung ke Arduino: { code, severity, target } | null */
+function judgePin(fn, netFns, mcuPins) {
+  const has = (list) => list.some((f) => netFns.includes(f));
+  const ground = has(GROUND);
+  const power = has(POWER);
+  const powerTarget = { vcc5: '5V', vcc33: '3V3', gnd: 'GND' }[fn];
+  if ((fn === 'vcc5' || fn === 'vcc33') && ground) return { code: 'power-reversed', severity: 'danger', target: powerTarget };
+  if (fn === 'gnd' && power) return { code: 'power-reversed', severity: 'danger', target: powerTarget };
+  if (powerTarget && has(SIGNAL)) return { code: 'power-on-signal', severity: 'warn', target: powerTarget };
+  if (fn === 'vcc33' && (netFns.includes('mcu-5v') || netFns.includes('supply-5v'))) return { code: 'vcc33-on-5v', severity: 'warn', target: '3V3' };
+  const infos = mcuPins.map(mcuPinInfo);
+  if (!infos.length || !has(SIGNAL)) return null;
+  if (fn === 'i2c-sda' || fn === 'i2c-scl') {
+    const want = fn.slice(4);
+    if (!infos.some((i) => i.i2c === want)) return { code: 'i2c-pin', severity: 'warn', target: want === 'sda' ? 'A4' : 'A5' };
+    return null;
+  }
+  if (['spi-mosi', 'spi-miso', 'spi-sck'].includes(fn)) {
+    const want = fn.slice(4);
+    if (!infos.some((i) => i.spi === want)) return { code: 'spi-pin', severity: 'warn', target: SPI_PIN[want] };
+    return null;
+  }
+  if (fn === 'analog-out' && !netFns.includes('mcu-analog')) return { code: 'analog-pin', severity: 'warn', free: ANALOG_ORDER };
+  if (fn === 'pwm-in' && netFns.includes('mcu-digital') && !infos.some((i) => i.pwm)) return { code: 'pwm-pin', severity: 'warn', free: PWM_ORDER };
+  if (fn !== 'neutral' && infos.some((i) => i.serial)) return { code: 'serial-pin', severity: 'warn', free: DIGITAL_ORDER };
+  return null;
+}
+
+/** Pin Uno pertama dari daftar yang netnya tidak memuat pin komponen lain. */
+function firstFree(s, uno, order) {
+  const v = view(s);
+  return order.find((pin) => {
+    const i = v.netOf(`${uno}:${pin}`);
+    return i !== undefined && !s.nets[i].some((n) => v.isComponent(n) && v.kind(n) !== 'none');
+  });
+}
+
+/** Satu kabel yang langsung menghubungkan pin komponen dengan salah satu pin Uno di net yang sama. */
+function directWire(s, compNode, mcuNodes) {
+  for (const w of s.wires) {
+    if (w.from === compNode && mcuNodes.includes(w.to)) return { wireId: w.id, end: 'to' };
+    if (w.to === compNode && mcuNodes.includes(w.from)) return { wireId: w.id, end: 'from' };
+  }
+  return null;
+}
+
+/** Periksa rangkaian → daftar masalah { severity, code, net, nodes: [komponen, Uno], fix? }. */
+export function checkCircuit(s) {
+  const v = view(s);
+  const issues = [];
+  s.nets.forEach((nodes, net) => {
+    const fns = nodes.map(v.fn);
+    const mcuNodes = nodes.filter((n) => v.kind(n) === 'mcu');
+    const supplies = nodes.filter((n) => v.kind(n) === 'source');
+    if (!mcuNodes.length && !supplies.length) return;
+    const anchor = mcuNodes[0] ?? supplies[0];
+
+    if (POWER.some((f) => fns.includes(f)) && GROUND.some((f) => fns.includes(f))) {
+      const p = nodes.find((n) => POWER.includes(v.fn(n)));
+      const g = nodes.find((n) => GROUND.includes(v.fn(n)));
+      issues.push({ severity: 'danger', code: 'short', net, nodes: [p, g] });
+      return;
+    }
+
+    const mcuPins = mcuNodes.map(pinOf);
+    for (const node of nodes) {
+      if (!v.isComponent(node)) continue;
+      const fn = v.fn(node);
+      const r = judgePin(fn, fns, mcuPins);
+      if (!r) {
+        if (fn === 'led-anode' && ledWithoutResistor(s, node, fns)) {
+          issues.push({ severity: 'warn', code: 'led-resistor', net, nodes: [node, anchor] });
+        }
+        continue;
+      }
+      const issue = { severity: r.severity, code: r.code, net, nodes: [node, anchor] };
+      const wire = directWire(s, node, mcuNodes);
+      const uno = mcuNodes.length ? partOf(mcuNodes[0]) : null;
+      const target = r.target ?? (uno && firstFree(s, uno, r.free));
+      if (wire && uno && target) issue.fix = { ...wire, to: `${uno}:${target}` };
+      issues.push(issue);
+    }
+  });
+  return issues;
+}
+
+/** Anoda di net pin digital/5V dan katoda (kaki LED yang sama) langsung di net ground. */
+function ledWithoutResistor(s, anode, anodeFns) {
+  if (!['mcu-digital', 'mcu-5v', 'supply-5v'].some((f) => anodeFns.includes(f))) return false;
+  const v = view(s);
+  const b = v.spec(anode).behavior;
+  const cathode = `${partOf(anode)}:${b.cathode ?? b.common}`;
+  const i = v.netOf(cathode);
+  return i !== undefined && s.nets[i].some((n) => GROUND.includes(v.fn(n)));
+}
