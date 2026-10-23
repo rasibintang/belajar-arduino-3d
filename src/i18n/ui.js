@@ -222,6 +222,7 @@ const id = {
   'guide.hint.rail-': 'Rel − → pin GND Arduino dan GND modul',
   'guide.panel': 'Periksa rangkaian ({n})',
   'guide.fix': 'Pindahkan ke {suggest}',
+  'guide.add': 'Tambahkan kabel {from} → {suggest}',
   'guide.empty': 'Tidak ada masalah kabel.',
   'guide.issue.short': 'Hubungan pendek: {pin} tersambung langsung ke {target}. Lepas kabel ini — pada papan nyata bisa merusak Arduino.',
   'guide.issue.power-reversed': '{pin} tersambung ke {target}, kebalikan dari seharusnya. Sambungkan ke {suggest}.',
@@ -233,6 +234,7 @@ const id = {
   'guide.issue.pwm-pin': '{pin} butuh pin PWM (~), {target} bukan PWM. Pakai {suggest}.',
   'guide.issue.serial-pin': '{pin} memakai {target}, yang dipakai Serial (USB). Pakai {suggest}.',
   'guide.issue.led-resistor': '{pin} tersambung ke {target} tanpa resistor — pada rangkaian nyata LED bisa rusak. Tambahkan resistor 220 Ω.',
+  'guide.issue.led-open': 'Katoda LED {pin} belum tersambung ke {target}, jadi LED tidak akan menyala. Tambahkan kabel dari jalur katoda ({from}) ke rel − ({suggest}).',
   'guide.issue.wire-misplaced': 'Kabel {pin} berakhir di lubang {target}, yang tidak tersambung ke komponen mana pun. Sepertinya maksudnya {suggest} — ingat, lubang a–e dan f–j dipisah parit tengah, dan tiap kolom terpisah dari kolom sebelahnya.',
 };
 
@@ -444,6 +446,7 @@ const en = {
   'guide.hint.rail-': '− rail → Arduino GND and module GND',
   'guide.panel': 'Check circuit ({n})',
   'guide.fix': 'Move to {suggest}',
+  'guide.add': 'Add wire {from} → {suggest}',
   'guide.empty': 'No wiring problems.',
   'guide.issue.short': 'Short circuit: {pin} is connected directly to {target}. Remove this wire — on a real board it can damage the Arduino.',
   'guide.issue.power-reversed': '{pin} is connected to {target}, the opposite of what it needs. Connect it to {suggest}.',
@@ -455,6 +458,7 @@ const en = {
   'guide.issue.pwm-pin': '{pin} needs a PWM pin (~), {target} is not PWM. Use {suggest}.',
   'guide.issue.serial-pin': '{pin} uses {target}, which Serial (USB) needs. Use {suggest}.',
   'guide.issue.led-resistor': '{pin} is connected to {target} without a resistor — in a real circuit the LED could burn out. Add a 220 Ω resistor.',
+  'guide.issue.led-open': 'LED cathode {pin} is not connected to {target} yet, so the LED will not light. Add a wire from the cathode row ({from}) to the − rail ({suggest}).',
   'guide.issue.wire-misplaced': 'The {pin} wire ends at hole {target}, which is not connected to any component. You probably meant {suggest} — remember, holes a–e and f–j are split by the center gap, and each column is separate from its neighbors.',
 };
 

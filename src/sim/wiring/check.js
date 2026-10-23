@@ -106,7 +106,61 @@ export function checkCircuit(s) {
     }
   });
   issues.push(...misplacedWires(s));
+  issues.push(...openLeds(s));
   return issues;
+}
+
+const DRIVE = ['mcu-digital', 'mcu-5v', 'supply-5v'];
+
+/** Sisi anoda tersambung ke pin Arduino, langsung atau lewat satu resistor. */
+function anodeDriven(s, anode) {
+  const v = view(s);
+  const nodes = s.nets[v.netOf(anode)];
+  if (nodes.some((n) => DRIVE.includes(v.fn(n)))) return true;
+  return nodes.some((n) => {
+    if (v.kind(n) !== 'resistor') return false;
+    const b = v.spec(n).behavior;
+    const other = `${partOf(n)}:${pinOf(n) === b.a ? b.b : b.a}`;
+    return s.nets[v.netOf(other)]?.some((m) => DRIVE.includes(v.fn(m)));
+  });
+}
+
+/**
+ * LED yang tinggal kurang satu kabel: anoda sudah ke Arduino, katoda belum ke GND, padahal rel −
+ * di breadboard yang sama sudah tersambung ke GND. Sarannya: kabel dari jalur katoda ke rel itu.
+ */
+function openLeds(s) {
+  const v = view(s);
+  const out = [];
+  for (const { id } of s.parts) {
+    const spec = v.spec(`${id}:`);
+    const b = spec?.behavior;
+    if (!['led', 'rgb-led'].includes(b?.kind)) continue;
+    const anodes = b.kind === 'led' ? [b.anode] : [b.red, b.green, b.blue];
+    if (!anodes.some((a) => anodeDriven(s, `${id}:${a}`))) continue;
+    const cathode = `${id}:${b.cathode}`;
+    const net = v.netOf(cathode);
+    const nodes = s.nets[net];
+    // katoda harus "menggantung": tidak ke GND dan tidak ke komponen lain (mis. transistor)
+    if (nodes.some((n) => n !== cathode && (v.kind(n) === 'mcu' || v.kind(n) === 'source' || (v.isComponent(n) && v.kind(n) !== 'none')))) continue;
+    const holes = nodes.filter((n) => v.kind(n) === 'breadboard' && !s.occupied.has(n) && hole(pinOf(n)));
+    if (!holes.length) continue;
+    const board = partOf(holes[0]);
+    const col = hole(pinOf(holes[0])).col;
+    const rails = s.nets
+      .filter((ns) => ns.some((n) => GROUND.includes(v.fn(n))))
+      .flatMap((ns) => ns.filter((n) => partOf(n) === board && v.fn(n) === 'rail-' && !s.occupied.has(n)))
+      .map((n) => ({ n, col: Number(pinOf(n).slice(2)), front: pinOf(n).startsWith('b') }))
+      .sort((a, c) => Math.abs(a.col - col) - Math.abs(c.col - col) || a.col - c.col);
+    if (!rails.length) continue;
+    const rail = rails[0];
+    const gnd = s.nets[v.netOf(rail.n)].find((n) => GROUND.includes(v.fn(n)));
+    // baris a menempel ke rel depan (bp/bn), baris j ke rel belakang (tp/tn)
+    const near = rail.front ? 0 : 9;
+    const from = holes.sort((a, c) => Math.abs(hole(pinOf(a)).row - near) - Math.abs(hole(pinOf(c)).row - near))[0];
+    out.push({ severity: 'warn', code: 'led-open', net, nodes: [cathode, gnd], suggest: rail.n, fix: { add: [from, rail.n] } });
+  }
+  return out;
 }
 
 const ROWS = 'abcdefghij';
@@ -157,6 +211,7 @@ function ledWithoutResistor(s, anode, anodeFns) {
  * dan baru semua kabel di net bila keduanya tidak berkabel langsung.
  */
 export function issueWires(issue, s) {
+  if (issue.fix?.add) return []; // kabel kurang, bukan kabel salah
   if (issue.fix) return [issue.fix.wireId];
   for (const node of issue.nodes) {
     const ids = s.wires.filter((w) => w.from === node || w.to === node).map((w) => w.id);

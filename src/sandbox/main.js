@@ -155,9 +155,16 @@ function renderIssues() {
       btn.addEventListener('click', () => {
         const id = guide.wireOf(issue);
         const wire = id && wb.wires.get(id);
-        if (!wire) return;
-        if (wb.mode === 'edit') wb.select({ kind: 'wire', id });
-        stage.focus(wire.group);
+        if (wire) {
+          if (wb.mode === 'edit') wb.select({ kind: 'wire', id });
+          stage.focus(wire.group);
+          return;
+        }
+        // kabel yang kurang: sorot komponennya
+        const part = wb.parts.get(issue.nodes[0].split(':')[0]);
+        if (!part) return;
+        if (wb.mode === 'edit') wb.select({ kind: 'part', id: part.id });
+        stage.focus(part.group);
       });
       li.append(btn);
       return li;

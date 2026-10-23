@@ -20,7 +20,12 @@ function readEnabled() {
 
 /** Kalimat sebuah masalah, mis. "o:SDA sebaiknya ke A4, bukan A2 — …". */
 export function issueText(issue, t) {
-  return t(`guide.issue.${issue.code}`, { pin: issue.nodes[0], target: pinOf(issue.nodes[1]), suggest: issue.suggest ? pinOf(issue.suggest) : '?' });
+  return t(`guide.issue.${issue.code}`, {
+    pin: issue.nodes[0],
+    target: pinOf(issue.nodes[1]),
+    suggest: issue.suggest ? pinOf(issue.suggest) : '?',
+    from: issue.fix?.add ? pinOf(issue.fix.add[0]) : '',
+  });
 }
 
 /**
@@ -117,12 +122,14 @@ export function createGuide({ wb, stage, root, layer, t }) {
     text.textContent = issueText(issue, t);
     popup.append(text);
     if (issue.fix && wb.mode === 'edit') { // saat simulasi berjalan rangkaian tidak bisa diubah
+      const { add } = issue.fix;
       const btn = document.createElement('button');
       btn.className = 'sb-btn';
-      btn.textContent = t('guide.fix', { suggest: pinOf(issue.fix.to) });
+      btn.textContent = add ? t('guide.add', { from: pinOf(add[0]), suggest: pinOf(add[1]) }) : t('guide.fix', { suggest: pinOf(issue.fix.to) });
       btn.addEventListener('click', () => {
         popup.hidden = true;
-        wb.moveWireEnd(issue.fix.wireId, issue.fix.end, issue.fix.to);
+        if (add) wb.addWire(add[0], add[1], 'black');
+        else wb.moveWireEnd(issue.fix.wireId, issue.fix.end, issue.fix.to);
       });
       popup.append(btn);
     }
@@ -140,11 +147,19 @@ export function createGuide({ wb, stage, root, layer, t }) {
     for (const issue of issues) {
       const ids = issueWires(issue, s);
       for (const id of ids) if (state.get(id) !== 'danger') state.set(id, issue.severity);
-      const wireId = issue.fix?.wireId ?? ids[0];
-      const wire = wb.wires.get(wireId);
-      if (!wire?.group || shown.some((x) => x.wireId === wireId)) continue;
-      const box = new THREE.Box3().setFromObject(wire.group);
-      const at = box.getCenter(new THREE.Vector3()).setY(box.max.y);
+      // tanda ! di tengah kabel bermasalah; bila masalahnya kabel yang kurang, di pin komponennya
+      const wire = wb.wires.get(issue.fix?.wireId ?? ids[0]);
+      const wireId = wire ? wire.id : `@${issue.nodes[0]}`;
+      if (shown.some((x) => x.wireId === wireId)) continue;
+      let at;
+      if (wire?.group) {
+        const box = new THREE.Box3().setFromObject(wire.group);
+        at = box.getCenter(new THREE.Vector3()).setY(box.max.y);
+      } else {
+        at = wb.pinWorld(issue.nodes[0]);
+        if (!at) continue;
+        at.y += 6;
+      }
       const el = document.createElement('button');
       el.className = 'sb-issue-mark';
       el.dataset.severity = issue.severity;
@@ -165,8 +180,8 @@ export function createGuide({ wb, stage, root, layer, t }) {
     startWiring,
     stopWiring,
     showIssues,
-    /** Kabel utama sebuah masalah (untuk disorot dari daftar). */
-    wireOf: (issue) => shown.find((x) => x.issue === issue)?.wireId ?? (lastSnapshot ? issueWires(issue, lastSnapshot)[0] : null),
+    /** Kabel utama sebuah masalah (untuk disorot dari daftar); null bila masalahnya kabel yang kurang. */
+    wireOf: (issue) => (lastSnapshot ? issueWires(issue, lastSnapshot)[0] ?? null : null),
     setEnabled(on) {
       enabled = on;
       try {

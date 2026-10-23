@@ -104,3 +104,22 @@ test('kabel ke jalur kosong yang jauh dari apa pun → diam (rangkaian setengah 
   const s = snap(LED_PARTS, [['uno:GND.1', 'bb:j25']], LED_LEGS);
   assert.deepEqual(checkCircuit(s), []);
 });
+
+test('katoda LED belum ke rel − yang sudah ber-GND → led-open dengan saran tambah kabel', () => {
+  // diagram pengguna: GND ke bn12, tetapi kolom katoda (13) tidak disambung ke rel
+  const s = snap(LED_PARTS, [['uno:D13', 'bb:c8'], ['uno:GND.1', 'bb:bn12']], LED_LEGS);
+  const issues = checkCircuit(s);
+  assert.equal(issues.length, 1);
+  const [i] = issues;
+  assert.equal(i.code, 'led-open'); assert.equal(i.severity, 'warn');
+  assert.deepEqual(i.nodes, ['led1:K', 'uno:GND.1']);
+  assert.equal(i.suggest, 'bb:bn14'); // bn13 tidak ada (celah rel), bn12 sudah terisi kabel
+  assert.deepEqual(i.fix, { add: ['bb:a13', 'bb:bn14'] }); // baris a paling dekat ke rel depan
+  assert.deepEqual(issueWires(i, s), []); // tidak ada kabel yang salah
+});
+test('katoda belum ke GND tetapi belum ada rel ber-GND → diam', () => {
+  assert.deepEqual(checkCircuit(snap(LED_PARTS, [['uno:D13', 'bb:c8']], LED_LEGS)), []);
+});
+test('rel − ber-GND tetapi sisi anoda belum ke Arduino → diam', () => {
+  assert.deepEqual(checkCircuit(snap(LED_PARTS, [['uno:GND.1', 'bb:bn12']], LED_LEGS)), []);
+});

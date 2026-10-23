@@ -23,6 +23,9 @@ nomor versi mengikuti [SemVer](https://semver.org/lang/id/).
     yang benar (mis. GND ke `j13` padahal katoda LED di `b13`, di seberang parit) ditandai dengan
     saran lubang terdekat dan tombol pindah. Kabel ke jalur kosong yang jauh dari komponen tetap
     tidak dinilai.
+  - **LED kurang satu kabel:** anoda sudah ke Arduino tetapi katoda belum ke GND, padahal rel − di
+    breadboard sudah tersambung GND → tanda ! di kaki katoda dengan tombol **Tambahkan kabel**
+    (mis. `a13 → bn14`).
   - Dua bahasa (ID/EN). Tidak pernah memblokir; rangkaian setengah jadi tidak dinilai.
 - Tes otomatis `npm test` (`node --test`) untuk netlist, fungsi pin, rekomendasi, pemeriksaan,
   dan kelengkapan teks ID/EN.
