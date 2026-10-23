@@ -61,7 +61,7 @@ export function createWorkbench(stage, hooks = {}) {
 
   // ------------------------------------------------------------ util
   function nextId(type) {
-    const base = { 'arduino-uno': 'uno', breadboard: 'bb' }[type] ?? type.split('-')[0];
+    const base = type === 'arduino-uno' ? 'uno' : type.startsWith('breadboard') ? 'bb' : type.split('-')[0];
     for (let i = base === 'uno' || base === 'bb' ? 0 : 1; ; i++) {
       const id = i === 0 ? base : `${base}${i}`;
       if (!parts.has(id)) return id;
@@ -88,7 +88,7 @@ export function createWorkbench(stage, hooks = {}) {
   function addPinHits(part) {
     for (const old of part.hits ?? []) old.removeFromParent();
     part.hits = part.pins.map((pin) => {
-      const hit = new THREE.Mesh(part.spec.type === 'breadboard' ? holeHitGeo : pinHitGeo, hitMat);
+      const hit = new THREE.Mesh(part.spec.behavior.kind === 'breadboard' ? holeHitGeo : pinHitGeo, hitMat);
       hit.position.copy(pin.at);
       hit.layers.set(PIN_LAYER);
       hit.userData.node = `${part.id}:${pin.id}`;
@@ -151,7 +151,7 @@ export function createWorkbench(stage, hooks = {}) {
   function holes() {
     const list = [];
     for (const p of parts.values()) {
-      if (p.spec.type !== 'breadboard') continue;
+      if (p.spec.behavior.kind !== 'breadboard') continue;
       p.group.updateMatrixWorld(true);
       for (const pin of p.pins) list.push(p.group.localToWorld(pin.at.clone()));
     }

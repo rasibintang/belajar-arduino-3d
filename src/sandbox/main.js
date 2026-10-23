@@ -233,6 +233,9 @@ function control(def, value) {
       .map((o) => `<button class="${o.value === value ? 'is-on' : ''}" data-key="${def.key}" data-value="${o.value}">${o.label}</button>`)
       .join('')}</div>`;
   }
+  if (def.type === 'text') {
+    return `<input class="insp-text" type="text" data-key="${def.key}" value="${escapeHtml(String(value ?? ''))}" maxlength="60">`;
+  }
   return `<div class="range"><input type="range" data-key="${def.key}" min="${def.min}" max="${def.max}" step="${def.step}" value="${value}"><output>${value}${def.unit ? ' ' + def.unit : ''}</output></div>`;
 }
 
@@ -274,6 +277,7 @@ function showPanel(sel) {
 }
 
 panel.addEventListener('pointerdown', (e) => e.stopPropagation());
+panel.addEventListener('keydown', (e) => e.stopPropagation());
 panel.addEventListener('click', (e) => {
   const id = panel.dataset.id;
   const act = e.target.closest('[data-act]')?.dataset.act;
@@ -303,6 +307,10 @@ panel.addEventListener('input', (e) => {
   if (!input) return;
   const id = panel.dataset.id;
   const def = wb.parts.get(id).spec.props.find((p) => p.key === input.dataset.key);
+  if (def.type === 'text') {
+    wb.setProp(id, def.key, input.value);
+    return;
+  }
   wb.setProp(id, def.key, Number(input.value));
   input.nextElementSibling.textContent = `${input.value}${def.unit ? ' ' + def.unit : ''}`;
   sim.refresh();

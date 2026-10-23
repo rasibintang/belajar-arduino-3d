@@ -1,5 +1,5 @@
 import arduinoUno from './arduino-uno.js';
-import breadboard from './breadboard.js';
+import breadboard, { breadboardFull, breadboardMini } from './breadboard.js';
 import led from './led.js';
 import rgbLed from './rgb-led.js';
 import ledBar from './led-bar.js';
@@ -24,6 +24,11 @@ import lcdI2c from './lcd-i2c.js';
 import servo from './servo.js';
 import dcMotor from './dc-motor.js';
 import stepper from './stepper.js';
+import { button6, slideSwitch, dipSwitch8, slidePot } from './inputs-extra.js';
+import { ntc, pir, mq2, dht22, ds1307 } from './sensors-extra.js';
+import { lcd1602, lcd2004, lcd2004i2c, seg7x4, neopixel as neopixelSingle, neopixelStrip, neopixelMatrix, neopixelMeter } from './displays-extra.js';
+import { gates, mux2, flipFlops, clockGen, hc165, mux16 } from './logic.js';
+import { vcc, gnd, text, junction, relayDPDT, a4988, nema17, biaxial } from './misc.js';
 
 /**
  * Daftar komponen untuk sandbox. Untuk menambah komponen: buat file spesifikasi
@@ -32,6 +37,8 @@ import stepper from './stepper.js';
 export const COMPONENTS = [
   arduinoUno,
   breadboard,
+  breadboardFull,
+  breadboardMini,
   resistor,
   transistor,
   hc595,
@@ -41,21 +48,52 @@ export const COMPONENTS = [
   trafficLight,
   buzzer,
   relay,
+  relayDPDT,
   neopixel,
+  neopixelSingle,
+  neopixelStrip,
   pushButton,
+  button6,
+  slideSwitch,
+  dipSwitch8,
   potentiometer,
+  slidePot,
   joystick,
   keypad,
   encoder,
   ldr,
+  ntc,
+  pir,
+  mq2,
   hcSr04,
   dht11,
+  dht22,
   rtc,
+  ds1307,
   seg7,
+  seg7x4,
   lcdI2c,
+  lcd1602,
+  lcd2004i2c,
+  lcd2004,
+  neopixelMatrix,
+  neopixelMeter,
   servo,
   dcMotor,
   stepper,
+  nema17,
+  biaxial,
+  a4988,
+  ...gates,
+  mux2,
+  ...flipFlops,
+  clockGen,
+  hc165,
+  mux16,
+  vcc,
+  gnd,
+  junction,
+  text,
 ];
 
 export const COMPONENT_BY_TYPE = Object.fromEntries(COMPONENTS.map((c) => [c.type, c]));

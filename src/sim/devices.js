@@ -20,6 +20,25 @@ import {
   encoderDevice,
   stepperDevice,
 } from './devices-more.js';
+import {
+  sourceDevice,
+  slideSwitchDevice,
+  dipDevice,
+  ntcDevice,
+  pirDevice,
+  mq2Device,
+  lcdParallelDevice,
+  gateDevice,
+  mux2Device,
+  dffDevice,
+  clockDevice,
+  dpdtDevice,
+  hc165Device,
+  mux16Device,
+  a4988Device,
+  bipolarDevice,
+  seg7muxDevice,
+} from './devices-extra.js';
 
 /**
  * Perangkat simulasi untuk setiap jenis perilaku komponen (spec.behavior.kind).
@@ -60,6 +79,24 @@ const FACTORIES = {
   'i2c-rtc': rtcDevice,
   encoder: encoderDevice,
   stepper: stepperDevice,
+  none: () => null,
+  source: sourceDevice,
+  'slide-switch': slideSwitchDevice,
+  dip: dipDevice,
+  ntc: ntcDevice,
+  pir: pirDevice,
+  mq2: mq2Device,
+  'lcd-parallel': lcdParallelDevice,
+  gate: gateDevice,
+  mux2: mux2Device,
+  dff: dffDevice,
+  clock: clockDevice,
+  dpdt: dpdtDevice,
+  hc165: hc165Device,
+  mux16: mux16Device,
+  a4988: a4988Device,
+  bipolar: bipolarDevice,
+  seg7mux: seg7muxDevice,
 };
 
 export function createDevice(part, ctx) {

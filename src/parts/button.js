@@ -7,7 +7,9 @@ import { M, mat, box, cyl, bentRod, anchor, markPart, PITCH } from './lib.js';
  *
  * userData.pressed, userData.press(true/false), userData.onChange = fn
  */
-export function createButton() {
+export const BUTTON_COLORS = { red: '#e0533f', green: '#3caa5a', blue: '#3f7be0', yellow: '#f2cf3a', white: '#ecebe6', black: '#2b2d33' };
+
+export function createButton({ color = 'red' } = {}) {
   const g = new THREE.Group();
   g.name = 'Tombol';
 
@@ -17,7 +19,7 @@ export function createButton() {
     g.add(cyl(0.6, 0.4, M.black, x, 4.35, z, 10));
   }
   const capUp = 4.35;
-  const cap = cyl(3.3, 3.2, mat('#e0533f', { roughness: 0.5 }), 0, capUp, 0, 32);
+  const cap = cyl(3.3, 3.2, mat(BUTTON_COLORS[color] ?? color, { roughness: 0.5 }), 0, capUp, 0, 32);
   g.add(cap);
 
   for (const x of [-PITCH, PITCH]) {

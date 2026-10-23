@@ -25,7 +25,7 @@ akan melaporkan bahwa server kompilasi belum terpasang.
 
 - Kiri: `sketch.ino` (editor dengan penanda error compiler dan sorotan baris yang sedang jalan),
   `diagram.json`, daftar library. Kanan: meja kerja 3D + Serial Monitor dua arah.
-- **+** membuka katalog komponen (26 komponen, 7 kategori). Seret komponen; komponen
+- **+** membuka katalog komponen (67 komponen, 10 kategori). Seret komponen; komponen
   breadboard otomatis menancap ke lubang. Klik pin → klik pin lain = kabel. `R` putar, `Delete` hapus.
 - 21 contoh proyek. Disimpan otomatis di browser; **Unduh/Buka** file `.json`; **Bagikan** = tautan
   berisi seluruh proyek (dikompres di hash URL).
@@ -160,10 +160,16 @@ export default {
   `ctx.watch` (tepi sinyal dengan stempel siklus CPU), `ctx.volts`, `ctx.schedule`.
 - Buka **http://localhost:5173/gallery.html** untuk melihat semua komponen beserta titik
   pinnya, dan hasil `validateSpec()` (pin di kisi 2,54 mm, peran perilaku menunjuk pin yang ada, dll.).
-- Komponen tersedia (26): Arduino Uno, breadboard, resistor, transistor TIP120, 74HC595, LED,
-  LED RGB, modul 8 LED, lampu lalu lintas, buzzer, relay, NeoPixel ring, push button,
-  potensiometer, joystick, keypad 4×4, rotary encoder, LDR, HC-SR04, DHT11, RTC DS3231,
-  7-segment, LCD 16×2 I²C, servo SG90, motor DC, stepper 28BYJ-48 + ULN2003.
+- Komponen tersedia (67):
+  - Papan & breadboard: Arduino Uno; breadboard full, half, dan mini.
+  - Dasar: resistor, transistor TIP120, 74HC595.
+  - Output: LED, LED RGB, modul 8 LED, lampu lalu lintas, buzzer, relay modul & DPDT, NeoPixel (ring/tunggal/strip).
+  - Input: push button (6 warna) & 6 mm, saklar geser, DIP switch 8, potensiometer putar & geser, joystick, keypad 4×4, rotary encoder.
+  - Sensor: LDR, NTC, PIR, MQ2, HC-SR04, DHT11/DHT22, RTC DS3231/DS1307.
+  - Tampilan: 7-segment 1 & 4 digit, LCD 16×2/20×4 (I²C dan paralel), NeoPixel matrix 8×8 & bar 10.
+  - Motor: servo SG90, motor DC, stepper 28BYJ-48 + ULN2003, NEMA 17, stepper biaxial, driver A4988.
+  - Logika: gerbang NOT/AND/OR/XOR/NAND/NOR/XNOR, MUX 2:1, flip-flop D (+R, +S/R), generator clock, 74HC165, CD74HC4067.
+  - Lain-lain: simbol VCC/GND, junction, teks.
 
 ## Animasi
 

@@ -682,3 +682,17 @@ body.sb {
     display: none;
   }
 }
+
+.insp-text {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid var(--line-2);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--ink);
+  font: 500 14px var(--f-body);
+}
+.insp-text:focus {
+  outline: 2px solid var(--teal);
+  outline-offset: 1px;
+}

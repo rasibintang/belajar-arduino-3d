@@ -15,7 +15,7 @@ import { PITCH } from '../parts/lib.js';
  *   surface: 'breadboard',          // 'breadboard' = kaki ditancapkan ke lubang; 'floor' = diletakkan di meja
  *   create: (props) => Group,       // membuat model 3D (memakai src/parts/*)
  *   apply: (group, props) => {},    // opsional: perbarui tampilan saat props berubah
- *   props: [ { key, label, type: 'swatch' | 'choice' | 'range', value, options?, min?, max?, step?, unit? } ],
+ *   props: [ { key, label, type: 'swatch' | 'choice' | 'range' | 'text', value, options?, min?, max?, step?, unit?, rebuild? } ],
  *   pins: [ { id, name, at: [x, y, z] } ]   // atau fungsi (props, group) => daftar yang sama
  *   behavior: { kind: 'led', anode: 'A', cathode: 'K', ... }  // lihat BEHAVIORS
  * }
@@ -31,12 +31,15 @@ import { PITCH } from '../parts/lib.js';
 
 export const CATEGORIES = {
   board: 'Papan',
+  breadboard: 'Breadboard',
   basic: 'Dasar',
   input: 'Input',
   output: 'Output',
   sensor: 'Sensor',
   display: 'Tampilan',
   motor: 'Motor',
+  logic: 'Logika',
+  misc: 'Lain-lain',
 };
 
 /**
@@ -69,10 +72,28 @@ export const BEHAVIORS = {
   'i2c-rtc': { roles: ['sda', 'scl', 'vcc', 'gnd'], desc: 'Register waktu BCD lewat I²C.' },
   encoder: { roles: ['clk', 'dt', 'vcc', 'gnd'], desc: 'Dua sinyal kuadratur per "klik" putaran.' },
   stepper: { roles: ['vcc', 'gnd'], desc: 'Urutan pola IN1–IN4 menggeser poros per langkah.' },
+  none: { roles: [], desc: 'Tanpa perilaku listrik (hiasan, catatan, titik sambung).' },
+  source: { roles: ['pin'], desc: 'Sumber tegangan ideal (volts).' },
+  'slide-switch': { roles: ['p1', 'common', 'p2'], desc: 'Common tersambung ke p1 (posisi 0) atau p2 (posisi 1).' },
+  dip: { roles: [], desc: 'Saklar ke-i menyambungkan inputs[i] dengan outputs[i] saat ON.' },
+  ntc: { roles: ['vcc', 'out', 'gnd'], desc: 'Pembagi tegangan termistor NTC 10 kΩ (β 3950) + resistor 10 kΩ.' },
+  pir: { roles: ['vcc', 'out', 'gnd'], desc: 'Keluaran HIGH beberapa detik setelah gerakan.' },
+  mq2: { roles: ['vcc', 'gnd', 'dout', 'aout'], desc: 'AOUT sebanding kadar gas; DOUT LOW di atas ambang.' },
+  'lcd-parallel': { roles: ['rs', 'e', 'vdd', 'vss'], desc: 'HD44780: data D0–D7 (atau D4–D7) dibaca pada tepi turun E.' },
+  gate: { roles: ['y'], desc: 'Gerbang logika: Y = fungsi(inputs).' },
+  mux2: { roles: ['a', 'b', 'sel', 'out'], desc: 'OUT = A bila SEL LOW, B bila SEL HIGH.' },
+  dff: { roles: ['d', 'clk', 'q', 'notq'], desc: 'Q mengambil nilai D pada tepi naik CLK (set/reset opsional).' },
+  clock: { roles: ['clk'], desc: 'Gelombang kotak dengan frekuensi tertentu.' },
+  dpdt: { roles: ['coil1', 'coil2', 'p1', 'nc1', 'no1', 'p2', 'nc2', 'no2'], desc: 'Kumparan aktif: P→NO; tidak aktif: P→NC.' },
+  hc165: { roles: ['vcc', 'gnd', 'pl', 'cp', 'ce', 'q7'], desc: 'Register geser 8 bit paralel-masuk, seri-keluar.' },
+  mux16: { roles: ['sig', 'en', 'vcc', 'gnd'], desc: 'SIG tersambung ke kanal C(S3..S0) saat EN LOW.' },
+  a4988: { roles: ['step', 'dir', 'enable', 'sleep', 'reset', 'vdd', 'gnd'], desc: 'Tiap pulsa STEP memajukan arus kumparan satu (mikro)langkah.' },
+  bipolar: { roles: [], desc: 'Motor stepper bipolar: urutan polaritas kumparan A dan B memutar poros.' },
+  seg7mux: { roles: [], desc: 'Beberapa digit 7-segment yang berbagi jalur segmen (multipleks).' },
 };
 
 /** Field perilaku berisi daftar pin yang juga harus diperiksa. */
-const PIN_LIST_FIELDS = ['outputs', 'segments', 'inputs', 'rows', 'cols'];
+const PIN_LIST_FIELDS = ['outputs', 'segments', 'inputs', 'rows', 'cols', 'digits', 'select'];
 
 /** Nilai awal props. */
 export function defaultProps(spec) {
@@ -172,7 +193,7 @@ export function validateSpec(spec) {
     }
   }
   for (const p of spec.props ?? []) {
-    need(p.key && p.label && ['swatch', 'choice', 'range'].includes(p.type), `prop "${p.key}" tidak lengkap`);
+    need(p.key && p.label && ['swatch', 'choice', 'range', 'text'].includes(p.type), `prop "${p.key}" tidak lengkap`);
     if (p.options) need(p.options.some((o) => o.value === p.value), `nilai awal prop "${p.key}" tidak ada di options`);
   }
   return errors;

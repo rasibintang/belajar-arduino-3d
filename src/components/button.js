@@ -1,5 +1,6 @@
 import { createButton } from '../parts/button.js';
 import { PITCH } from '../parts/lib.js';
+import { buttonColorProp } from './inputs-extra.js';
 
 /*
  * Tombol 4 kaki mengangkangi parit breadboard (baris e dan f).
@@ -13,7 +14,8 @@ export default {
   icon: 'button',
   desc: 'Menyambungkan dua sisi selama ditekan. Klik dan tahan di tampilan 3D.',
   surface: 'breadboard',
-  create: () => createButton(),
+  create: (props) => createButton({ color: props.color }),
+  props: [buttonColorProp],
   pins: [
     { id: '1a', name: 'Sisi kiri (belakang)', at: [-PITCH, 0, -3 * PITCH * 0.5] },
     { id: '1b', name: 'Sisi kiri (depan)', at: [-PITCH, 0, 3 * PITCH * 0.5] },

@@ -130,8 +130,10 @@ export function createSim(deps) {
           sample();
         };
       }
-      if (part.spec.type === 'potentiometer') {
-        ud.knob = { get: () => part.props.value, set: (v) => wb.setProp(part.id, 'value', Math.round(v)), min: 0, max: 1023, speed: 4 };
+      const b = part.spec.behavior;
+      if (b.kind === 'pot') {
+        const key = b.positionProp;
+        ud.knob = { get: () => part.props[key], set: (v) => wb.setProp(part.id, key, Math.round(v)), min: 0, max: 1023, speed: 4 };
       }
     }
     sample();

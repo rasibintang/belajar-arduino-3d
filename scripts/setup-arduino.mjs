@@ -11,7 +11,7 @@ const CLI_DIR = join(TOOLS, 'arduino-cli');
 const WIN = process.platform === 'win32';
 const CLI = join(CLI_DIR, WIN ? 'arduino-cli.exe' : 'arduino-cli');
 const CONFIG = join(CLI_DIR, 'arduino-cli.yaml');
-const LIBRARIES = ['Servo', 'LiquidCrystal I2C', 'DHT sensor library', 'Adafruit Unified Sensor', 'Adafruit NeoPixel', 'Keypad', 'RTClib', 'Stepper'];
+const LIBRARIES = ['Servo', 'LiquidCrystal', 'LiquidCrystal I2C', 'DHT sensor library', 'Adafruit Unified Sensor', 'Adafruit NeoPixel', 'Keypad', 'RTClib', 'Stepper'];
 
 function assetName() {
   const arch = { x64: '64bit', arm64: 'ARM64', arm: 'ARMv7' }[process.arch] ?? '64bit';

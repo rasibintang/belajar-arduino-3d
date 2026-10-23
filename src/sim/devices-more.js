@@ -225,6 +225,7 @@ export function hc595Device(part, ctx, n) {
 // ---------------------------------------------------------------- NeoPixel (WS2812)
 export function ws2812Device(part, ctx, n) {
   const b = part.spec.behavior;
+  const count = b.countProp ? part.props[b.countProp] : b.count;
   const RESET = FREQ * 50e-6; // jeda ≥ 50 µs = akhir data
   let rise = 0;
   let fall = 0;
@@ -232,7 +233,7 @@ export function ws2812Device(part, ctx, n) {
   let pixels = [];
   const latch = () => {
     const out = [];
-    for (let i = 0; i + 24 <= bits.length && out.length < b.count; i += 24) {
+    for (let i = 0; i + 24 <= bits.length && out.length < count; i += 24) {
       const byte = (k) => bits.slice(i + k * 8, i + k * 8 + 8).reduce((a, v) => (a << 1) | v, 0);
       out.push([byte(1), byte(0), byte(2)]); // urutan kabel: G, R, B
     }
@@ -274,9 +275,17 @@ export function dhtDevice(part, ctx, n) {
   };
   function respond() {
     responding = true;
-    const hum = Math.round(part.props[b.humProp]);
-    const temp = Math.round(part.props[b.tempProp]);
-    const bytes = [hum, 0, temp, 0, (hum + temp) & 0xff];
+    let bytes;
+    if (b.format === 'dht22') {
+      // DHT22: nilai ×10 dalam 16 bit; bit tertinggi suhu = tanda minus
+      const hum = Math.round(part.props[b.humProp] * 10);
+      const t = Math.round(part.props[b.tempProp] * 10);
+      const temp = t < 0 ? 0x8000 | -t : t;
+      bytes = [hum >> 8, hum & 0xff, temp >> 8, temp & 0xff];
+    } else {
+      bytes = [Math.round(part.props[b.humProp]), 0, Math.round(part.props[b.tempProp]), 0];
+    }
+    bytes.push(bytes.reduce((a, v) => a + v, 0) & 0xff);
     // [lama, tarik LOW?]: tanggapan 80 µs LOW + 80 µs HIGH, lalu 40 bit (50 µs LOW + 26/70 µs HIGH)
     const steps = [
       [us(80), true],
@@ -316,7 +325,8 @@ export function rtcDevice(part, ctx, n) {
   const bcd = (v) => ((Math.floor(v / 10) << 4) | v % 10) & 0xff;
   const unbcd = (v) => (v >> 4) * 10 + (v & 0x0f);
   let offset = 0; // ms: selisih jam RTC terhadap jam komputer
-  const regs = new Uint8Array(0x13);
+  const ds1307 = b.chip === 'ds1307';
+  const regs = new Uint8Array(ds1307 ? 0x40 : 0x13); // DS1307: 8 register + 56 byte RAM
   let ptr = 0;
   let first = false;
   let written = false;
@@ -329,6 +339,7 @@ export function rtcDevice(part, ctx, n) {
     regs[4] = bcd(d.getDate());
     regs[5] = bcd(d.getMonth() + 1);
     regs[6] = bcd(d.getFullYear() % 100);
+    if (ds1307) return;
     regs[0x11] = 27; // suhu 27,25 °C
     regs[0x12] = 0x40;
   };
