@@ -16,6 +16,8 @@ const LIBRARIES = [
   // gelombang 2
   'Adafruit SSD1306', 'Adafruit GFX Library', 'Adafruit SH110X', 'MFRC522', 'IRremote', 'OneWire', 'DallasTemperature', 'Adafruit MPU6050',
   'Adafruit BMP085 Library', 'TM1637', 'LedControl', 'MD_MAX72XX', 'MD_Parola', 'Adafruit PCD8544 Nokia 5110 LCD library', 'HX711', 'U8g2',
+  // gelombang 3
+  'Adafruit ILI9341', 'Adafruit FT6206 Library', 'SD', 'GxEPD2',
 ];
 
 function assetName() {

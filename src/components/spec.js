@@ -102,6 +102,9 @@ export const BEHAVIORS = {
   'ir-receiver': { roles: ['dat', 'vcc', 'gnd'], desc: 'Keluaran LOW aktif mengikuti pulsa NEC dari remote.' },
   'ir-remote': { roles: [], desc: 'Memancarkan kode NEC ke semua penerima IR.' },
   mfrc522: { roles: ['cs', 'sck', 'mosi', 'miso', 'vcc', 'gnd'], desc: 'Register MFRC522 lewat SPI + kartu ISO 14443A.' },
+  ili9341: { roles: ['cs', 'dc', 'rst', 'mosi', 'sck', 'vcc', 'gnd'], desc: 'Layar TFT: CASET/PASET/RAMWR + MADCTL (rotasi); opsional sentuh FT6206 (I²C).' },
+  epaper: { roles: ['busy', 'rst', 'dc', 'cs', 'sck', 'mosi', 'vcc', 'gnd'], desc: 'SSD1680: RAM 1 bit/piksel, refresh saat master activation (BUSY HIGH).' },
+  microsd: { roles: ['cs', 'sck', 'mosi', 'miso', 'vcc', 'gnd'], desc: 'Kartu SD mode SPI (CMD0/8/55/41/58/9/17/24…) dengan citra FAT16.' },
 };
 
 /** Field perilaku berisi daftar pin yang juga harus diperiksa. */

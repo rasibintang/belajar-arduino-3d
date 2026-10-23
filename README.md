@@ -25,7 +25,7 @@ akan melaporkan bahwa server kompilasi belum terpasang.
 
 - Kiri: `sketch.ino` (editor dengan penanda error compiler dan sorotan baris yang sedang jalan),
   `diagram.json`, daftar library. Kanan: meja kerja 3D + Serial Monitor dua arah.
-- **+** membuka katalog komponen (80 komponen, 10 kategori). Seret komponen; komponen
+- **+** membuka katalog komponen (85 komponen, 10 kategori). Seret komponen; komponen
   breadboard otomatis menancap ke lubang. Klik pin → klik pin lain = kabel. `R` putar, `Delete` hapus.
 - 21 contoh proyek. Disimpan otomatis di browser; **Unduh/Buka** file `.json`; **Bagikan** = tautan
   berisi seluruh proyek (dikompres di hash URL).
@@ -160,7 +160,7 @@ export default {
   `ctx.watch` (tepi sinyal dengan stempel siklus CPU), `ctx.volts`, `ctx.schedule`.
 - Buka **http://localhost:5173/gallery.html** untuk melihat semua komponen beserta titik
   pinnya, dan hasil `validateSpec()` (pin di kisi 2,54 mm, peran perilaku menunjuk pin yang ada, dll.).
-- Komponen tersedia (80):
+- Komponen tersedia (85):
   - Papan & breadboard: Arduino Uno; breadboard full, half, dan mini.
   - Dasar: resistor, transistor TIP120, 74HC595.
   - Output: LED, LED RGB, modul 8 LED, lampu lalu lintas, buzzer, relay modul & DPDT, NeoPixel (ring/tunggal/strip).
@@ -172,7 +172,9 @@ export default {
   - Lain-lain: simbol VCC/GND, junction, teks.
   - Gelombang 2: OLED SSD1306 128×64 & SH1107 128×128, LCD Nokia 5110, TM1637, matriks MAX7219 (1/2/4 modul),
     logic analyzer, MPU6050, BMP180, DS18B20, HX711 + load cell, penerima & remote IR, RFID MFRC522.
-- Bus yang diemulasikan: I²C (TWI), SPI perangkat keras (D11/D12/D13) maupun bit-bang, OneWire, protokol 2 kabel TM1637, NEC IR.
+  - Gelombang 3: TFT ILI9341 240×320 (± layar sentuh FT6206), e-Paper 2,9" (SSD1680), kartu microSD 32 MB (FAT16),
+    driver LED RGB NLSF595.
+- Bus yang diemulasikan: I²C (TWI), SPI perangkat keras (D11/D12/D13) maupun bit-bang, OneWire, protokol 2 kabel TM1637, NEC IR, kartu SD mode SPI.
 
 ## Animasi
 

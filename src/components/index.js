@@ -30,6 +30,7 @@ import { lcd1602, lcd2004, lcd2004i2c, seg7x4, neopixel as neopixelSingle, neopi
 import { gates, mux2, flipFlops, clockGen, hc165, mux16 } from './logic.js';
 import { vcc, gnd, text, junction, relayDPDT, a4988, nema17, biaxial } from './misc.js';
 import { WAVE2 } from './wave2.js';
+import { WAVE3 } from './wave3.js';
 
 /**
  * Daftar komponen untuk sandbox. Untuk menambah komponen: buat file spesifikasi
@@ -96,6 +97,7 @@ export const COMPONENTS = [
   junction,
   text,
   ...WAVE2,
+  ...WAVE3,
 ];
 
 export const COMPONENT_BY_TYPE = Object.fromEntries(COMPONENTS.map((c) => [c.type, c]));

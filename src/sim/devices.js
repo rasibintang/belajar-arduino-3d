@@ -53,6 +53,7 @@ import {
   irReceiverDevice,
   mfrc522Device,
 } from './devices-wave2.js';
+import { ili9341Device, epaperDevice, microsdDevice } from './devices-wave3.js';
 
 /**
  * Perangkat simulasi untuk setiap jenis perilaku komponen (spec.behavior.kind).
@@ -123,6 +124,9 @@ const FACTORIES = {
   'ir-remote': irRemoteDevice,
   'ir-receiver': irReceiverDevice,
   mfrc522: mfrc522Device,
+  ili9341: ili9341Device,
+  epaper: epaperDevice,
+  microsd: microsdDevice,
 };
 
 export function createDevice(part, ctx) {

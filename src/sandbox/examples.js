@@ -3,6 +3,7 @@
 import { MORE_EXAMPLES } from './examples-more.js';
 import { WAVE1_EXAMPLES } from './examples-wave1.js';
 import { WAVE2_EXAMPLES } from './examples-wave2.js';
+import { WAVE3_EXAMPLES } from './examples-wave3.js';
 
 const UNO = { id: 'uno', type: 'arduino-uno', x: -82, z: 22 };
 const BB = { id: 'bb', type: 'breadboard', x: 44, z: 0 };
@@ -259,7 +260,7 @@ void loop() {
   },
 ];
 
-EXAMPLES.push(...MORE_EXAMPLES, ...WAVE1_EXAMPLES, ...WAVE2_EXAMPLES);
+EXAMPLES.push(...MORE_EXAMPLES, ...WAVE1_EXAMPLES, ...WAVE2_EXAMPLES, ...WAVE3_EXAMPLES);
 
 /** Proyek kosong: hanya Arduino Uno. */
 export const BLANK = {

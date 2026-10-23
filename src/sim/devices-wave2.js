@@ -6,7 +6,7 @@ import { powered } from './device-utils.js';
 const us = (t) => FREQ * t * 1e-6;
 
 /** Pasang perangkat I²C ke bus emulator bila SDA/SCL tersambung ke A4/A5. */
-function i2cAttach(ctx, n, b, part, device, label) {
+export function i2cAttach(ctx, n, b, part, device, label) {
   return (runner) => {
     const sda = ctx.mcuPinOf(n(b.sda));
     const scl = ctx.mcuPinOf(n(b.scl));
@@ -25,7 +25,7 @@ function i2cAttach(ctx, n, b, part, device, label) {
  * Penerima SPI: bit-bang (setiap tepi naik SCK selama CS LOW) dan SPI perangkat keras
  * (bila SCK = D13 dan MOSI = D11). onByte(byte) boleh mengembalikan byte balasan (MISO).
  */
-function spiSlave(ctx, n, { sck, mosi, cs, onByte, onSelect }) {
+export function spiSlave(ctx, n, { sck, mosi, cs, onByte, onSelect }) {
   let bits = 0;
   let count = 0;
   const selected = () => (cs ? !ctx.digital(n(cs)) : true);
