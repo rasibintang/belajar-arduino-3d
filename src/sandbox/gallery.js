@@ -11,6 +11,7 @@ import * as THREE from 'three';
 import { t, translateDom, languageSwitch } from '../i18n/index.js';
 import { mountAccount } from '../account/ui.js';
 import { initMonitor, monitor } from '../monitor/client.js';
+import { githubLink } from '../ui/github.js';
 
 initMonitor('gallery');
 import { createStage } from '../core/stage.js';
@@ -35,6 +36,7 @@ translateDom();
 document.title = `${t('top.catalog')} · Learn Arduino`;
 document.querySelectorAll('.cat-actions [data-icon]').forEach((a) => a.insertAdjacentHTML('afterbegin', icon(a.dataset.icon)));
 $('.cat-lang').append(languageSwitch());
+$('.account-slot').before(githubLink('top-btn'));
 mountAccount($('.account-slot'));
 
 await Promise.all(['700 20px "Barlow Semi Condensed"', '800 20px "Barlow Semi Condensed"', '600 20px "IBM Plex Mono"'].map((f) => document.fonts.load(f)));

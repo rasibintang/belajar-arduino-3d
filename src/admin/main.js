@@ -10,6 +10,7 @@ import './admin.css';
 import { t, isEN, translateDom, languageSwitch } from '../i18n/index.js';
 import { mountAccount, toast } from '../account/ui.js';
 import { initMonitor } from '../monitor/client.js';
+import { githubLink } from '../ui/github.js';
 
 initMonitor('admin');
 import { LOGO } from '../ui/icons.js';
@@ -160,6 +161,7 @@ async function refresh(acc) {
   render();
 }
 
+$('.account-slot').before(githubLink('top-btn'));
 const acc = await mountAccount($('.account-slot'));
 backend = acc.backend;
 acc.onChange(() => refresh(acc));

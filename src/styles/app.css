@@ -1383,6 +1383,15 @@ body.has-overlay .backdrop {
 }
 
 /* ---------------- Layar sedang ---------------- */
+/* judul lebih kecil di laptop agar bilah atas (Sandbox · Katalog · GitHub · Masuk · bahasa) tidak menimpanya */
+@media (max-width: 1440px) {
+  .brand h1 {
+    font-size: 26px;
+  }
+  .brand p {
+    font-size: 12.5px;
+  }
+}
 @media (max-width: 1280px) {
   .callout {
     width: 196px;
@@ -1924,4 +1933,15 @@ body.has-overlay .backdrop {
   .top-btn span {
     display: inline;
   }
+}
+
+/* ikon GitHub (tautan kode sumber) di bilah atas semua halaman */
+.gh-link {
+  justify-content: center;
+  padding-left: 9px;
+  padding-right: 9px;
+}
+.gh-link .gh-mark {
+  width: 18px;
+  height: 18px;
 }

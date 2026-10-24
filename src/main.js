@@ -1,6 +1,7 @@
 import { t, translateDom, languageSwitch } from './i18n/index.js';
 import { mountAccount, toast } from './account/ui.js';
 import { initMonitor, monitor } from './monitor/client.js';
+import { githubLink } from './ui/github.js';
 
 initMonitor('home');
 import { syncProgress } from './account/progress-sync.js';
@@ -54,6 +55,7 @@ translateDom();
 document.querySelector('meta[name="description"]')?.setAttribute('content', t('meta.description'));
 document.querySelectorAll('.topbar [data-icon]').forEach((a) => a.insertAdjacentHTML('afterbegin', icon(a.dataset.icon)));
 $('.top-lang').append(languageSwitch());
+$('.account-slot').before(githubLink('top-btn'));
 const account = mountAccount($('.account-slot'));
 const loader = createLoader($('#loader'));
 document.querySelectorAll('[data-logo]').forEach((el) => (el.innerHTML = LOGO));

@@ -4,6 +4,7 @@ import { saveToAccount, openFromAccount, createAutosave } from '../account/cloud
 import { createAiPanel } from '../ai/panel.js';
 import { logicalCircuit } from '../ai/client.js';
 import { initMonitor, monitor } from '../monitor/client.js';
+import { githubLink } from '../ui/github.js';
 
 initMonitor('sandbox');
 import '@fontsource/barlow-semi-condensed/500.css';
@@ -36,6 +37,7 @@ const $ = (s) => document.querySelector(s);
 document.querySelectorAll('[data-logo]').forEach((el) => (el.innerHTML = LOGO));
 translateDom();
 $('.sb-lang').append(languageSwitch());
+$('.account-slot').before(githubLink('sb-btn'));
 const account = mountAccount($('.account-slot'), { buttonClass: 'sb-btn' });
 
 await Promise.all(
