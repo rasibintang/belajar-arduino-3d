@@ -23,7 +23,7 @@ nomor versi mengikuti [SemVer](https://semver.org/lang/id/).
 ### Catatan
 - Fitur akun aktif setelah `VITE_SUPABASE_URL` dan `VITE_SUPABASE_ANON_KEY` dipasang; pustaka
   Supabase dimuat malas sehingga tanpa konfigurasi tidak ada yang diunduh. Langkah pemilik ada
-  di README bagian *Akun & data*.
+  di docs/PANDUAN-PENGEMBANG.md bagian *Akun & data*.
 
 ## [0.7.0] — 2026-10-23 · Panduan kabel
 

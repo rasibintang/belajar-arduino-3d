@@ -106,14 +106,14 @@ const MSG = {
     empty: 'Sketch kosong.',
     tooBig: 'Sketch terlalu besar (maks 100 KB).',
     include: (path) => `#include "${path}" tidak diizinkan.`,
-    noCli: 'arduino-cli belum terpasang di server (lihat README: Server kompilasi).',
+    noCli: 'arduino-cli belum terpasang di server (lihat docs/PANDUAN-PENGEMBANG.md: Server kompilasi).',
     badRequest: (m) => `Permintaan tidak valid: ${m}`,
   },
   en: {
     empty: 'The sketch is empty.',
     tooBig: 'The sketch is too large (max 100 KB).',
     include: (path) => `#include "${path}" is not allowed.`,
-    noCli: 'arduino-cli is not installed on the server (see README: Compile server).',
+    noCli: 'arduino-cli is not installed on the server (see docs/PANDUAN-PENGEMBANG.md: compile server).',
     badRequest: (m) => `Invalid request: ${m}`,
   },
 };

@@ -1,6 +1,6 @@
 node_modules
 dist
-# arduino-cli portabel + core AVR + library (diunduh lokal, lihat README)
+# arduino-cli portabel + core AVR + library (diunduh lokal, lihat docs/PANDUAN-PENGEMBANG.md)
 tools/
 .slimtest/
 .vercel-toolchain/
