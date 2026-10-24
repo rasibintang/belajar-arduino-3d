@@ -3,14 +3,18 @@ import { createWorkbench } from '../sandbox/workbench.js';
 import { COMPONENT_BY_TYPE } from '../components/index.js';
 import { escapeHtml } from '../ui/highlight.js';
 import { icon } from '../ui/icons.js';
-import { fetchAiInfo, requestCircuit, diffCircuits } from './client.js';
+import { fetchAiInfo, requestCircuit, reportMissing, diffCircuits } from './client.js';
+import { PRESETS, loadKey, saveKey, clearKey, keyReady, listModels, createBrowserClient } from './byok.js';
+import { runPipeline } from './pipeline.js';
 import './ai.css';
 
 /**
- * Kotak "Susun dengan AI": perintah → (server) → pratinjau → Terima / Tolak.
- * deps: { t, lang, toast, account: Promise<{ backend, user() }>, getCurrent(), onAcceptNew(res), onAcceptModify(res) }
+ * Kotak "Susun dengan AI": perintah → AI → pratinjau → Terima / Tolak.
+ * Dua sumber: "Kunci saya" (AI dipanggil dari browser dengan kunci pengguna; alur pemeriksaan juga
+ * di browser) dan "Jatah gratis situs" (lewat /api/ai, wajib login, bila pemilik memasang kunci server).
+ * deps: { t, lang, toast, account: Promise<{ backend, user() }>, compile(sketch), getCurrent(), onAcceptNew(res), onAcceptModify(res) }
  */
-export function createAiPanel({ t, lang, toast, account, getCurrent, onAcceptNew, onAcceptModify }) {
+export function createAiPanel({ t, lang, toast, account, compile, getCurrent, onAcceptNew, onAcceptModify }) {
   const fake = import.meta.env?.DEV ? new URLSearchParams(location.search).get('fakeai') : null;
   const modal = document.createElement('div');
   modal.className = 'sb-modal ai-modal';
@@ -22,6 +26,34 @@ export function createAiPanel({ t, lang, toast, account, getCurrent, onAcceptNew
         <button class="icon-btn" data-act="close" aria-label="${escapeHtml(t('ai.close'))}">${icon('close')}</button>
       </header>
       <form class="ai-form" data-view="form">
+        <div class="ai-source" role="radiogroup" aria-label="${escapeHtml(t('ai.source'))}">
+          <label><input type="radio" name="ai-source" value="own" checked> ${escapeHtml(t('ai.sourceOwn'))}</label>
+          <label class="ai-source-site"><input type="radio" name="ai-source" value="site"> ${escapeHtml(t('ai.sourceSite'))}</label>
+        </div>
+        <fieldset class="ai-key">
+          <div class="ai-key-using" hidden>
+            <span></span>
+            <button type="button" class="sb-btn" data-act="change-key">${escapeHtml(t('ai.changeKey'))}</button>
+            <button type="button" class="sb-btn sb-danger" data-act="clear-key">${escapeHtml(t('ai.clearKey'))}</button>
+          </div>
+          <div class="ai-key-form">
+            <label>${escapeHtml(t('ai.provider'))}
+              <select name="provider">${Object.entries(PRESETS)
+                .map(([id, p]) => `<option value="${id}">${escapeHtml(p.label)}${p.free ? ` (${escapeHtml(t('ai.free'))})` : ''}</option>`)
+                .join('')}</select>
+            </label>
+            <label class="ai-base" hidden>${escapeHtml(t('ai.baseUrl'))}<input name="baseUrl" type="url" placeholder="https://…/v1" autocomplete="off"></label>
+            <label>${escapeHtml(t('ai.key'))}<input name="apiKey" type="password" autocomplete="off" spellcheck="false"></label>
+            <label>${escapeHtml(t('ai.model'))}
+              <span class="ai-model-row"><input name="model" list="ai-models" autocomplete="off" spellcheck="false"><datalist id="ai-models"></datalist>
+              <button type="button" class="sb-btn" data-act="load-models">${escapeHtml(t('ai.loadModels'))}</button></span>
+            </label>
+            <label class="ai-check"><input type="checkbox" name="remember"> ${escapeHtml(t('ai.remember'))}</label>
+            <p class="ai-help">${escapeHtml(t('ai.keyNote'))}</p>
+            <details class="ai-howto"><summary>${escapeHtml(t('ai.howTo'))}</summary><p>${escapeHtml(t('ai.howToSteps'))}</p><a href="${PRESETS.gemini.keyUrl}" target="_blank" rel="noopener">aistudio.google.com</a></details>
+            <div class="ai-actions"><button type="button" class="sb-btn" data-act="save-key">${escapeHtml(t('ai.saveKey'))}</button></div>
+          </div>
+        </fieldset>
         <div class="ai-modes" role="radiogroup">
           <label><input type="radio" name="ai-mode" value="new" checked> ${escapeHtml(t('ai.modeNew'))}</label>
           <label><input type="radio" name="ai-mode" value="modify"> ${escapeHtml(t('ai.modeModify'))}</label>
@@ -71,24 +103,81 @@ export function createAiPanel({ t, lang, toast, account, getCurrent, onAcceptNew
     show('form');
   };
 
+  // ------------------------------------------------------------ kunci milik pengguna
+  const source = () => form['ai-source'].value;
+  let editingKey = false;
+  function fillKeyForm(cfg) {
+    form.provider.value = cfg?.provider ?? 'gemini';
+    form.apiKey.value = cfg?.apiKey ?? '';
+    form.model.value = cfg?.model ?? (form.provider.value === 'anthropic' ? 'claude-sonnet-5-5' : '');
+    form.baseUrl.value = cfg?.baseUrl ?? '';
+    form.remember.checked = !!cfg?.remember;
+    $('.ai-base').hidden = form.provider.value !== 'custom';
+  }
+  function renderKey() {
+    const cfg = loadKey();
+    const own = source() === 'own';
+    $('.ai-key').hidden = !own;
+    const ready = keyReady(cfg) && !editingKey;
+    $('.ai-key-using').hidden = !ready;
+    $('.ai-key-form').hidden = ready;
+    if (ready) $('.ai-key-using span').textContent = t('ai.usingKey', { provider: PRESETS[cfg.provider].label, model: cfg.model.replace(/^models\//, '') });
+    else if (!editingKey) fillKeyForm(cfg);
+    return ready;
+  }
+  const formKey = () => ({
+    provider: form.provider.value,
+    apiKey: form.apiKey.value.trim(),
+    model: form.model.value.trim(),
+    baseUrl: form.baseUrl.value.trim() || undefined,
+    remember: form.remember.checked,
+  });
+  form.provider.addEventListener('change', () => {
+    $('.ai-base').hidden = form.provider.value !== 'custom';
+    form.model.value = form.provider.value === 'anthropic' ? 'claude-sonnet-5-5' : '';
+    $('#ai-models').replaceChildren();
+  });
+  form['ai-source'].forEach((r) => r.addEventListener('change', () => refresh()));
+
   async function refresh() {
     info ??= fake ? { enabled: true, label: 'contoh (DEV)' } : await fetchAiInfo();
-    $('.ai-privacy').textContent = info.enabled ? t('ai.privacy', { label: info.label }) : '';
+    $('.ai-source-site').hidden = !info.enabled;
+    if (!info.enabled && source() === 'site') form['ai-source'].value = 'own';
     const submit = form.querySelector('[type=submit]');
     const acc = await account;
-    if (!info.enabled) {
-      submit.disabled = true;
-      return say(t('ai.notEnabled'));
+    say(null);
+    if (source() === 'own') {
+      const ready = renderKey();
+      const cfg = loadKey();
+      $('.ai-privacy').textContent = ready ? t('ai.privacyOwn', { label: PRESETS[cfg.provider].label }) : '';
+      submit.disabled = !ready;
+      return;
     }
+    $('.ai-key').hidden = true;
+    $('.ai-privacy').textContent = t('ai.privacy', { label: info.label });
     if (!acc.backend || !acc.user()) {
       submit.disabled = true;
       return say(t('ai.signIn'), acc.backend && { label: t('acct.signIn'), onClick: () => acc.backend.signIn().catch(() => toast(t('acct.offline'), 'error')) });
     }
     submit.disabled = false;
-    say(null);
+  }
+
+  /** Jalur "Kunci saya": AI dipanggil dari browser; alur pemeriksaan sama dengan server. */
+  async function runOwn({ prompt, mode, current }) {
+    const ai = await createBrowserClient(loadKey());
+    const { outcome, result } = await runPipeline({ generate: (args) => ai.generate(args), request: { prompt, mode, lang, current }, compile: (sketch) => compile(sketch) });
+    const missing = Array.isArray(result?.missing) ? result.missing.filter((m) => m?.component) : [];
+    if (missing.length) {
+      const acc = await account;
+      const token = acc.user() ? await acc.backend.accessToken().catch(() => null) : null;
+      reportMissing({ prompt, missing, token }); // tidak ditunggu; gagal pun tidak apa-apa
+    }
+    if (!outcome.ok) return { ok: false, code: 'failed', reason: outcome.reason, details: outcome.details, missing };
+    return { ok: true, result, diagram: outcome.diagram, sketch: result.sketch, issues: outcome.issues, compile: outcome.compile };
   }
 
   function failureText(res) {
+    if (res.reason === 'provider' && /HTTP 40[13]|authentication|api key/i.test(res.details?.join(' ') ?? '')) return t('ai.badKey');
     if (res.code === 'not-enabled') return t('ai.notEnabled');
     if (res.code === 'not-signed-in') return t('ai.signIn');
     if (res.code === 'quota') return t('ai.quota', { limit: res.limit });
@@ -145,11 +234,13 @@ export function createAiPanel({ t, lang, toast, account, getCurrent, onAcceptNew
     if (!prompt) return say(t('ai.empty'));
     const mode = form['ai-mode'].value;
     const acc = await account;
+    if (source() === 'own' && !keyReady(loadKey())) return say(t('ai.needKey'));
     const current = mode === 'modify' ? getCurrent() : null;
     show('working');
-    const res = fake
-      ? await (await import('./fake.js')).fakeRequest({ mode, current, variant: fake })
-      : await requestCircuit({ prompt, mode, lang, current, token: await acc.backend.accessToken() });
+    let res;
+    if (fake) res = await (await import('./fake.js')).fakeRequest({ mode, current, variant: fake });
+    else if (source() === 'own') res = await runOwn({ prompt, mode, current }).catch((err) => ({ ok: false, code: 'failed', reason: 'provider', details: [String(err?.message ?? err)] }));
+    else res = await requestCircuit({ prompt, mode, lang, current, token: await acc.backend.accessToken() });
     if (!res.ok) {
       show('form');
       return say(failureText(res));
@@ -162,6 +253,37 @@ export function createAiPanel({ t, lang, toast, account, getCurrent, onAcceptNew
     const act = e.target.closest('[data-act]')?.dataset.act;
     if (e.target === modal || act === 'close') close();
     if (act === 'reject') show('form');
+    if (act === 'save-key') {
+      const cfg = formKey();
+      if (!keyReady(cfg)) return say(t('ai.needKey'));
+      saveKey(cfg, { remember: cfg.remember });
+      editingKey = false;
+      refresh();
+    }
+    if (act === 'change-key') {
+      editingKey = true;
+      fillKeyForm(loadKey());
+      renderKey();
+    }
+    if (act === 'clear-key') {
+      clearKey();
+      editingKey = false;
+      toast(t('ai.keyCleared'));
+      refresh();
+    }
+    if (act === 'load-models') {
+      const cfg = formKey();
+      const btn = e.target.closest('button');
+      btn.disabled = true;
+      listModels(cfg)
+        .then((models) => {
+          $('#ai-models').replaceChildren(...models.map((m) => Object.assign(document.createElement('option'), { value: m.id, label: m.label })));
+          if (!form.model.value && models[0]) form.model.value = models[0].id;
+          say(null);
+        })
+        .catch(() => say(t('ai.modelsFailed')))
+        .finally(() => (btn.disabled = false));
+    }
     if (act === 'accept' && last) {
       close();
       if (last.mode === 'modify') onAcceptModify(last.res);

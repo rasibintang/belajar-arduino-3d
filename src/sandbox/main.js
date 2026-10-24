@@ -24,7 +24,7 @@ import { createWorkbench } from './workbench.js';
 import { createGuide, issueText } from './guide.js';
 import { checkCircuit } from '../sim/wiring/check.js';
 import { createCodeEditor } from './code-editor.js';
-import { createSim } from './sim.js';
+import { createSim, compile } from './sim.js';
 import { EXAMPLES, BLANK } from './examples.js';
 import { LIBRARIES } from './libraries.js';
 import { loadLocal, saveLocal, shareUrl, fromHash, download, pickFile } from './project.js';
@@ -765,6 +765,7 @@ const aiPanel = createAiPanel({
   lang: isEN ? 'en' : 'id',
   toast,
   account,
+  compile,
   /** Rangkaian logis + diagram + peta kaki→lubang dari sandbox (untuk mode "ubah"). */
   getCurrent() {
     const s = wb.snapshot();

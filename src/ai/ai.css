@@ -178,3 +178,98 @@
     height: auto;
   }
 }
+.ai-source {
+  display: inline-flex;
+  gap: 4px;
+  padding: 3px;
+  border-radius: 8px;
+  background: var(--paper-2, #f3eee3);
+  justify-self: start;
+  font: 600 13px var(--f-display);
+  letter-spacing: 0.04em;
+}
+.ai-source label {
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.ai-source label:has(input:checked) {
+  background: var(--card);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+.ai-source input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.ai-source label[hidden],
+.ai-key[hidden],
+.ai-key-form[hidden],
+.ai-key-using[hidden],
+.ai-base[hidden] {
+  display: none;
+}
+.ai-key {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--line-2);
+  border-radius: 7px;
+}
+.ai-key-form {
+  display: grid;
+  gap: 10px;
+}
+.ai-key-form > label {
+  display: grid;
+  gap: 4px;
+  font: 600 13px var(--f-body);
+}
+.ai-key-form input:not([type='checkbox']),
+.ai-key-form select {
+  padding: 7px 10px;
+  border: 1px solid var(--line-2);
+  border-radius: 6px;
+  font: 500 14px var(--f-body);
+  background: #fff;
+}
+.ai-model-row {
+  display: flex;
+  gap: 6px;
+}
+.ai-model-row input {
+  flex: 1;
+  min-width: 0;
+}
+.ai-key-form .ai-check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.ai-key-using {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font: 600 14px var(--f-body);
+}
+.ai-key-using span {
+  flex: 1;
+}
+.ai-help {
+  margin: 0;
+  color: var(--muted);
+  font: 500 12.5px/1.4 var(--f-body);
+}
+.ai-howto {
+  font: 500 13px/1.45 var(--f-body);
+}
+.ai-howto summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--teal);
+}
+.ai-howto p {
+  margin: 6px 0;
+}

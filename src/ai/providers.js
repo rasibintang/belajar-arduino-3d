@@ -90,3 +90,38 @@ export function openAiCompatible({ baseUrl, apiKey, model }, fetchImpl = fetch) 
     },
   };
 }
+
+const GEMINI = 'https://generativelanguage.googleapis.com/v1beta';
+
+/**
+ * Google Gemini, API asli (bisa dipanggil langsung dari browser; endpoint berformat OpenAI-nya
+ * menolak CORS). Skema JSON lewat responseJsonSchema; bila ditolak (400) diulang dengan skema di prompt.
+ */
+export function gemini({ apiKey, model }, fetchImpl = fetch) {
+  const name = model.startsWith('models/') ? model : `models/${model}`;
+  return {
+    async generate({ system, messages, signal }) {
+      const contents = messages.map((m) => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] }));
+      const call = (strict) =>
+        fetchImpl(`${GEMINI}/${name}:generateContent`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+          signal,
+          body: JSON.stringify({
+            systemInstruction: { parts: [{ text: strict ? systemText(system) : withSchema(systemText(system)) }] },
+            contents,
+            generationConfig: { responseMimeType: 'application/json', maxOutputTokens: MAX_TOKENS, ...(strict ? { responseJsonSchema: CIRCUIT_SCHEMA } : {}) },
+          }),
+        });
+      let res = await call(true);
+      if (res.status === 400) res = await call(false);
+      if (!res.ok) throw Object.assign(new Error(`Gemini returned HTTP ${res.status}`), { status: res.status });
+      const data = await res.json();
+      const candidate = data.candidates?.[0];
+      const stopReason = candidate?.finishReason ?? data.promptFeedback?.blockReason ?? null;
+      if (stopReason !== 'STOP') return { result: null, stopReason, usage: data.usageMetadata };
+      const text = (candidate.content?.parts ?? []).map((p) => p.text ?? '').join('');
+      return { result: parseJson(text), stopReason, usage: data.usageMetadata };
+    },
+  };
+}

@@ -172,3 +172,18 @@ test('mode ubah: rangkaian saat ini dikirim ke AI dan posisi lama dipertahankan'
   assert.match(ai.calls[0][0].content, /uno:D13 → led1:A/);
   assert.equal(res.body.diagram.parts.find((p) => p.id === 'uno').x, -120);
 });
+
+test('laporan komponen dari jalur kunci sendiri: tanpa login → tanpa nama; tetap jalan tanpa kunci AI server', async () => {
+  const db = fakeDb();
+  const missing = Array.from({ length: 8 }, (_, i) => ({ component: `Komponen ${i} ${'x'.repeat(200)}`, reason: 'r' }));
+  const anon = await call({ ai: null, db }, { token: null, body: { action: 'report', prompt: 'penyiram', missing } });
+  assert.equal(anon.body.ok, true);
+  assert.equal(db.requests.length, 5); // paling banyak 5
+  assert.equal(db.requests[0].userId, null);
+  assert.ok(db.requests[0].component.length <= 120);
+  await call({ ai: null, db }, { body: { action: 'report', prompt: 'x', missing: [{ component: 'Pompa' }] } });
+  assert.equal(db.requests.at(-1).userId, 'u1');
+  assert.equal((await call({ ai: null, db: null }, { body: { action: 'report', prompt: 'x', missing: [] } })).body.code, 'not-enabled');
+  // laporan tidak memakai jatah
+  assert.equal(await db.countToday('u1'), 0);
+});

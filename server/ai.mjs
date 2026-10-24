@@ -97,17 +97,30 @@ export async function handleAi(req, res, deps = defaultDeps(req)) {
   const { ai, db, info, compile, now } = deps;
   if (req.method === 'GET') return send(res, 200, { enabled: !!(ai && db), provider: (ai && db && info?.provider) || null, label: (ai && db && info?.label) || null });
   if (req.method !== 'POST') return send(res, 405, { ok: false, code: 'invalid' });
-  if (!ai || !db) return send(res, 200, { ok: false, code: 'not-enabled' });
-
-  let request;
+  let body;
   try {
-    request = parseRequest(await readBody(req));
+    body = await readBody(req);
   } catch {
-    request = null;
+    body = null;
   }
+  const token = /^Bearer\s+(.+)$/i.exec(req.headers.authorization ?? '')?.[1];
+
+  // laporan komponen dari jalur "kunci saya" (AI dipanggil di browser): tanpa jatah, login opsional
+  if (body?.action === 'report') {
+    if (!db) return send(res, 200, { ok: false, code: 'not-enabled' });
+    const reporter = token ? await db.userFromToken(token).catch(() => null) : null;
+    const missing = (Array.isArray(body.missing) ? body.missing : [])
+      .filter((m) => typeof m?.component === 'string' && m.component.trim())
+      .slice(0, 5)
+      .map((m) => ({ component: m.component.trim().slice(0, 120) }));
+    await db.recordRequests(reporter?.id ?? null, String(body.prompt ?? '').slice(0, MAX_PROMPT), missing).catch(() => {});
+    return send(res, 200, { ok: true });
+  }
+
+  if (!ai || !db) return send(res, 200, { ok: false, code: 'not-enabled' });
+  const request = parseRequest(body);
   if (!request) return send(res, 400, { ok: false, code: 'invalid' });
 
-  const token = /^Bearer\s+(.+)$/i.exec(req.headers.authorization ?? '')?.[1];
   const user = await db.userFromToken(token).catch(() => null);
   if (!user) return send(res, 401, { ok: false, code: 'not-signed-in' });
 

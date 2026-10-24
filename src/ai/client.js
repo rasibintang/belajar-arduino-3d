@@ -70,3 +70,16 @@ export function diffCircuits(before, after) {
     sketchChanged: (before.sketch ?? '') !== (after.sketch ?? ''),
   };
 }
+
+/** Laporan komponen yang belum tersedia dari jalur "kunci saya" (tanpa kunci AI; token opsional). */
+export async function reportMissing({ prompt, missing, token = null, fetchImpl = fetch }) {
+  try {
+    await fetchImpl(ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      body: JSON.stringify({ action: 'report', prompt, missing }),
+    });
+  } catch {
+    /* laporan bersifat bantuan; gagal tidak mengganggu pengguna */
+  }
+}
