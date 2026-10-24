@@ -3,6 +3,23 @@
 Semua perubahan penting pada proyek ini. Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/);
 nomor versi mengikuti [SemVer](https://semver.org/lang/id/).
 
+## [0.9.0] — 2026-10-24 · AI penyusun rangkaian
+
+### Ditambahkan
+- **Susun dengan AI** (sandbox, khusus pengguna login): tulis perintah, AI memilih komponen dari
+  katalog, memasang kabel, dan menulis sketch. Sebelum pratinjau tampil, server menata komponen di
+  breadboard, memeriksa kabel dengan aturan panduan kabel, dan mengompilasi sketch; bila gagal, AI
+  memperbaiki sekali.
+- **Pratinjau** dengan meja 3D kecil, ringkasan, komponen, pengganti, komponen yang belum tersedia,
+  kode, dan daftar perubahan; **Terima** (rangkaian baru dibuka sebagai proyek terpisah dan disimpan
+  di akun — proyek yang sedang dikerjakan disimpan dulu) atau **Tolak**.
+- **Mode ubah** dengan tombol **Urungkan perubahan AI**; komponen lama tetap di tempatnya.
+- **Jatah harian** per pengguna (awal 1, diatur di halaman pengelola; pengelola tanpa batas;
+  permintaan gagal tidak dihitung) dan **laporan komponen** yang belum tersedia.
+- **Penyedia AI bisa dipilih:** Anthropic API (Claude Sonnet 5.5), Amazon Bedrock, atau layanan
+  berformat OpenAI (mis. Google Gemini gratis), dengan pemberitahuan privasi di kotak AI.
+- Daftar pin semua komponen kini terbaca tanpa model 3D (dipakai server).
+
 ## [0.8.0] — 2026-10-24 · Akun & data
 
 ### Ditambahkan

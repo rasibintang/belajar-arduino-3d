@@ -121,6 +121,59 @@ Masuk dengan Google (Supabase) membuka fitur tambahan; tanpa login semua tetap b
    `VITE_` dan jangan di-commit.
 6. Ganti password database Supabase (sempat tertulis di percakapan). Aplikasi tidak memakainya.
 
+## AI penyusun rangkaian
+
+Pengguna yang login menulis perintah ("monitoring kelembapan tanah otomatis") di tombol **Susun
+dengan AI** (sandbox). AI hanya menentukan rangkaian *logis* — komponen dari katalog, sambungan
+pin-ke-pin, dan sketch; semua yang fisik dihitung kode kita:
+
+```
+perintah ──POST /api/ai──▶ login & jatah (Supabase service role)
+                         ▶ AI (structured output: src/ai/schema.js)
+                         ▶ validasi (src/ai/validate.js): tipe, pin, props dari registri
+                         ▶ tata letak (src/ai/layout.js): breadboard + lubang, kabel ke jalur kaki
+                         ▶ panduan kabel (checkCircuit): masalah "danger" = gagal
+                         ▶ kompilasi (/api/compile)
+                         ▶ gagal & < 30 dtk? kirim kesalahan ke AI, perbaiki sekali
+                         ▶ catat ai_usage (ok / gagal) + component_requests
+browser: pratinjau 3D → Terima (proyek baru / ubah + "Urungkan perubahan AI") atau Tolak
+```
+
+- Katalog di prompt dibangkitkan dari registri (`src/ai/catalog.js`), jadi komponen baru otomatis
+  dikenal AI; daftar pin dibaca tanpa model 3D (`pinIdsOf`).
+- Jatah: `settings.ai_daily_limit` per pengguna per hari (UTC); pengelola tanpa batas; permintaan
+  yang gagal tidak dihitung. Komponen yang belum ada muncul di halaman pengelola → *Laporan komponen*.
+- Mode **ubah**: browser mengirim rangkaian logis + peta kaki → lubang dari sandbox; komponen lama
+  tetap persis di tempatnya, komponen baru ditempatkan di lubang kosong.
+- Saat pengembangan: `?fakeai=1` (jawaban contoh), `?fakeai=fail`, `?fakeai=quota` — tanpa kunci.
+
+### Penyedia AI (variabel lingkungan server, tanpa awalan `VITE_`)
+
+| Penyedia | Variabel |
+|---|---|
+| **Gratis, berformat OpenAI** (Google Gemini, Groq, OpenRouter) | `AI_PROVIDER=openai-compatible`, `AI_BASE_URL`, `AI_API_KEY`, `AI_MODEL` |
+| **Anthropic API** (bawaan) | `ANTHROPIC_API_KEY` (model bawaan `claude-sonnet-5-5`) |
+| **Amazon Bedrock** | `AI_PROVIDER=bedrock`, `AWS_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` (model `anthropic.claude-sonnet-5-5`) |
+
+Semua penyedia juga butuh `SUPABASE_URL` dan `SUPABASE_SERVICE_ROLE_KEY` (pencatatan jatah &
+laporan). Opsional: `AI_MODEL`, `AI_EFFORT` (bawaan `medium`). Tanpa kredensial lengkap, situs
+menampilkan "Fitur AI belum diaktifkan".
+
+Langkah pemilik:
+
+1. **Gemini (gratis):** buat API key di [Google AI Studio](https://aistudio.google.com/); pasang
+   `AI_PROVIDER=openai-compatible`, `AI_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai`,
+   `AI_API_KEY=<kunci>`, `AI_MODEL=<nama model Gemini di AI Studio>`. Di tier gratis, isi perintah
+   dapat dipakai Google untuk meningkatkan layanannya (pemberitahuan ini tampil di kotak AI).
+2. **Anthropic:** buat API key di console.anthropic.com → `ANTHROPIC_API_KEY`.
+3. **Amazon Bedrock:** aktifkan akses model Claude Sonnet 5.5 di konsol Bedrock, buat IAM user dengan
+   izin `bedrock:InvokeModel`, lalu pasang `AI_PROVIDER=bedrock` + region + access key. (Kiro adalah
+   IDE AWS; tidak menyediakan API untuk aplikasi.)
+4. Supabase → Project Settings → API → **service_role key** → `SUPABASE_SERVICE_ROLE_KEY`, plus
+   `SUPABASE_URL=https://gsjpkjolxielseltvhnn.supabase.co`.
+5. Pasang di Vercel → Settings → Environment Variables (Production), lalu deploy ulang. Untuk lokal,
+   tulis di `.env.local` (tidak di-commit) dan jalankan ulang `npm run dev`.
+
 ## Deploy
 
 ### Semua di Vercel (frontend + fungsi kompilasi)
@@ -165,6 +218,7 @@ hasil. Jalankan di kontainer sebagai pengguna biasa (sudah diatur di `Dockerfile
 index.html sandbox.html gallery.html admin.html   Halaman: pelajaran, sandbox, katalog, pengelola
 supabase/migrations/    Skema database + Row Level Security (jalankan di Supabase)
 api/compile.js          Fungsi Vercel: kompilasi sketch
+api/ai.js               Fungsi Vercel: AI penyusun rangkaian (server/ai.mjs, ai-client.mjs, ai-prompt.mjs)
 server/
   compile.mjs           Kompilasi dengan arduino-cli (cache, antrean, peta baris DWARF)
   compile-server.mjs    Server kompilasi mandiri (Docker / VPS)

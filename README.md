@@ -7,7 +7,7 @@
 **English** · [Bahasa Indonesia](README.id.md)
 
 [![Live site](https://img.shields.io/badge/live-learn--arduino--id.vercel.app-1f9e94?style=for-the-badge)](https://learn-arduino-id.vercel.app)
-[![Version](https://img.shields.io/badge/version-0.8.0-1d2740?style=for-the-badge)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.9.0-1d2740?style=for-the-badge)](CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/license-MIT-e8603c?style=for-the-badge)](LICENSE)
 
 ![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)
@@ -36,6 +36,7 @@ no hardware and no installation needed.
 | **Component catalog** | Every part in 3D with its pins, settings, and a one-click "Try in sandbox" |
 | **Two languages** | Indonesian and English across the whole site, including lessons and example code |
 | **Accounts** | Optional Google sign-in to keep sandbox projects and lesson progress in the cloud |
+| **AI circuit builder** | Describe a project in plain words; the AI picks parts, wires them, and writes the sketch — compiled and wire-checked before you see the preview |
 
 ## Live site
 
@@ -105,6 +106,17 @@ uses rules from the Arduino Uno documentation and component datasheets:
   </tr>
 </table>
 
+### AI circuit builder
+
+Signed-in users can describe what they want — *"an automatic soil-moisture monitor that shows the
+value on an LCD"* — and the AI builds it in the sandbox: it picks components from the catalog, wires
+them, and writes the sketch. Our own code then lays the parts out on the breadboard, checks every
+wire with the wire-guide rules, and compiles the sketch; the AI gets one chance to fix anything that
+fails. You see a 3D preview with the parts, code, and any substitutes, then **Accept** or **Reject**.
+It can also modify the open circuit, with an **Undo AI changes** button. Components the catalog
+lacks are reported to the admin. The provider is configurable: Anthropic (Claude Sonnet), Amazon
+Bedrock, or a free OpenAI-compatible service such as Google Gemini.
+
 ### Accounts (optional)
 
 Signing in with Google (Supabase) adds features without taking anything away from guests:
@@ -119,6 +131,7 @@ for the site owner. Data access is enforced with Postgres Row Level Security.
 | Simulation | [avr8js](https://github.com/wokwi/avr8js) + a custom netlist and voltage solver |
 | Compilation | [arduino-cli](https://arduino.github.io/arduino-cli/) with the AVR core and 27 libraries, as a Vercel function |
 | Accounts | [Supabase](https://supabase.com) (Google OAuth, Postgres, Row Level Security) |
+| AI | Claude via the [Anthropic SDK](https://github.com/anthropics/anthropic-sdk-typescript) / Amazon Bedrock, or any OpenAI-compatible endpoint (e.g. Gemini), with structured JSON output |
 | Tests | `node --test`, with [PGlite](https://pglite.dev) for the database schema and policies |
 | Hosting | [Vercel](https://vercel.com) |
 

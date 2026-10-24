@@ -7,7 +7,7 @@
 [English](README.md) · **Bahasa Indonesia**
 
 [![Situs](https://img.shields.io/badge/situs-learn--arduino--id.vercel.app-1f9e94?style=for-the-badge)](https://learn-arduino-id.vercel.app)
-[![Versi](https://img.shields.io/badge/versi-0.8.0-1d2740?style=for-the-badge)](CHANGELOG.md)
+[![Versi](https://img.shields.io/badge/versi-0.9.0-1d2740?style=for-the-badge)](CHANGELOG.md)
 [![Lisensi: MIT](https://img.shields.io/badge/lisensi-MIT-e8603c?style=for-the-badge)](LICENSE)
 
 ![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)
@@ -36,6 +36,7 @@ Arduino sungguhan di browser — tanpa perangkat keras dan tanpa instalasi.
 | **Katalog komponen** | Semua komponen dalam 3D lengkap dengan pin, pengaturan, dan tombol "Coba di sandbox" |
 | **Dua bahasa** | Indonesia dan Inggris di seluruh situs, termasuk pelajaran dan kode contoh |
 | **Akun** | Masuk dengan Google (opsional) untuk menyimpan proyek sandbox dan progres pelajaran di cloud |
+| **AI penyusun rangkaian** | Jelaskan proyek dengan kalimat biasa; AI memilih komponen, memasang kabel, dan menulis sketch — dikompilasi dan diperiksa kabelnya sebelum pratinjau tampil |
 
 ## Situs
 
@@ -107,6 +108,18 @@ disambung. Panduan kabel memakai aturan dari dokumentasi Arduino Uno dan datashe
   </tr>
 </table>
 
+### AI penyusun rangkaian
+
+Pengguna yang login bisa menuliskan keinginannya — *"monitoring kelembapan tanah otomatis yang
+menampilkan nilainya di LCD"* — lalu AI menyusunnya di sandbox: memilih komponen dari katalog,
+memasang kabel, dan menulis sketch. Kode kita sendiri kemudian menata komponen di breadboard,
+memeriksa setiap kabel dengan aturan panduan kabel, dan mengompilasi sketch; bila ada yang gagal, AI
+diberi satu kesempatan memperbaikinya. Anda melihat pratinjau 3D beserta komponen, kode, dan
+pengganti, lalu **Terima** atau **Tolak**. AI juga bisa mengubah rangkaian yang sedang terbuka,
+dengan tombol **Urungkan perubahan AI**. Komponen yang belum ada di katalog dilaporkan ke pengelola.
+Penyedianya bisa dipilih: Anthropic (Claude Sonnet), Amazon Bedrock, atau layanan gratis berformat
+OpenAI seperti Google Gemini.
+
 ### Akun (opsional)
 
 Masuk dengan Google (Supabase) menambah fitur tanpa mengurangi apa pun bagi pengunjung: proyek
@@ -121,6 +134,7 @@ untuk pemilik situs. Akses data dijaga Row Level Security di Postgres.
 | Simulasi | [avr8js](https://github.com/wokwi/avr8js) + netlist dan pemecah tegangan buatan sendiri |
 | Kompilasi | [arduino-cli](https://arduino.github.io/arduino-cli/) dengan core AVR dan 27 library, sebagai fungsi Vercel |
 | Akun | [Supabase](https://supabase.com) (Google OAuth, Postgres, Row Level Security) |
+| AI | Claude lewat [Anthropic SDK](https://github.com/anthropics/anthropic-sdk-typescript) / Amazon Bedrock, atau endpoint berformat OpenAI (mis. Gemini), dengan keluaran JSON terstruktur |
 | Tes | `node --test`, dengan [PGlite](https://pglite.dev) untuk skema dan kebijakan database |
 | Hosting | [Vercel](https://vercel.com) |
 
