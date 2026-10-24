@@ -6,19 +6,20 @@
 
 **Architecture:** AI hanya menghasilkan rangkaian *logis* (komponen dari katalog + sambungan pin-ke-pin + sketch) lewat structured output. Semua yang bersifat fisik dihitung kode kita, sama di server dan browser: katalog komponen yang dibaca tanpa model 3D, validasi, tata letak breadboard dengan matematika kisi, dan pemeriksaan kabel (`checkCircuit`). Fungsi server `api/ai.js` memeriksa login & jatah (Supabase service role), memanggil Claude, memvalidasi + mengompilasi (`/api/compile`) + memeriksa, memperbaiki sekali bila gagal, lalu mencatat pemakaian/laporan.
 
-**Tech Stack:** `@anthropic-ai/sdk` (server saja), Claude `claude-opus-5-5` (default; `ANTHROPIC_MODEL` bisa mengganti), structured outputs (`output_config.format` JSON schema), `@supabase/supabase-js` (server, service role), modul `src/sim/wiring/*` yang sudah ada, `node --test`.
+**Tech Stack:** `@anthropic-ai/sdk` + `@anthropic-ai/bedrock-sdk` (server saja), Claude **Sonnet 5.5** (pilihan pemilik) lewat **Anthropic API** atau **Amazon Bedrock** (`AI_PROVIDER`), structured outputs (`output_config.format` JSON schema), `@supabase/supabase-js` (server, service role), modul `src/sim/wiring/*` yang sudah ada, `node --test`.
 
 **Spec:** `docs/superpowers/specs/2026-10-23-ai-penyusun-rangkaian-design.md`
 
 ## Global Constraints
 
-- Kunci rahasia hanya di server (variabel Vercel tanpa awalan `VITE_`): `ANTHROPIC_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_URL`. Tidak ada kode di `src/` yang membacanya; tidak ada kunci di repo, tes, log, atau memori.
-- Tanpa `ANTHROPIC_API_KEY` (atau tanpa service role): `/api/ai` menjawab `{ ok: false, code: 'not-enabled' }` dan UI menampilkan "fitur AI belum diaktifkan" — tanpa error.
+- Kunci rahasia hanya di server (variabel Vercel tanpa awalan `VITE_`): `ANTHROPIC_API_KEY` (penyedia `anthropic`) atau `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY`/`AWS_REGION` (penyedia `bedrock`), `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_URL`. Tidak ada kode di `src/` yang membacanya; tidak ada kunci di repo, tes, log, atau memori.
+- Tanpa kredensial penyedia yang dipilih (atau tanpa service role): `/api/ai` menjawab `{ ok: false, code: 'not-enabled' }` dan UI menampilkan "fitur AI belum diaktifkan" — tanpa error.
 - Hanya untuk pengguna login (token Supabase di header `Authorization: Bearer`). Batas: `settings.ai_daily_limit` per pengguna per hari (UTC), pengelola (tabel `admins`) tanpa batas. **Permintaan yang gagal tidak mengurangi jatah** (dicatat `ai_usage.ok = false`).
 - AI tidak boleh mengarang komponen/pin: setiap `type` harus ada di registri, setiap pin harus ada pada komponen itu; selain itu hasil ditolak/diperbaiki.
 - Tidak menampilkan rangkaian/kode yang tidak jalan seolah benar: pratinjau hanya bila sketch terkompilasi dan tidak ada masalah kabel `danger`; masalah `warn` ditampilkan apa adanya.
 - Perbaikan otomatis **paling banyak sekali**; fungsi server selesai < 60 dtk (`maxDuration` 60): perbaikan dilewati bila waktu terpakai > 30 dtk.
-- Model default `claude-opus-5-5`, `output_config.effort` default `medium` (env `ANTHROPIC_EFFORT`), `fallbacks: "default"` (beta `server-side-fallback-2026-07-01`) bila SDK menerimanya bersama structured outputs; periksa `stop_reason` (`refusal`, `max_tokens`) sebelum memakai hasil.
+- Penyedia: `AI_PROVIDER=anthropic` (bawaan; `new Anthropic()`) atau `bedrock` (`AnthropicBedrockMantle` dari `@anthropic-ai/bedrock-sdk`, region dari `AWS_REGION`). Model bawaan **Claude Sonnet 5.5**: `claude-sonnet-5-5` (Anthropic) / `anthropic.claude-sonnet-5-5` (Bedrock); `AI_MODEL` bisa mengganti. `output_config.effort` bawaan `medium` (env `AI_EFFORT`). Structured outputs, prompt caching, dan effort tersedia di kedua penyedia; `fallbacks: "default"` (beta `server-side-fallback-2026-07-01`) hanya dikirim di penyedia `anthropic` (tidak tersedia di Bedrock). Selalu periksa `stop_reason` (`refusal`, `max_tokens`) sebelum memakai hasil.
+- Kiro (IDE AWS) tidak menyediakan API resmi untuk aplikasi; untuk ekosistem AWS gunakan Amazon Bedrock (ditagih terpisah dari langganan Kiro).
 - Katalog di prompt dibangkitkan dari registri komponen (nama, keterangan, pin + fungsi, props), deterministik, ditaruh di awal prompt dengan `cache_control` agar bisa di-cache.
 - Penjelasan AI mengikuti bahasa situs (`lang`); semua teks UI baru punya kunci ID & EN.
 - Tes: `npm test`, tanpa jaringan (klien Claude dan Supabase disuntik/tiruan).
@@ -114,7 +115,7 @@
 
 **Files:**
 - Create: `server/ai-prompt.mjs`, `server/ai-claude.mjs`
-- Modify: `package.json` (dependensi `@anthropic-ai/sdk`)
+- Modify: `package.json` (dependensi `@anthropic-ai/sdk`, `@anthropic-ai/bedrock-sdk`)
 - Test: `tests/ai-prompt.test.js`
 
 **Interfaces:**
@@ -122,8 +123,9 @@
 - Produces:
   - `buildSystem({ lang }) → Anthropic.TextBlockParam[]` — blok 1: peran & aturan (pakai hanya komponen katalog; Arduino Uno `uno`; jangan deklarasikan breadboard; aturan kabel umum: I²C A4/A5, SPI D11–D13, servo di PWM, resistor seri LED, hindari D0/D1; tulis sketch lengkap yang terkompilasi untuk Uno dengan library terpasang; bila komponen tidak ada: isi `missing`, dan bila tujuan tetap tercapai dengan komponen lain isi `substitutions` + `feasible: true`; `summary`/`changes`/alasan dalam bahasa `lang`); blok 2: katalog (`cache_control: { type: 'ephemeral' }`). Tanpa tanggal/ID acak (prefiks stabil).
   - `buildUserContent({ prompt, mode, current }) → string` — `mode: 'new' | 'modify'`; untuk `modify` sertakan diagram logis saat ini (komponen + sambungan pin-ke-pin, tanpa posisi) dan sketch.
-  - `createClaude({ apiKey, model = 'claude-opus-5-5', effort = 'medium' }) → { generate({ system, messages, signal }) → Promise<{ result | null, stopReason, usage }> }` — SDK `@anthropic-ai/sdk`, structured output `output_config.format` dengan `CIRCUIT_SCHEMA`, `max_tokens` 16000, `fallbacks: "default"` lewat beta bila diterima; `refusal`/`max_tokens` → `result: null`.
-- [ ] **Step 1: Tulis tes gagal** — `tests/ai-prompt.test.js`: `buildSystem` dua kali identik (byte); blok terakhir punya `cache_control`; teks memuat `arduino-uno` dan aturan `A4`; `buildUserContent` mode `modify` memuat `led1:A` dan sketch saat ini.
+  - `createClaude({ provider = 'anthropic', model, effort = 'medium', env }) → { generate({ system, messages, signal }) → Promise<{ result | null, stopReason, usage }> }` — `provider: 'anthropic'` memakai `new Anthropic()` (+ `fallbacks: "default"`), `'bedrock'` memakai `new AnthropicBedrockMantle({ awsRegion })` (tanpa `fallbacks`); model bawaan `claude-sonnet-5-5` / `anthropic.claude-sonnet-5-5`; structured output `output_config.format` dengan `CIRCUIT_SCHEMA`, `max_tokens` 16000; `refusal`/`max_tokens` → `result: null`.
+  - `providerConfig(env) → { provider, model, effort } | null` — `null` bila kredensial penyedia terpilih tidak lengkap.
+- [ ] **Step 1: Tulis tes gagal** — `tests/ai-prompt.test.js`: `buildSystem` dua kali identik (byte); blok terakhir punya `cache_control`; teks memuat `arduino-uno` dan aturan `A4`; `buildUserContent` mode `modify` memuat `led1:A` dan sketch saat ini; `providerConfig({})` → `null`; `providerConfig({ ANTHROPIC_API_KEY: 'x' })` → `{ provider: 'anthropic', model: 'claude-sonnet-5-5', effort: 'medium' }`; `providerConfig({ AI_PROVIDER: 'bedrock', AWS_REGION: 'us-east-1', AWS_ACCESS_KEY_ID: 'a', AWS_SECRET_ACCESS_KEY: 'b' })` → model `anthropic.claude-sonnet-5-5`; bedrock tanpa region → `null`.
 - [ ] **Step 2: Jalankan** — Expected: FAIL.
 - [ ] **Step 3: Implementasikan** (`npm i @anthropic-ai/sdk`); baca `typescript/claude-api/README.md` & bagian Structured Outputs skill claude-api sebelum menulis `ai-claude.mjs`; jangan menebak API SDK.
 - [ ] **Step 4: Jalankan** — Expected: PASS; `node -e "import('./server/ai-claude.mjs')"` tanpa error.
@@ -135,7 +137,7 @@
 
 **Files:**
 - Create: `server/ai.mjs`, `api/ai.js`
-- Modify: `vite.config.js` (middleware `/api/ai` saat dev), `vercel.json` (`api/ai.js`: `maxDuration` 60), `.env.example` (`ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`, `ANTHROPIC_EFFORT`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` — dikomentari, tanpa nilai)
+- Modify: `vite.config.js` (middleware `/api/ai` saat dev), `vercel.json` (`api/ai.js`: `maxDuration` 60), `.env.example` (`AI_PROVIDER`, `AI_MODEL`, `AI_EFFORT`, `ANTHROPIC_API_KEY`, `AWS_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` — dikomentari, tanpa nilai)
 - Test: `tests/ai-server.test.js`
 
 **Interfaces:**
@@ -190,7 +192,7 @@
 **Files:**
 - Modify: `docs/PANDUAN-PENGEMBANG.md` (bagian **AI penyusun rangkaian**: alur, variabel lingkungan, biaya & jatah), `README.md` + `README.id.md` (fitur AI), `CHANGELOG.md` (0.9.0), `package.json` (versi `0.9.0`)
 
-- [ ] **Step 1:** Tulis dokumentasi; langkah pemilik: pasang `ANTHROPIC_API_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` di Vercel (bukan `VITE_`).
+- [ ] **Step 1:** Tulis dokumentasi; langkah pemilik untuk kedua penyedia: (a) Anthropic: `ANTHROPIC_API_KEY`; (b) Bedrock: aktifkan akses model Claude Sonnet 5.5 di konsol Bedrock, buat IAM user/role dengan izin `bedrock:InvokeModel`, pasang `AI_PROVIDER=bedrock`, `AWS_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`; keduanya plus `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` di Vercel (bukan `VITE_`).
 - [ ] **Step 2: Verifikasi** — `npm test` PASS, `npm run build` `built`.
 - [ ] **Step 3: Commit** — `git commit -m "Docs: AI penyusun rangkaian, versi 0.9.0"`
 - [ ] **Step 4 (setelah pemilik memasang kunci):** uji di situs produksi dengan 3 perintah (LED berkedip; monitoring kelembapan tanah — komponen belum ada → pengganti + laporan; ubah: tambah buzzer) dan catat waktu, hasil kompilasi, masalah kabel, jatah, serta laporan di halaman pengelola.
