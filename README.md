@@ -9,7 +9,7 @@ Dibangun dengan **Vite + Three.js** (JavaScript biasa, tanpa framework UI). Ters
 Desain terinspirasi dari [Learn Arduino](https://learn-arduino-red.vercel.app/) karya Dilum Sanjaya.
 Kode, model 3D, dan teks pelajaran di repo ini ditulis ulang dari awal.
 
-**Versi terbaru: 0.8.0** — lihat [Riwayat pembaharuan](#riwayat-pembaharuan) atau [CHANGELOG.md](CHANGELOG.md).
+**Situs:** https://learn-arduino-id.vercel.app · **Versi terbaru: 0.8.0** — lihat [Riwayat pembaharuan](#riwayat-pembaharuan) atau [CHANGELOG.md](CHANGELOG.md).
 
 | Halaman | Isi |
 |---|---|
@@ -117,8 +117,8 @@ Masuk dengan Google (Supabase) membuka fitur tambahan; tanpa login semua tetap b
 1. **Google Cloud Console** → APIs & Services → Credentials → *OAuth client ID* (Web application).
    Authorized redirect URI: `https://gsjpkjolxielseltvhnn.supabase.co/auth/v1/callback`.
 2. **Supabase** → Authentication → Providers → **Google**: aktifkan, isi Client ID & Client Secret.
-3. Supabase → Authentication → URL Configuration: *Site URL* = domain produksi; *Redirect URLs*
-   tambahkan `http://localhost:5173/**` dan `https://<domain-anda>/**`.
+3. Supabase → Authentication → URL Configuration: *Site URL* = `https://learn-arduino-id.vercel.app`;
+   *Redirect URLs* tambahkan `http://localhost:5173/**` dan `https://learn-arduino-id.vercel.app/**`.
 4. Supabase → SQL Editor: jalankan isi `supabase/migrations/20261024000000_akun_dan_data.sql`,
    lalu tandai diri sebagai pengelola:
    `insert into public.admins (email) values ('<email Google Anda>');`
