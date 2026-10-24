@@ -110,15 +110,19 @@ disambung. Panduan kabel memakai aturan dari dokumentasi Arduino Uno dan datashe
 
 ### AI penyusun rangkaian
 
-Pengguna yang login bisa menuliskan keinginannya — *"monitoring kelembapan tanah otomatis yang
+Siapa pun bisa menuliskan keinginannya — *"monitoring kelembapan tanah otomatis yang
 menampilkan nilainya di LCD"* — lalu AI menyusunnya di sandbox: memilih komponen dari katalog,
 memasang kabel, dan menulis sketch. Kode kita sendiri kemudian menata komponen di breadboard,
 memeriksa setiap kabel dengan aturan panduan kabel, dan mengompilasi sketch; bila ada yang gagal, AI
 diberi satu kesempatan memperbaikinya. Anda melihat pratinjau 3D beserta komponen, kode, dan
 pengganti, lalu **Terima** atau **Tolak**. AI juga bisa mengubah rangkaian yang sedang terbuka,
 dengan tombol **Urungkan perubahan AI**. Komponen yang belum ada di katalog dilaporkan ke pengelola.
-Penyedianya bisa dipilih: Anthropic (Claude Sonnet), Amazon Bedrock, atau layanan gratis berformat
-OpenAI seperti Google Gemini.
+
+**Pakai kunci sendiri.** AI berjalan dengan kunci API *Anda* — disimpan hanya di browser Anda dan
+dikirim langsung dari browser ke penyedia, tidak pernah ke server situs ini. Didukung: **Google
+Gemini** (kunci gratis dari [Google AI Studio](https://aistudio.google.com/apikey)), **OpenRouter**,
+**Groq**, **Anthropic (Claude)**, atau alamat apa pun berformat OpenAI. Tidak perlu login. Pemilik
+situs juga bisa menyalakan **jatah gratis situs** (kunci di server, wajib login, jatah harian).
 
 ### Akun (opsional)
 
@@ -134,7 +138,7 @@ untuk pemilik situs. Akses data dijaga Row Level Security di Postgres.
 | Simulasi | [avr8js](https://github.com/wokwi/avr8js) + netlist dan pemecah tegangan buatan sendiri |
 | Kompilasi | [arduino-cli](https://arduino.github.io/arduino-cli/) dengan core AVR dan 27 library, sebagai fungsi Vercel |
 | Akun | [Supabase](https://supabase.com) (Google OAuth, Postgres, Row Level Security) |
-| AI | Claude lewat [Anthropic SDK](https://github.com/anthropics/anthropic-sdk-typescript) / Amazon Bedrock, atau endpoint berformat OpenAI (mis. Gemini), dengan keluaran JSON terstruktur |
+| AI | Kunci milik pengguna dari browser (Gemini, OpenRouter, Groq, Claude lewat [Anthropic SDK](https://github.com/anthropics/anthropic-sdk-typescript), berformat OpenAI) plus jatah server opsional (Anthropic / Amazon Bedrock / berformat OpenAI), semuanya dengan keluaran JSON terstruktur |
 | Tes | `node --test`, dengan [PGlite](https://pglite.dev) untuk skema dan kebijakan database |
 | Hosting | [Vercel](https://vercel.com) |
 

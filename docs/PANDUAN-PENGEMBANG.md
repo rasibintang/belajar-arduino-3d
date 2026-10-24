@@ -123,9 +123,19 @@ Masuk dengan Google (Supabase) membuka fitur tambahan; tanpa login semua tetap b
 
 ## AI penyusun rangkaian
 
-Pengguna yang login menulis perintah ("monitoring kelembapan tanah otomatis") di tombol **Susun
-dengan AI** (sandbox). AI hanya menentukan rangkaian *logis* — komponen dari katalog, sambungan
-pin-ke-pin, dan sketch; semua yang fisik dihitung kode kita:
+Pengguna menulis perintah ("monitoring kelembapan tanah otomatis") di tombol **Susun dengan AI**
+(sandbox). AI hanya menentukan rangkaian *logis* — komponen dari katalog, sambungan pin-ke-pin, dan
+sketch; semua yang fisik dihitung kode kita. Ada dua sumber AI:
+
+- **Kunci saya** (jalur utama, tanpa login): kunci pengguna disimpan di browser (`src/ai/byok.js`;
+  di memori selama halaman terbuka, atau `localStorage['la-ai-key']` bila "Ingat di browser ini").
+  Browser memanggil penyedia langsung — Gemini native (`generateContent`), OpenRouter/Groq/alamat
+  berformat OpenAI (`/chat/completions`), atau Anthropic (SDK dengan `dangerouslyAllowBrowser`).
+  Kunci **tidak pernah** dikirim ke server situs. Alur pemeriksaan yang sama (`src/ai/pipeline.js`)
+  berjalan di browser, memakai `/api/compile`. Komponen yang belum ada dilaporkan lewat
+  `POST /api/ai {action:'report'}` (tanpa kunci; token login opsional).
+- **Jatah gratis situs** (opsional): hanya tampil bila server punya kunci AI; wajib login dan dibatasi
+  jatah harian, alurnya di bawah.
 
 ```
 perintah ──POST /api/ai──▶ login & jatah (Supabase service role)
@@ -147,7 +157,9 @@ browser: pratinjau 3D → Terima (proyek baru / ubah + "Urungkan perubahan AI") 
   tetap persis di tempatnya, komponen baru ditempatkan di lubang kosong.
 - Saat pengembangan: `?fakeai=1` (jawaban contoh), `?fakeai=fail`, `?fakeai=quota` — tanpa kunci.
 
-### Penyedia AI (variabel lingkungan server, tanpa awalan `VITE_`)
+### Jatah gratis situs: penyedia AI (variabel lingkungan server, tanpa awalan `VITE_`)
+
+Bagian ini opsional — tanpa variabel ini, pengguna tetap bisa memakai **Kunci saya**.
 
 | Penyedia | Variabel |
 |---|---|
@@ -157,7 +169,7 @@ browser: pratinjau 3D → Terima (proyek baru / ubah + "Urungkan perubahan AI") 
 
 Semua penyedia juga butuh `SUPABASE_URL` dan `SUPABASE_SERVICE_ROLE_KEY` (pencatatan jatah &
 laporan). Opsional: `AI_MODEL`, `AI_EFFORT` (bawaan `medium`). Tanpa kredensial lengkap, situs
-menampilkan "Fitur AI belum diaktifkan".
+hanya menampilkan pilihan **Kunci saya**.
 
 Langkah pemilik:
 

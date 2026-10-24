@@ -108,14 +108,19 @@ uses rules from the Arduino Uno documentation and component datasheets:
 
 ### AI circuit builder
 
-Signed-in users can describe what they want — *"an automatic soil-moisture monitor that shows the
+Anyone can describe what they want — *"an automatic soil-moisture monitor that shows the
 value on an LCD"* — and the AI builds it in the sandbox: it picks components from the catalog, wires
 them, and writes the sketch. Our own code then lays the parts out on the breadboard, checks every
 wire with the wire-guide rules, and compiles the sketch; the AI gets one chance to fix anything that
 fails. You see a 3D preview with the parts, code, and any substitutes, then **Accept** or **Reject**.
 It can also modify the open circuit, with an **Undo AI changes** button. Components the catalog
-lacks are reported to the admin. The provider is configurable: Anthropic (Claude Sonnet), Amazon
-Bedrock, or a free OpenAI-compatible service such as Google Gemini.
+lacks are reported to the admin.
+
+**Bring your own key.** The AI runs on *your* API key — stored only in your browser and sent straight
+from your browser to the provider, never to this site's server. Supported: **Google Gemini** (free
+key from [Google AI Studio](https://aistudio.google.com/apikey)), **OpenRouter**, **Groq**,
+**Anthropic (Claude)**, or any OpenAI-compatible address. No sign-in needed. A site owner can also
+enable an optional **free site allowance** (server-side key, sign-in and a daily quota).
 
 ### Accounts (optional)
 
@@ -131,7 +136,7 @@ for the site owner. Data access is enforced with Postgres Row Level Security.
 | Simulation | [avr8js](https://github.com/wokwi/avr8js) + a custom netlist and voltage solver |
 | Compilation | [arduino-cli](https://arduino.github.io/arduino-cli/) with the AVR core and 27 libraries, as a Vercel function |
 | Accounts | [Supabase](https://supabase.com) (Google OAuth, Postgres, Row Level Security) |
-| AI | Claude via the [Anthropic SDK](https://github.com/anthropics/anthropic-sdk-typescript) / Amazon Bedrock, or any OpenAI-compatible endpoint (e.g. Gemini), with structured JSON output |
+| AI | Bring-your-own-key from the browser (Gemini, OpenRouter, Groq, Claude via the [Anthropic SDK](https://github.com/anthropics/anthropic-sdk-typescript), OpenAI-compatible) plus an optional server allowance (Anthropic / Amazon Bedrock / OpenAI-compatible), all with structured JSON output |
 | Tests | `node --test`, with [PGlite](https://pglite.dev) for the database schema and policies |
 | Hosting | [Vercel](https://vercel.com) |
 
