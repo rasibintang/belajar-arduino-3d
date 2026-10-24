@@ -200,3 +200,21 @@
 - [ ] **Step 2: Verifikasi** — `npm test` PASS, `npm run build` `built`.
 - [ ] **Step 3: Commit** — `git commit -m "Docs: AI penyusun rangkaian, versi 0.9.0"`
 - [ ] **Step 4 (setelah pemilik memasang kunci):** uji di situs produksi dengan 3 perintah (LED berkedip; monitoring kelembapan tanah — komponen belum ada → pengganti + laporan; ubah: tambah buzzer) dan catat waktu, hasil kompilasi, masalah kabel, jatah, serta laporan di halaman pengelola.
+
+---
+
+### Task 8 (tambahan): kunci AI milik pengguna (BYOK) + jatah situs opsional
+
+- Pindahkan alur (AI → validasi → tata letak → cek kabel → kompilasi → perbaikan sekali) ke
+  `src/ai/pipeline.js` (`runPipeline`) dan prompt ke `src/ai/prompt.js`, dipakai server dan browser.
+- `src/ai/providers.js` (aman untuk browser): klien berformat OpenAI, **Gemini native**
+  (`models/{m}:generateContent`, header `x-goog-api-key`, `responseMimeType: application/json` +
+  `responseJsonSchema`, ulang tanpa skema bila 400) — endpoint Gemini berformat OpenAI menolak CORS,
+  dan Anthropic (SDK `dangerouslyAllowBrowser`, dimuat malas). Server memakai modul yang sama.
+- `src/ai/byok.js`: preset penyedia, simpan/muat/hapus kunci (`localStorage` bila "ingat",
+  selain itu hanya di memori tab), daftar model dari `/models` penyedia.
+- `/api/ai` `{ action: 'report', prompt, missing }` — catat laporan komponen dari jalur kunci sendiri
+  (user_id bila token sah, selain itu null; maks 5 item).
+- Kotak AI: pilihan **Kunci saya** / **Jatah gratis situs** (bila server aktif), formulir kunci
+  (penyedia, kunci, model, ingat, hapus, panduan Gemini), pemberitahuan privasi per jalur.
+- Tes: penyedia (Gemini, berformat OpenAI), penyimpanan kunci, laporan anonim, `runPipeline` langsung.

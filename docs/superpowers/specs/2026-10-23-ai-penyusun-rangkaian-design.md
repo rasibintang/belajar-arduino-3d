@@ -79,3 +79,20 @@ menjadi masukan bagi pemilik untuk menambah katalog.
 Format pertukaran data dengan AI (mis. tool/JSON terstruktur), isi prompt sistem, penempatan
 otomatis komponen di meja & breadboard, desain kotak perintah dan pratinjau (gaya sandbox),
 penyimpanan riwayat untuk "Urungkan", pencatatan pemakaian, dan penanganan batas waktu fungsi.
+
+## Perubahan 2026-10-24: kunci AI milik pengguna (keputusan pemilik)
+
+Karena proyek ini open source, pemilik memilih model **campuran** agar biaya AI tidak dibebankan ke
+pengembang. Ini menggantikan "AI dengan kunci API milik pengguna" di *Bukan tujuan*.
+
+- **Kunci saya (jalur utama):** pengguna memasukkan kunci penyedia AI sendiri (Google Gemini gratis,
+  OpenRouter, Anthropic, Groq, atau layanan berformat OpenAI lain). Kunci disimpan **hanya di browser
+  pengguna** (opsi "ingat di browser ini"; bisa dihapus) dan browser memanggil penyedia **langsung** —
+  kunci tidak pernah dikirim ke server situs. Tidak wajib login; tanpa jatah dari situs.
+- **Coba gratis (opsional):** bila pemilik memasang kunci server, pengguna yang login mendapat jatah
+  harian dari situs seperti sebelumnya (bisa 0 = mati).
+- Validasi, tata letak, pemeriksaan kabel, dan perbaikan sekali tetap sama (berjalan di browser untuk
+  jalur kunci sendiri); kompilasi tetap lewat `/api/compile`.
+- Komponen yang belum tersedia tetap dilaporkan ke pengelola (tanpa nama bila tidak login).
+- Kotak AI menampilkan panduan singkat mendapatkan kunci Gemini gratis dan pemberitahuan privasi yang
+  sesuai jalurnya.
