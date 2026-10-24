@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildSystem, buildUserContent } from '../server/ai-prompt.mjs';
+import { buildSystem, buildUserContent } from '../src/ai/prompt.js';
 import { providerConfig, createAiClient } from '../server/ai-client.mjs';
 
 const RESULT = { title: 'LED', summary: '', feasible: true, parts: [], connections: [], sketch: 'x', substitutions: [], missing: [], changes: [] };

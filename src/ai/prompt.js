@@ -1,6 +1,6 @@
 // Prompt untuk AI penyusun rangkaian. Blok sistem stabil (tanpa tanggal/ID) agar katalog di blok
 // terakhir bisa di-cache; permintaan pengguna dan rangkaian saat ini ada di pesan pengguna.
-import { buildCatalog } from '../src/ai/catalog.js';
+import { buildCatalog } from './catalog.js';
 
 const RULES = `You design Arduino Uno circuits for a browser sandbox that simulates them. The sandbox compiles your sketch with arduino-cli and runs it on an ATmega328P emulator, so the circuit and the code must really work together.
 

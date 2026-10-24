@@ -5,11 +5,9 @@
 // generate() → { result | null, stopReason, usage }; result null bila ditolak, terpotong, atau bukan JSON.
 import Anthropic from '@anthropic-ai/sdk';
 import { AnthropicBedrockMantle } from '@anthropic-ai/bedrock-sdk';
-import { CIRCUIT_SCHEMA } from '../src/ai/schema.js';
+import { claudeMessages, openAiCompatible } from '../src/ai/providers.js';
 
 const DEFAULT_MODEL = { anthropic: 'claude-sonnet-5-5', bedrock: 'anthropic.claude-sonnet-5-5' };
-const FALLBACK_BETA = 'server-side-fallback-2026-07-01';
-const MAX_TOKENS = 16000;
 const TIMEOUT_MS = 45000; // fungsi Vercel berhenti di 60 dtk
 
 /** Penyedia dari variabel lingkungan, atau null bila kredensialnya belum lengkap. */
@@ -38,96 +36,13 @@ export function providerConfig(env) {
   return null;
 }
 
-/** Teks JSON dari model → objek, atau null. Pagar ```json``` dari sebagian model dibuang. */
-function parseJson(text) {
-  const clean = String(text ?? '')
-    .trim()
-    .replace(/^```(?:json)?\s*/i, '')
-    .replace(/```$/, '')
-    .trim();
-  try {
-    const value = JSON.parse(clean);
-    return value && typeof value === 'object' ? value : null;
-  } catch {
-    return null;
-  }
-}
-
-function claudeClient(config, client) {
-  client ??=
-    config.provider === 'bedrock'
-      ? new AnthropicBedrockMantle({ awsRegion: config.region, timeout: TIMEOUT_MS, maxRetries: 1 })
-      : new Anthropic({ timeout: TIMEOUT_MS, maxRetries: 1 });
-  return {
-    async generate({ system, messages, signal }) {
-      const params = {
-        model: config.model,
-        max_tokens: MAX_TOKENS,
-        system,
-        messages,
-        output_config: { effort: config.effort, format: { type: 'json_schema', schema: CIRCUIT_SCHEMA } },
-      };
-      let res;
-      if (config.provider === 'anthropic') {
-        try {
-          res = await client.beta.messages.create({ ...params, betas: [FALLBACK_BETA], fallbacks: 'default' }, { signal });
-        } catch (err) {
-          // akun/model yang belum mendukung fallback server: ulang tanpa fallback
-          if (!(err instanceof Anthropic.BadRequestError) || !/fallback/i.test(err.message)) throw err;
-          res = await client.messages.create(params, { signal });
-        }
-      } else {
-        res = await client.messages.create(params, { signal });
-      }
-      const stopReason = res.stop_reason;
-      if (stopReason === 'refusal' || stopReason === 'max_tokens') return { result: null, stopReason, usage: res.usage };
-      const text = res.content
-        .filter((b) => b.type === 'text')
-        .map((b) => b.text)
-        .join('');
-      return { result: parseJson(text), stopReason, usage: res.usage };
-    },
-  };
-}
-
-function openAiCompatibleClient(config, fetchImpl) {
-  return {
-    async generate({ system, messages, signal }) {
-      const systemText = system.map((b) => b.text).join('\n\n');
-      const call = (format) =>
-        fetchImpl(`${config.baseUrl}/chat/completions`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${config.apiKey}` },
-          signal,
-          body: JSON.stringify({
-            model: config.model,
-            max_tokens: MAX_TOKENS,
-            messages: [
-              {
-                role: 'system',
-                content: format === 'json_schema' ? systemText : `${systemText}\n\nReturn only one JSON object that matches this JSON Schema:\n${JSON.stringify(CIRCUIT_SCHEMA)}`,
-              },
-              ...messages,
-            ],
-            response_format:
-              format === 'json_schema' ? { type: 'json_schema', json_schema: { name: 'circuit', schema: CIRCUIT_SCHEMA, strict: true } } : { type: 'json_object' },
-          }),
-        });
-      // tidak semua penyedia mendukung json_schema ketat: ulang sekali dengan mode JSON biasa
-      let res = await call('json_schema');
-      if (res.status === 400) res = await call('json_object');
-      if (!res.ok) throw Object.assign(new Error(`AI provider returned HTTP ${res.status}`), { status: res.status });
-      const data = await res.json();
-      const choice = data.choices?.[0];
-      const stopReason = choice?.finish_reason ?? null;
-      if (stopReason === 'length' || stopReason === 'content_filter') return { result: null, stopReason, usage: data.usage };
-      return { result: parseJson(choice?.message?.content), stopReason, usage: data.usage };
-    },
-  };
-}
-
 /** Klien untuk config dari providerConfig(). deps.client / deps.fetchImpl hanya untuk tes. */
 export function createAiClient(config, deps = {}) {
-  if (config.provider === 'openai-compatible') return openAiCompatibleClient(config, deps.fetchImpl ?? fetch);
-  return claudeClient(config, deps.client);
+  if (config.provider === 'openai-compatible') return openAiCompatible(config, deps.fetchImpl ?? fetch);
+  const client =
+    deps.client ??
+    (config.provider === 'bedrock'
+      ? new AnthropicBedrockMantle({ awsRegion: config.region, timeout: TIMEOUT_MS, maxRetries: 1 })
+      : new Anthropic({ timeout: TIMEOUT_MS, maxRetries: 1 }));
+  return claudeMessages(config, client, { fallbacks: config.provider === 'anthropic' });
 }
