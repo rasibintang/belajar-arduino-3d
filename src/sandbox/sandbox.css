@@ -682,7 +682,23 @@ body.sb {
   .sb-sim {
     height: 80vh;
   }
-  .sb-actions .sb-btn:not(.sb-primary):not(#btn-examples) {
+  /* tombol tidak disembunyikan (masuk, proyek saya, buka file, unduh tetap ada): pindah ke baris sendiri */
+  .sb-top {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+  .sb-name {
+    max-width: none;
+  }
+  .sb-actions {
+    margin-left: 0;
+    flex-basis: 100%;
+    flex-wrap: wrap;
+  }
+}
+@media (max-width: 560px) {
+  /* HP: logo + lencana Sandbox cukup, nama proyek mendapat ruang */
+  .sb-brand b {
     display: none;
   }
 }

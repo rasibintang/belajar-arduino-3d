@@ -287,6 +287,10 @@ body.cat {
   .cat-top {
     flex-wrap: wrap;
   }
+  .cat-actions {
+    margin-left: 0;
+    flex-wrap: wrap;
+  }
   .cat-top h1 {
     border: 0;
     padding: 0;

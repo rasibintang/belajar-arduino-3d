@@ -1928,7 +1928,9 @@ body.has-overlay .backdrop {
   .topbar {
     order: 0;
     margin: 0;
-    justify-content: flex-end;
+    max-width: 100%;
+    flex-wrap: wrap;
+    justify-content: center;
   }
   .top-btn span {
     display: inline;
