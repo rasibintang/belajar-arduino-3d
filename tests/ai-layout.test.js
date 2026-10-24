@@ -90,17 +90,33 @@ test('rangkaian yang benar tidak memunculkan masalah kabel', () => {
   }
 });
 
-test('mode ubah mempertahankan posisi komponen lama', () => {
-  const first = layoutCircuit(LED).diagram;
-  const moved = structuredClone(first);
-  moved.parts.find((p) => p.id === 'led1').hole = 'b20';
-  moved.parts.find((p) => p.id === 'uno').x = -100;
+test('mode ubah: komponen lama tetap persis di tempatnya, lubangnya dianggap terpakai', () => {
+  // rangkaian buatan pengguna di sandbox: posisi x/z (tanpa nama lubang) + peta kaki → lubang dari sandbox
+  const previous = {
+    diagram: {
+      version: 1,
+      parts: [
+        { id: 'uno', type: 'arduino-uno', x: -100, z: 20, rot: 0, props: {} },
+        { id: 'bb', type: 'breadboard', x: 44.45, z: 0, rot: 0, props: {} },
+        { id: 'r1', type: 'resistor', x: 30.48, z: 6.35, rot: 0, props: { ohms: 220, span: 4 } },
+        { id: 'led1', type: 'led', x: 36.83, z: 11.43, rot: 180, props: { color: 'red' } },
+      ],
+      wires: [],
+    },
+    inserted: new Map([['r1:1', 'bb:d8'], ['r1:2', 'bb:d12'], ['led1:A', 'bb:b12'], ['led1:K', 'bb:b13']]),
+  };
   const next = circuit([...LED.parts.slice(1), part('bz1', 'buzzer')], [...LED.connections.map((c) => [c.from, c.to]), ['uno:D8', 'bz1:+'], ['bz1:-', 'uno:GND.2']]);
-  const out = layoutCircuit(next, { previous: moved });
+  const out = layoutCircuit(next, { previous });
   const get = (id) => out.diagram.parts.find((p) => p.id === id);
-  assert.equal(get('led1').hole, 'b20');
-  assert.equal(get('uno').x, -100);
-  assert.ok(get('bz1').hole);
+  for (const id of ['uno', 'bb', 'r1', 'led1']) {
+    const old = previous.diagram.parts.find((p) => p.id === id);
+    assert.deepEqual([get(id).x, get(id).z, get(id).rot, get(id).hole], [old.x, old.z, old.rot, undefined], id);
+  }
+  const used = new Set(['8', '12', '13']);
+  const buzzerCols = [...out.inserted].filter(([leg]) => leg.startsWith('bz1:')).map(([, h]) => h.slice(4));
+  assert.equal(buzzerCols.length, 2);
+  assert.ok(buzzerCols.every((c) => !used.has(c)), buzzerCols.join());
+  assert.equal(out.inserted.get('led1:K'), 'bb:b13');
   sameConnectivity(next, out);
 });
 

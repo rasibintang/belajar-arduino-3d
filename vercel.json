@@ -7,6 +7,9 @@
       "memory": 1769,
       "maxDuration": 60,
       "includeFiles": ".vercel-toolchain/**"
+    },
+    "api/ai.js": {
+      "maxDuration": 60
     }
   }
 }

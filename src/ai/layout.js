@@ -58,12 +58,21 @@ function findSpot(legs, from, cols, usedStrips) {
 }
 
 function tryLayout(c, previous, size) {
-  const prev = new Map((previous?.parts ?? []).map((p) => [p.id, p]));
+  const prev = new Map((previous?.diagram?.parts ?? []).map((p) => [p.id, p]));
+  const prevBoard = previous?.diagram?.parts?.find((p) => p.type.startsWith('breadboard'));
+  const boardId = prevBoard?.id ?? 'bb';
   const parts = [];
   const inserted = new Map();
   const usedStrips = new Set();
   const usedHoles = new Set();
-  let cursor = 2;
+  const HOLE = /^(.+):([a-j])(\d+)$/;
+  const occupy = (leg, hole) => {
+    const m = HOLE.exec(hole);
+    inserted.set(leg, hole);
+    if (!m || m[1] !== boardId) return;
+    usedStrips.add(strip(m[2], Number(m[3])));
+    usedHoles.add(`${m[2]}${m[3]}`);
+  };
   const onBoard = [];
   const floor = [];
 
@@ -71,60 +80,42 @@ function tryLayout(c, previous, size) {
     const spec = COMPONENT_BY_TYPE[p.type];
     const props = normalizeProps(p.type, p.props);
     const entry = { id: p.id, type: p.type, props };
-    if (p.type === 'arduino-uno') {
-      const old = prev.get('uno');
-      parts.push({ ...entry, x: old?.x ?? UNO.x, z: old?.z ?? UNO.z, rot: old?.rot ?? 0 });
-    } else if (spec.surface === 'breadboard') onBoard.push({ entry, spec, props, old: prev.get(p.id) });
-    else floor.push({ entry, old: prev.get(p.id) });
+    const old = prev.get(p.id);
+    if (old && old.type === p.type) {
+      // mode ubah: komponen lama tetap persis di tempatnya; kakinya menurut sandbox
+      const { props: oldProps, ...place } = old;
+      parts.push({ ...place, props: { ...oldProps, ...props } });
+      for (const [leg, hole] of previous.inserted ?? []) if (leg.startsWith(`${p.id}:`)) occupy(leg, hole);
+    } else if (p.type === 'arduino-uno') parts.push({ ...entry, x: UNO.x, z: UNO.z, rot: 0 });
+    else if (spec.surface === 'breadboard') onBoard.push({ entry, spec, props });
+    else floor.push(entry);
   }
 
-  const place = (item, holes) => {
-    const { entry } = item;
-    for (const h of holes) {
-      inserted.set(`${entry.id}:${h.id}`, `bb:${h.row}${h.col}`);
-      usedStrips.add(strip(h.row, h.col));
-      usedHoles.add(`${h.row}${h.col}`);
-      cursor = Math.max(cursor, h.col + 2);
-    }
-    parts.push({ ...entry, board: 'bb', hole: `${holes[0].row}${holes[0].col}`, rot: 0 });
-  };
-
-  // komponen lama tetap di lubangnya (rot 0 seperti yang dibuat tata letak ini)
-  const fresh = [];
   for (const item of onBoard) {
-    const m = item.old?.hole && /^([a-j])(\d+)$/.exec(item.old.hole);
-    const holes = m && !item.old.rot && legHoles(legOffsets(item.spec, { ...defaultProps(item.spec), ...item.props }), m[1], Number(m[2]), size.cols);
-    if (holes && holes.every((h) => !usedStrips.has(strip(h.row, h.col)))) place(item, holes);
-    else fresh.push(item);
-  }
-  for (const item of fresh) {
-    const holes = findSpot(legOffsets(item.spec, { ...defaultProps(item.spec), ...item.props }), cursor, size.cols, usedStrips);
+    const holes = findSpot(legOffsets(item.spec, { ...defaultProps(item.spec), ...item.props }), 2, size.cols, usedStrips);
     if (!holes) return null; // tidak muat: coba breadboard yang lebih besar
-    place(item, holes);
+    for (const h of holes) occupy(`${item.entry.id}:${h.id}`, `${boardId}:${h.row}${h.col}`);
+    parts.push({ ...item.entry, board: boardId, hole: `${holes[0].row}${holes[0].col}`, rot: 0 });
   }
 
-  let slot = 0;
-  for (const { entry, old } of floor) {
-    if (old && old.x !== undefined) parts.push({ ...entry, x: old.x, z: old.z, rot: old.rot ?? 0 });
-    else {
-      const i = slot++;
-      parts.push({ ...entry, x: FLOOR.x + (i % FLOOR.perRow) * FLOOR.step, z: FLOOR.z - Math.floor(i / FLOOR.perRow) * FLOOR.step, rot: 0 });
-    }
-  }
-  if (onBoard.length) {
-    const old = prev.get('bb');
-    parts.splice(1, 0, { id: 'bb', type: size.type, x: old?.x ?? BOARD.x, z: old?.z ?? BOARD.z, rot: old?.rot ?? 0, props: {} });
-  }
+  const taken = parts.filter((p) => p.x !== undefined && p.type !== 'arduino-uno' && !p.type.startsWith('breadboard')).length;
+  floor.forEach((entry, n) => {
+    const i = taken + n;
+    parts.push({ ...entry, x: FLOOR.x + (i % FLOOR.perRow) * FLOOR.step, z: FLOOR.z - Math.floor(i / FLOOR.perRow) * FLOOR.step, rot: 0 });
+  });
+  // breadboard: yang lama dipertahankan; yang baru hanya bila ada komponen breadboard
+  for (const board of previous?.diagram?.parts?.filter((p) => p.type.startsWith('breadboard')) ?? []) parts.splice(1, 0, board);
+  if (!prevBoard && onBoard.length) parts.splice(1, 0, { id: 'bb', type: size.type, x: BOARD.x, z: BOARD.z, rot: 0, props: {} });
 
   // ujung kabel di kaki komponen breadboard → lubang kosong di jalur kaki itu
   const endpoint = (node) => {
-    const hole = inserted.get(node);
-    if (!hole) return node;
-    const [, row, col] = /^bb:([a-j])(\d+)$/.exec(hole);
+    const m = HOLE.exec(inserted.get(node) ?? '');
+    if (!m || m[1] !== boardId) return node;
+    const [, board, row, col] = m;
     const free = WIRE_ROWS[half(row)].find((r) => !usedHoles.has(`${r}${col}`));
     if (!free) return node; // jalur penuh: langsung ke kakinya (tetap tersambung)
     usedHoles.add(`${free}${col}`);
-    return `bb:${free}${col}`;
+    return `${board}:${free}${col}`;
   };
   const wires = c.connections.map(({ from, to }) => ({ from: endpoint(from), to: endpoint(to) }));
   return { diagram: { version: 1, parts, wires }, inserted };
@@ -132,14 +123,15 @@ function tryLayout(c, previous, size) {
 
 /**
  * Rangkaian logis (CIRCUIT_SCHEMA) → { diagram, inserted: Map<kaki, lubang> }.
- * previous: diagram saat ini (mode ubah) — komponen ber-id sama tetap di tempatnya.
+ * previous (mode ubah): { diagram: diagram sandbox saat ini, inserted: Map<kaki, lubang> dari sandbox } —
+ * komponen ber-id sama tetap persis di tempatnya dan lubangnya dianggap terpakai.
  */
 export function layoutCircuit(c, { previous = null } = {}) {
-  const prevBoard = previous?.parts?.find((p) => p.id === 'bb');
-  const sizes = prevBoard ? SIZES.filter((s) => s.type === prevBoard.type).concat(SIZES) : SIZES;
-  for (const size of sizes) {
+  const prevBoard = previous?.diagram?.parts?.find((p) => p.type.startsWith('breadboard'));
+  const sizes = prevBoard ? SIZES.filter((s) => s.type === prevBoard.type) : SIZES;
+  for (const size of sizes.length ? sizes : SIZES) {
     const out = tryLayout(c, previous, size);
     if (out) return out;
   }
-  throw new Error('rangkaian terlalu besar untuk breadboard 830 lubang');
+  throw new Error(prevBoard ? 'komponen baru tidak muat di breadboard yang ada' : 'rangkaian terlalu besar untuk breadboard 830 lubang');
 }
