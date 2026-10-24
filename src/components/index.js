@@ -106,4 +106,4 @@ COMPONENTS.forEach(localizeSpec);
 
 export const COMPONENT_BY_TYPE = Object.fromEntries(COMPONENTS.map((c) => [c.type, c]));
 
-export { CATEGORIES, BEHAVIORS, instantiate, validateSpec, defaultProps, resolvePins } from './spec.js';
+export { CATEGORIES, BEHAVIORS, instantiate, validateSpec, defaultProps, resolvePins, pinIdsOf } from './spec.js';

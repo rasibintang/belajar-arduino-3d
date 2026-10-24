@@ -19,7 +19,10 @@ export function localizeSpec(spec) {
   spec.desc = tr(spec.desc);
   if (spec.props) spec.props = spec.props.map(prop);
   const pins = spec.pins;
-  if (typeof pins === 'function') spec.pins = (props, group) => pins(props, group).map(pin);
+  if (typeof pins === 'function') {
+    spec.pins = (props, group) => pins(props, group).map(pin);
+    if (pins.names) spec.pins.names = pins.names; // pinIdsOf (tanpa model 3D)
+  }
   else if (pins) spec.pins = pins.map(pin);
   return spec;
 }

@@ -127,12 +127,27 @@ export function resolvePins(spec, props, group) {
 
 /** Pin dari header modul (group.userData.pins), dengan nama tampilan. */
 export function headerPins(names) {
-  return (props, group) =>
+  const pins = (props, group) =>
     Object.entries(names).map(([id, name]) => {
       const at = group?.userData.pins?.[id];
       if (!at) throw new Error(`pin header "${id}" tidak ditemukan di model`);
       return { id, name, at };
     });
+  pins.names = names; // agar daftar pin terbaca tanpa model 3D (pinIdsOf)
+  return pins;
+}
+
+/**
+ * Id pin sebuah komponen tanpa membuat model 3D (untuk server/AI). Urutan sama dengan instantiate().
+ * Komponen yang posisi pinnya diambil dari model memberi `pinNames` (objek id → nama, atau fungsi props).
+ */
+export function pinIdsOf(spec, props = defaultProps(spec)) {
+  const pins = spec.pins;
+  if (Array.isArray(pins)) return pins.map((p) => p.id);
+  if (pins?.names) return Object.keys(pins.names);
+  if (spec.pinNames) return Object.keys(typeof spec.pinNames === 'function' ? spec.pinNames(props) : spec.pinNames);
+  if (typeof pins === 'function') return pins(props, undefined).map((p) => p.id);
+  return [];
 }
 
 /** Kaki berjajar di sumbu x berjarak 2,54 mm dan berpusat di 0 (komponen breadboard). */

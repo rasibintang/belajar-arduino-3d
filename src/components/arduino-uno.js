@@ -19,5 +19,6 @@ export default {
   surface: 'floor',
   create: () => createArduino(),
   pins: (props, group) => PIN_NAMES.filter((id) => id !== 'NC').map((id) => ({ id, name: pinLabel(id), at: group.userData.pin(id) })),
+  pinNames: Object.fromEntries(PIN_NAMES.filter((id) => id !== 'NC').map((id) => [id, pinLabel(id)])), // pinIdsOf
   behavior: { kind: 'mcu', chip: 'atmega328p', clockHz: 16e6 },
 };

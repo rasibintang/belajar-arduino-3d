@@ -13,5 +13,6 @@ export default {
     { id: '+', name: 'Terminal +', at: group.userData.terminals.plus.position.clone().add(new THREE.Vector3(0, -2, 0)) },
     { id: '-', name: 'Terminal −', at: group.userData.terminals.minus.position.clone().add(new THREE.Vector3(0, -2, 0)) },
   ],
+  pinNames: { '+': 'Terminal +', '-': 'Terminal −' }, // pinIdsOf tanpa model 3D
   behavior: { kind: 'dc-motor', plus: '+', minus: '-' },
 };

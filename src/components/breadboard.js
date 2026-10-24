@@ -1,4 +1,4 @@
-import { createBreadboard, breadboardStrip } from '../parts/breadboard.js';
+import { createBreadboard, breadboardStrip, breadboardHoles } from '../parts/breadboard.js';
 
 const RAIL_NAME = { tp: 'Rel + belakang', tn: 'Rel − belakang', bp: 'Rel + depan', bn: 'Rel − depan' };
 
@@ -18,6 +18,8 @@ export function breadboardSpec({ type, name, desc, cols, rails }) {
         name: row.length === 2 ? `${RAIL_NAME[row]} · ${col}` : `Lubang ${row}${col}`,
         at: group.userData.hole(row, col),
       })),
+    // pinIdsOf tanpa model 3D (urutan sama dengan userData.holes)
+    pinNames: () => Object.fromEntries(breadboardHoles({ cols, rails }).map(({ id }) => [id, id])),
     behavior: {
       kind: 'breadboard',
       /** id lubang -> id jalur tembaga internal */

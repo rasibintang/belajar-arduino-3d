@@ -1,0 +1,32 @@
+// Library Arduino yang terpasang di server kompilasi (scripts/setup-arduino.mjs).
+// Dipakai daftar "Library" di sandbox dan katalog untuk AI.
+export const LIBRARIES = [
+  // [nama, keterangan ID, keterangan EN]
+  ['Servo', 'Mengendalikan motor servo (pulsa 1–2 ms).', 'Drives servo motors (1–2 ms pulses).'],
+  ['Wire', 'Komunikasi I²C (bawaan Arduino).', 'I²C communication (built into Arduino).'],
+  ['SPI', 'Bus SPI perangkat keras (bawaan Arduino).', 'Hardware SPI bus (built into Arduino).'],
+  ['EEPROM', 'Memori 1 KB yang tidak hilang (bawaan).', '1 KB memory that survives power-off (built in).'],
+  ['Stepper', 'Motor stepper (bawaan Arduino).', 'Stepper motors (built into Arduino).'],
+  ['LiquidCrystal', 'LCD karakter paralel (4/8 bit).', 'Parallel character LCDs (4/8-bit).'],
+  ['LiquidCrystal I2C', 'LCD karakter lewat modul I²C PCF8574.', 'Character LCDs through a PCF8574 I²C module.'],
+  ['DHT sensor library', 'Sensor suhu & kelembapan DHT11/DHT22.', 'DHT11/DHT22 temperature & humidity sensors.'],
+  ['Adafruit NeoPixel', 'LED RGB berantai WS2812.', 'Chained WS2812 RGB LEDs.'],
+  ['Keypad', 'Keypad matriks 3×4 / 4×4.', '3×4 / 4×4 matrix keypads.'],
+  ['RTClib', 'Jam real-time DS1307/DS3231.', 'DS1307/DS3231 real-time clocks.'],
+  ['Adafruit SSD1306 + GFX', 'OLED 128×64 dan fungsi gambar (teks, bentuk).', '128×64 OLED and drawing functions (text, shapes).'],
+  ['U8g2', 'Banyak layar monokrom, termasuk SH1107 128×128 (mode halaman).', 'Many monochrome displays, incl. SH1107 128×128 (page mode).'],
+  ['Adafruit SH110X', 'OLED SH1106/SH1107.', 'SH1106/SH1107 OLEDs.'],
+  ['Adafruit PCD8544', 'LCD Nokia 5110.', 'Nokia 5110 LCD.'],
+  ['Adafruit ILI9341 + FT6206', 'TFT warna 240×320 + layar sentuh kapasitif.', '240×320 color TFT + capacitive touch.'],
+  ['GxEPD2', 'Layar e-Paper (mis. GxEPD2_290_T94).', 'e-Paper displays (e.g. GxEPD2_290_T94).'],
+  ['TM1637', 'Display 4 digit TM1637Display.', 'TM1637Display 4-digit displays.'],
+  ['LedControl', 'MAX7219 lewat shiftOut.', 'MAX7219 via shiftOut.'],
+  ['MD_MAX72XX + MD_Parola', 'Matriks MAX7219 berantai & teks berjalan.', 'Chained MAX7219 matrices & scrolling text.'],
+  ['OneWire + DallasTemperature', 'Sensor suhu DS18B20.', 'DS18B20 temperature sensors.'],
+  ['Adafruit MPU6050', 'Akselerometer & giroskop.', 'Accelerometer & gyroscope.'],
+  ['Adafruit BMP085', 'Sensor tekanan BMP180/BMP085.', 'BMP180/BMP085 pressure sensors.'],
+  ['HX711', 'Penguat sel beban (timbangan).', 'Load-cell amplifier (scales).'],
+  ['IRremote', 'Penerima remote IR (NEC dll.).', 'IR remote receivers (NEC etc.).'],
+  ['MFRC522', 'Pembaca kartu RFID.', 'RFID card readers.'],
+  ['SD', 'Kartu SD/microSD (FAT16).', 'SD/microSD cards (FAT16).'],
+];
