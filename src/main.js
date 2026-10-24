@@ -171,7 +171,6 @@ async function boot() {
     onTrace: (text, nth) => code.trace(text, nth),
     onPhase(phase) {
       code.setPhase(phase);
-      $('[data-nav="run"]').parentElement.classList.toggle('is-running', phase !== 'idle');
       if (phase === 'running' && store.markDone(app.lesson.id)) {
         strip.refreshDone(app.lesson.id);
         showProgress(app.lesson.level);
@@ -247,7 +246,6 @@ async function boot() {
           )
           .join('')}</ul>
         <h3 class="fly-sub">${t('parts.all')}</h3>
-        <a class="fly-catalog" href="/gallery.html">${icon('chip')} ${t('parts.catalog')}</a>
         <ul class="fly-parts">${CATALOG.map((c) => {
           const i = LESSONS.findIndex((l) => l.id === c.lesson);
           const l = LESSONS[i];
@@ -258,7 +256,6 @@ async function boot() {
       settings: () => `
         <header><h2>${t('nav.settings')}</h2><button class="icon-btn flyout-close" aria-label="${t('ui.close')}">${icon('close')}</button></header>
         <div class="fly-settings">
-          <div class="fly-lang"><span class="feat-icon">${icon('community')}</span><span>${t('lang.label')}</span></div>
           ${[
             ['sound', t('set.sound'), 'volume'],
             ['labels', t('set.labels'), 'tag'],
@@ -280,14 +277,7 @@ async function boot() {
       if (name === 'home') {
         if (app.index === 0) stage.rig.reset();
         else openLesson(0);
-      } else if (name === 'run') {
-        toggleRun();
-      } else if (name === 'sandbox') {
-        location.href = 'sandbox.html';
       }
-    },
-    onOpen(name, el) {
-      if (name === 'settings') el.querySelector('.fly-lang')?.append(languageSwitch());
     },
     onFlyoutClick(e, { close, refresh }) {
       const focusBtn = e.target.closest('[data-focus]');

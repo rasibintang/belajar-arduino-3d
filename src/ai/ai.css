@@ -21,6 +21,11 @@
   gap: 12px;
   padding: 16px;
 }
+/* isi lebih tinggi dari layar (mis. petunjuk dibuka) → kotak bisa digulir */
+.ai-form {
+  min-height: 0;
+  overflow-y: auto;
+}
 .ai-modes {
   display: flex;
   gap: 18px;

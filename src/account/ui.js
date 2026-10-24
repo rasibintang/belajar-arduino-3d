@@ -92,7 +92,9 @@ export async function mountAccount(slot, { buttonClass = 'top-btn', menuItems = 
       btn.type = 'button';
       btn.className = `${buttonClass} acct-signin`;
       btn.innerHTML = `${GOOGLE}<span></span>`;
-      btn.querySelector('span').textContent = t('acct.signIn');
+      btn.querySelector('span').textContent = t('acct.signInShort'); // logo Google sudah menjelaskan
+      btn.title = t('acct.signIn');
+      btn.setAttribute('aria-label', t('acct.signIn'));
       btn.addEventListener('click', signIn);
       slot.append(btn);
       return;

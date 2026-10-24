@@ -37,6 +37,7 @@ const id = {
   'brand.tagline': 'Jelajahi <i>·</i> Pahami <i>·</i> Rakit',
   'top.sandbox': 'Sandbox',
   'top.catalog': 'Katalog komponen',
+  'top.catalogShort': 'Katalog',
   'level.basic': 'Dasar',
   'level.intermediate': 'Menengah',
   'level.expert': 'Mahir',
@@ -155,6 +156,7 @@ const id = {
 
   // akun
   'acct.signIn': 'Masuk dengan Google',
+  'acct.signInShort': 'Masuk',
   'acct.signOut': 'Keluar',
   'acct.admin': 'Halaman pengelola',
   'acct.offline': 'Tidak dapat terhubung ke server akun. Coba lagi nanti — fitur lain tetap bisa dipakai.',
@@ -398,6 +400,7 @@ const en = {
   'brand.tagline': 'Explore <i>·</i> Understand <i>·</i> Build',
   'top.sandbox': 'Sandbox',
   'top.catalog': 'Component catalog',
+  'top.catalogShort': 'Catalog',
   'level.basic': 'Basic',
   'level.intermediate': 'Intermediate',
   'level.expert': 'Expert',
@@ -509,6 +512,7 @@ const en = {
   'sb.deleteWire': 'Delete wire',
 
   'acct.signIn': 'Sign in with Google',
+  'acct.signInShort': 'Sign in',
   'acct.signOut': 'Sign out',
   'acct.admin': 'Admin page',
   'acct.offline': 'Could not reach the account server. Try again later — everything else still works.',
