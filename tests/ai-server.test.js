@@ -213,3 +213,12 @@ test('pemantauan: AI berhasil → metrik ai ok; galat penyedia → error, gagal 
   await call({ ai: fakeAi({ ...LED(), feasible: false }), db: fakeDb(), monitor: infeasible });
   assert.deepEqual(infeasible.events.map((e) => e.level), ['warn']);
 });
+
+test('server: email pengelola hanya dipercaya dari akun Google terverifikasi', async () => {
+  const { trustedEmail } = await import('../server/ai.mjs');
+  const google = { email: 'Admin@contoh.test', email_confirmed_at: '2026-10-24T00:00:00Z', app_metadata: { providers: ['google'] } };
+  assert.equal(trustedEmail(google), 'admin@contoh.test');
+  assert.equal(trustedEmail({ ...google, app_metadata: { providers: ['email'] } }), null);
+  assert.equal(trustedEmail({ ...google, email_confirmed_at: null }), null);
+  assert.equal(trustedEmail({ ...google, app_metadata: undefined }), null);
+});

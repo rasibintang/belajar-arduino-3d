@@ -7,7 +7,7 @@
 **English** · [Bahasa Indonesia](README.id.md)
 
 [![Live site](https://img.shields.io/badge/live-learn--arduino--id.vercel.app-1f9e94?style=for-the-badge)](https://learn-arduino-id.vercel.app)
-[![Version](https://img.shields.io/badge/version-0.10.0-1d2740?style=for-the-badge)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.10.1-1d2740?style=for-the-badge)](CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/license-MIT-e8603c?style=for-the-badge)](LICENSE)
 
 ![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)

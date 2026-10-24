@@ -3,6 +3,23 @@
 Semua perubahan penting pada proyek ini. Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/);
 nomor versi mengikuti [SemVer](https://semver.org/lang/id/).
 
+## [0.10.1] — 2026-10-25 · Keamanan
+
+### Keamanan
+- **XSS lewat diagram:** id komponen dan isian props dari tautan bagikan, file, proyek akun, atau AI
+  kini dibersihkan sebelum dimuat (`src/sandbox/sanitize.js`), dan `escapeHtml` juga meng-escape
+  tanda kutip. Sebelumnya diagram yang dibuat khusus bisa menjalankan skrip saat dibuka — termasuk
+  di sesi pengelola yang membuka salinan proyek pengguna.
+- **Pengelola hanya akun Google terverifikasi:** `is_admin()` (migrasi
+  `20261025010000_pengelola_terverifikasi.sql`) dan server `/api/ai` tidak lagi memercayai klaim
+  email di token; akun email/sandi atau email belum terverifikasi dengan email pengelola ditolak.
+- **Header keamanan** di Vercel: Content-Security-Policy (skrip hanya dari situs sendiri),
+  X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy.
+
+### Diperbaiki
+- Kondisi situs: kartu ringkasan tidak membuang data terbaru saat jam komputer pengelola sedikit
+  di belakang jam server.
+
 ## [0.10.0] — 2026-10-25 · Pemantauan situs
 
 ### Ditambahkan

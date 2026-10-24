@@ -9,6 +9,15 @@ import { createMonitor, record, serverEvent } from './monitor.mjs';
 
 const MAX_PROMPT = 1000;
 
+/**
+ * Email yang boleh dipakai untuk pemeriksaan pengelola: hanya akun Google dengan email terverifikasi
+ * (sama dengan public.is_admin() di database). Akun lain → null.
+ */
+export function trustedEmail(user) {
+  const providers = user?.app_metadata?.providers ?? [];
+  return user?.email && user.email_confirmed_at && providers.includes('google') ? user.email.toLowerCase() : null;
+}
+
 /** Database lewat service role (melewati RLS; hanya di server). */
 function supabaseDb(env) {
   if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) return null;
@@ -23,9 +32,10 @@ function supabaseDb(env) {
     async userFromToken(token) {
       if (!token) return null;
       const { data, error } = await sb.auth.getUser(token);
-      return error || !data?.user ? null : { id: data.user.id, email: data.user.email };
+      return error || !data?.user ? null : { id: data.user.id, email: trustedEmail(data.user) };
     },
     async isAdmin(email) {
+      if (!email) return false;
       const { data } = await run(sb.from('admins').select('email'));
       return data.some((a) => a.email.toLowerCase() === String(email).toLowerCase());
     },

@@ -342,7 +342,7 @@ function control(def, value) {
   if (def.type === 'text') {
     return `<input class="insp-text" type="text" data-key="${def.key}" value="${escapeHtml(String(value ?? ''))}" maxlength="60">`;
   }
-  return `<div class="range"><input type="range" data-key="${def.key}" min="${def.min}" max="${def.max}" step="${def.step}" value="${value}"><output>${value}${def.unit ? ' ' + def.unit : ''}</output></div>`;
+  return `<div class="range"><input type="range" data-key="${def.key}" min="${def.min}" max="${def.max}" step="${def.step}" value="${Number(value)}"><output>${Number(value)}${def.unit ? ' ' + def.unit : ''}</output></div>`;
 }
 
 function showPanel(sel) {
@@ -383,7 +383,7 @@ function showPanel(sel) {
   panel.dataset.kind = 'part';
   panel.dataset.id = part.id;
   panel.innerHTML = `
-    <header><div><small>${CATEGORIES[part.spec.category]} · ${part.id}</small><h3>${part.spec.name}</h3></div>
+    <header><div><small>${CATEGORIES[part.spec.category]} · ${escapeHtml(part.id)}</small><h3>${part.spec.name}</h3></div>
       <button class="icon-btn" data-act="close" aria-label="Tutup">${icon('close')}</button></header>
     <p class="insp-desc">${part.spec.desc}</p>
     ${(part.spec.props ?? [])

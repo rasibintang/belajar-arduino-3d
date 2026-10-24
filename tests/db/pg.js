@@ -7,7 +7,8 @@ const MIGRATIONS = new URL('../../supabase/migrations/', import.meta.url);
 
 const SUPABASE_STUB = `
 create schema auth;
-create table auth.users (id uuid primary key, email text, raw_user_meta_data jsonb not null default '{}'::jsonb);
+create table auth.users (id uuid primary key, email text, raw_user_meta_data jsonb not null default '{}'::jsonb,
+  raw_app_meta_data jsonb not null default '{}'::jsonb, email_confirmed_at timestamptz);
 create function auth.jwt() returns jsonb language sql stable as
   $$ select coalesce(nullif(current_setting('request.jwt.claims', true), ''), '{}')::jsonb $$;
 create function auth.uid() returns uuid language sql stable as
@@ -39,8 +40,11 @@ export async function freshDb() {
   return { db, as };
 }
 
-/** Pengguna baru di auth.users (memicu trigger profil). */
-export async function addUser(db, { id, email, name }) {
-  await db.query(`insert into auth.users (id, email, raw_user_meta_data) values ($1, $2, $3)`, [id, email, JSON.stringify({ full_name: name })]);
+/** Pengguna baru di auth.users (memicu trigger profil). Bawaan: masuk lewat Google, email terverifikasi. */
+export async function addUser(db, { id, email, name, providers = ['google'], confirmed = true }) {
+  await db.query(
+    `insert into auth.users (id, email, raw_user_meta_data, raw_app_meta_data, email_confirmed_at) values ($1, $2, $3, $4, $5)`,
+    [id, email, JSON.stringify({ full_name: name }), JSON.stringify({ provider: providers[0], providers }), confirmed ? new Date().toISOString() : null]
+  );
   return { id, email };
 }

@@ -17,7 +17,8 @@ const TOKEN =
   /(\/\/[^\n]*)|(#\w+[^\n]*)|("(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)')|(\b\d+(?:\.\d+)?\b)|([A-Za-z_]\w*)(\s*\()?|([^\w\s"'#/]+|\/)|(\s+)|([\s\S])/g;
 
 export function escapeHtml(s) {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  // tanda kutip juga: hasilnya dipakai di dalam atribut (value="…", title="…")
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
 /** Ubah kode menjadi HTML berwarna (tanpa nomor baris). */

@@ -5,6 +5,7 @@ import { createWire } from '../parts/wire.js';
 import { markPart, noOutline } from '../parts/lib.js';
 import { insertedLegs } from '../sim/netlist.js';
 import { snapshotFromTopology } from '../sim/wiring/snapshot.js';
+import { sanitizeDiagram } from './sanitize.js';
 
 const PIN_LAYER = 2; // titik pin: tidak dirender, hanya untuk dipilih pointer
 const SNAP_RANGE = 5; // mm: jarak maksimum untuk menancap ke breadboard
@@ -692,7 +693,9 @@ export function createWorkbench(stage, hooks = {}) {
     colorSeq = 0;
   }
 
-  function loadDiagram(d) {
+  function loadDiagram(input) {
+    // semua sumber (tautan bagikan, file, akun, AI, editor diagram) bisa berisi data orang lain
+    const d = sanitizeDiagram(input);
     clear();
     const problems = [];
     for (const p of d.parts ?? []) {
