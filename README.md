@@ -8,6 +8,7 @@
 
 [![Live site](https://img.shields.io/badge/live-learn--arduino--id.vercel.app-1f9e94?style=for-the-badge)](https://learn-arduino-id.vercel.app)
 [![Version](https://img.shields.io/badge/version-0.8.0-1d2740?style=for-the-badge)](CHANGELOG.md)
+[![License: MIT](https://img.shields.io/badge/license-MIT-e8603c?style=for-the-badge)](LICENSE)
 
 ![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)
 ![Three.js](https://img.shields.io/badge/Three.js-r186-000000?logo=threedotjs&logoColor=white)
@@ -191,6 +192,10 @@ npx vercel deploy --prod
 
 Account setup (Google provider, database migration, environment variables) is described step by
 step in the [developer guide](docs/PANDUAN-PENGEMBANG.md#akun--data).
+
+## License
+
+Released under the [MIT License](LICENSE).
 
 ## Credits
 

@@ -8,6 +8,7 @@
 
 [![Situs](https://img.shields.io/badge/situs-learn--arduino--id.vercel.app-1f9e94?style=for-the-badge)](https://learn-arduino-id.vercel.app)
 [![Versi](https://img.shields.io/badge/versi-0.8.0-1d2740?style=for-the-badge)](CHANGELOG.md)
+[![Lisensi: MIT](https://img.shields.io/badge/lisensi-MIT-e8603c?style=for-the-badge)](LICENSE)
 
 ![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)
 ![Three.js](https://img.shields.io/badge/Three.js-r186-000000?logo=threedotjs&logoColor=white)
@@ -193,6 +194,10 @@ npx vercel deploy --prod
 
 Langkah menyiapkan akun (provider Google, migrasi database, variabel lingkungan) dijelaskan di
 [panduan pengembang](docs/PANDUAN-PENGEMBANG.md#akun--data).
+
+## Lisensi
+
+Dirilis dengan [Lisensi MIT](LICENSE).
 
 ## Kredit
 
