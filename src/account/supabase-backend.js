@@ -82,6 +82,11 @@ export async function createSupabaseBackend({ url, anonKey }, deps = {}) {
     async signOut() {
       await run(client.auth.signOut());
     },
+    /** Token akses sesi saat ini (untuk fungsi server, mis. /api/ai). */
+    async accessToken() {
+      const { data } = await client.auth.getSession();
+      return data.session?.access_token ?? null;
+    },
     async touch() {
       await run(client.from('profiles').update({ last_seen_at: new Date().toISOString() }).eq('id', uid()));
     },

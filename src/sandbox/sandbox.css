@@ -882,3 +882,8 @@ body.sb {
     display: none;
   }
 }
+
+.sb-ai {
+  background: #fff4d6;
+  color: #b07a00;
+}

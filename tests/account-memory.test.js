@@ -27,3 +27,10 @@ test('memori: laporan komponen dikelompokkan, terbanyak dulu', async () => {
   const rows = await backend.admin.requests();
   assert.deepEqual(rows.map((r) => [r.component, r.requests, r.users]), [['soil sensor', 2, 2], ['pompa', 1, 1]]);
 });
+
+test('memori: accessToken null sebelum masuk, ada setelah masuk', async () => {
+  const { backend, signInAs } = make();
+  assert.equal(await backend.accessToken(), null);
+  await signInAs(USERS.ani.email);
+  assert.match(await backend.accessToken(), /^fake-token-/);
+});

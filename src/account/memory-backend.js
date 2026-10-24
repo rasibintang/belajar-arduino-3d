@@ -6,7 +6,7 @@ import { AccountError } from './errors.js';
  * saat pengembangan.
  *
  * Antarmuka Backend (dipenuhi juga oleh supabase-backend.js):
- *   user() · onAuthChange(fn) · signIn() · signOut() · touch()
+ *   user() · onAuthChange(fn) · signIn() · signOut() · touch() · accessToken()
  *   projects.list/get/save/rename/remove · progress.pull/push
  *   admin.isAdmin/requests/projects/users/getLimit/setLimit
  * Semua metode async melempar AccountError.
@@ -78,6 +78,10 @@ export function createMemoryBackend({ users = [], admins = [], fail = false, see
     async touch() {
       await guard();
       current.lastSeenAt = now();
+    },
+    /** Token untuk fungsi server (backend memori: token palsu). */
+    async accessToken() {
+      return current ? `fake-token-${current.id}` : null;
     },
 
     projects: {

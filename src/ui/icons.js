@@ -44,6 +44,7 @@ const P = {
   rotRight: '<path d="M19.5 10.5A8 8 0 1 0 18 17"/><path d="M20 5v5.8h-5.8"/>',
   plus: '<path d="M12 5v14M5 12h14"/>',
   minus: '<path d="M5 12h14"/>',
+  sparkle: '<path d="M12 3.5 13.8 9a2 2 0 0 0 1.2 1.2l5.5 1.8-5.5 1.8a2 2 0 0 0-1.2 1.2L12 20.5 10.2 15A2 2 0 0 0 9 13.8L3.5 12 9 10.2A2 2 0 0 0 10.2 9z" class="fill"/><path d="M19 3v3.5M17.25 4.75h3.5"/>',
   compass: '<circle cx="12" cy="12" r="8.5"/><g class="needle"><path d="M12 5.2 14.2 12h-4.4z" class="fill"/><path d="M12 18.8 9.8 12h4.4z"/></g>',
   check: '<path d="m5 12.5 4.5 4.5L19 7.5"/>',
   x: '<path d="M18.9 1.15h3.68l-8.04 9.19L24 22.85h-7.4l-5.8-7.59-6.64 7.59H.47l8.6-9.83L0 1.15h7.6l5.24 6.93zm-1.29 19.5h2.04L6.49 3.24H4.3z" class="fill" stroke="none"/>',

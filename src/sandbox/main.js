@@ -1,6 +1,8 @@
 import { t, isEN, translateDom, languageSwitch } from '../i18n/index.js';
 import { mountAccount, toast } from '../account/ui.js';
 import { saveToAccount, openFromAccount, createAutosave } from '../account/cloud-projects.js';
+import { createAiPanel } from '../ai/panel.js';
+import { logicalCircuit } from '../ai/client.js';
 import '@fontsource/barlow-semi-condensed/500.css';
 import '@fontsource/barlow-semi-condensed/600.css';
 import '@fontsource/barlow-semi-condensed/700.css';
@@ -751,7 +753,64 @@ function loadDiagram(d) {
   fit(true);
 }
 
+// ------------------------------------------------------------------ AI penyusun rangkaian
+let aiUndo = null; // { sketch, diagram } sebelum perubahan AI diterapkan (hanya di sesi ini)
+function clearAiUndo() {
+  aiUndo = null;
+  $('#ai-undo').hidden = true;
+}
+const isBlank = () => wb.parts.size <= 1 && project.sketch.trim() === BLANK.sketch.trim();
+const aiPanel = createAiPanel({
+  t,
+  lang: isEN ? 'en' : 'id',
+  toast,
+  account,
+  /** Rangkaian logis + diagram + peta kaki→lubang dari sandbox (untuk mode "ubah"). */
+  getCurrent() {
+    const s = wb.snapshot();
+    const props = Object.fromEntries([...wb.parts.values()].map((p) => [p.id, { ...p.props }]));
+    return { ...logicalCircuit(s, props), sketch: project.sketch, diagram: wb.toDiagram(), inserted: [...s.topology.inserted] };
+  },
+  async onAcceptNew(res) {
+    // proyek yang sedang dikerjakan tidak boleh hilang: simpan dulu ke akun bila hanya ada di browser
+    if (cloud.user && !ownsCloud() && !isBlank()) {
+      await saveCloud();
+      toast(t('ai.savedCurrent'));
+    }
+    openProject({ name: res.result.title, sketch: res.sketch, diagram: res.diagram });
+    if (cloud.user) {
+      await saveCloud();
+      toast(t('ai.created'));
+    }
+  },
+  onAcceptModify(res) {
+    const before = { sketch: project.sketch, diagram: wb.toDiagram() };
+    project.sketch = res.sketch;
+    editor.value = res.sketch;
+    loadDiagram(res.diagram);
+    refreshDiagramTab();
+    persist();
+    aiUndo = before;
+    $('#ai-undo').hidden = false;
+    toast(t('ai.applied'));
+  },
+});
+$('#btn-ai').innerHTML = icon('sparkle');
+$('#btn-ai').addEventListener('click', () => aiPanel.open());
+$('#ai-undo').textContent = t('ai.undo');
+$('#ai-undo').addEventListener('click', () => {
+  if (!aiUndo) return;
+  project.sketch = aiUndo.sketch;
+  editor.value = aiUndo.sketch;
+  loadDiagram(aiUndo.diagram);
+  refreshDiagramTab();
+  persist();
+  clearAiUndo();
+  toast(t('ai.undone'));
+});
+
 function openProject(p) {
+  clearAiUndo();
   sim.stop();
   project = { name: p.name ?? t('sb.project'), sketch: p.sketch ?? '', diagram: p.diagram ?? { parts: [], wires: [] }, eeprom: p.eeprom ?? null };
   // proyek dari akun membawa id & pemiliknya; contoh, file, dan tautan selalu proyek baru di browser
@@ -772,4 +831,4 @@ if (fromLink) serial.sys(t('sb.fromLink'));
 showPanel(null);
 
 // akses untuk pengujian otomatis (hanya saat pengembangan)
-if (import.meta.env.DEV) window.__sb = { wb, sim, stage, editor, openProject, EXAMPLES, guide, cloud, get project() { return project; } };
+if (import.meta.env.DEV) window.__sb = { wb, sim, stage, editor, openProject, EXAMPLES, guide, cloud, aiPanel, get project() { return project; } };
