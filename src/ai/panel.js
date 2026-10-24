@@ -6,6 +6,7 @@ import { icon } from '../ui/icons.js';
 import { fetchAiInfo, requestCircuit, reportMissing, diffCircuits } from './client.js';
 import { PRESETS, loadKey, saveKey, clearKey, keyReady, listModels, createBrowserClient } from './byok.js';
 import { runPipeline } from './pipeline.js';
+import { monitor } from '../monitor/client.js';
 import './ai.css';
 
 /**
@@ -244,7 +245,16 @@ export function createAiPanel({ t, lang, toast, account, compile, getCurrent, on
     show('working');
     let res;
     if (fake) res = await (await import('./fake.js')).fakeRequest({ mode, current, variant: fake });
-    else if (source() === 'own') res = await runOwn({ prompt, mode, current }).catch((err) => ({ ok: false, code: 'failed', reason: 'provider', details: [String(err?.message ?? err)] }));
+    else if (source() === 'own') {
+      const started = performance.now();
+      res = await runOwn({ prompt, mode, current }).catch((err) => ({ ok: false, code: 'failed', reason: 'provider', details: [String(err?.message ?? err)] }));
+      monitor.metric('ai', performance.now() - started, res.ok);
+      if (!res.ok) {
+        // hanya alasan & kode HTTP; isi perintah/jawaban tidak dikirim
+        const status = /HTTP \d{3}/.exec(res.details?.join(' ') ?? '')?.[0];
+        monitor.event('warn', 'ai', `kunci saya (${PRESETS[loadKey()?.provider]?.label ?? '?'}): ${res.reason}${status ? ` ${status}` : ''}`);
+      }
+    }
     else res = await requestCircuit({ prompt, mode, lang, current, token: await acc.backend.accessToken() });
     if (!res.ok) {
       show('form');

@@ -3,6 +3,28 @@
 Semua perubahan penting pada proyek ini. Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/);
 nomor versi mengikuti [SemVer](https://semver.org/lang/id/).
 
+## [0.10.0] — 2026-10-25 · Pemantauan situs
+
+### Ditambahkan
+- **Tab "Kondisi situs"** di halaman pengelola (tab pertama): ringkasan 24 jam / 7 hari dengan
+  pembanding periode sebelumnya (error, warning, kompilasi berhasil & waktu tipikal, AI berhasil /
+  gagal, pengguna baru, proyek disimpan).
+- **Log error & warning** yang dikelompokkan (pesan sama = satu baris): jumlah, pertama/terakhir,
+  halaman, perangkat & browser; filter level dan sumber; tombol **Tandai selesai** (muncul lagi bila
+  terjadi lagi).
+- **Kinerja:** waktu muat halaman per halaman × perangkat (p50/p95), kompilasi dan AI (p50/p95,
+  persentase berhasil).
+- Browser melaporkan error JS & promise, WebGL hilang, halaman lambat, gagal masuk/simpan proyek,
+  dan AI "kunci saya" yang gagal (alasan saja) lewat `POST /api/log` (dibatasi per IP, rahasia
+  disamarkan). Server mencatat kompilasi dan AI. Data disimpan 30 hari.
+
+### Diperbaiki
+- Tombol di halaman pengelola kini bergaya seperti di halaman lain.
+- Sandbox: tombol ganda dihapus (Paskan tampilan, item proyek di menu akun); tombol **Proyek saya**
+  di toolbar; kotak AI bisa digulir; petunjuk kunci Gemini bernomor.
+- Halaman pelajaran: item menu ganda (Simulator, Sandbox, bahasa di Pengaturan, tautan katalog)
+  dihapus; bilah atas tidak lagi menimpa judul.
+
 ## [0.9.0] — 2026-10-24 · AI penyusun rangkaian
 
 ### Ditambahkan

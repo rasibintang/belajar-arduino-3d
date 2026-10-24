@@ -7,7 +7,7 @@
 [English](README.md) · **Bahasa Indonesia**
 
 [![Situs](https://img.shields.io/badge/situs-learn--arduino--id.vercel.app-1f9e94?style=for-the-badge)](https://learn-arduino-id.vercel.app)
-[![Versi](https://img.shields.io/badge/versi-0.9.0-1d2740?style=for-the-badge)](CHANGELOG.md)
+[![Versi](https://img.shields.io/badge/versi-0.10.0-1d2740?style=for-the-badge)](CHANGELOG.md)
 [![Lisensi: MIT](https://img.shields.io/badge/lisensi-MIT-e8603c?style=for-the-badge)](LICENSE)
 
 ![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)
@@ -129,6 +129,11 @@ situs juga bisa menyalakan **jatah gratis situs** (kunci di server, wajib login,
 Masuk dengan Google (Supabase) menambah fitur tanpa mengurangi apa pun bagi pengunjung: proyek
 sandbox tersimpan di akun, progres pelajaran tersinkron antarperangkat, dan halaman pengelola
 untuk pemilik situs. Akses data dijaga Row Level Security di Postgres.
+
+Halaman pengelola dibuka di tab **Kondisi situs**: error dan warning dari browser dan server
+(dikelompokkan, dengan tombol *Tandai selesai*), persentase berhasil kompilasi dan AI, serta waktu
+muat halaman di desktop dan HP — tanpa pelacak pihak ketiga, dan tanpa menyimpan sketch, perintah,
+kunci, atau email.
 
 ## Teknologi
 

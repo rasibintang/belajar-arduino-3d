@@ -9,13 +9,15 @@ const compileApi = {
   },
 };
 
-/** /api/ai saat pengembangan; kunci server (tanpa awalan VITE_) dibaca dari .env.local. */
+/** /api/ai dan /api/log saat pengembangan; kunci server (tanpa awalan VITE_) dibaca dari .env.local. */
 const aiApi = {
   name: 'ai-api',
   async configureServer(server) {
     for (const [k, v] of Object.entries(loadEnv(server.config.mode, process.cwd(), ''))) process.env[k] ??= v;
     const { handleAi } = await import('./server/ai.mjs');
     server.middlewares.use('/api/ai', (req, res) => handleAi(req, res));
+    const { handleLog } = await import('./server/log.mjs');
+    server.middlewares.use('/api/log', (req, res) => handleLog(req, res));
   },
 };
 

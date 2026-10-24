@@ -10,6 +10,9 @@ import './gallery.css';
 import * as THREE from 'three';
 import { t, translateDom, languageSwitch } from '../i18n/index.js';
 import { mountAccount } from '../account/ui.js';
+import { initMonitor, monitor } from '../monitor/client.js';
+
+initMonitor('gallery');
 import { createStage } from '../core/stage.js';
 import { markPart } from '../parts/lib.js';
 import { COMPONENTS, CATEGORIES, BEHAVIORS, instantiate, validateSpec } from '../components/index.js';
@@ -279,6 +282,7 @@ function holeFor(spec) {
 
 filter();
 frameVisible(true);
+monitor.ready();
 
 // untuk pengujian otomatis
 window.__gallery = { placed: placed.map((p) => ({ type: p.spec.type, errors: DEV ? p.errors : validateSpec(p.spec), pins: p.group?.userData.component.pins.length ?? 0 })) };

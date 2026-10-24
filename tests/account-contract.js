@@ -97,4 +97,19 @@ export function runContract(name, make) {
     assert.equal(await code(backend.admin.setLimit(-1)), 'invalid');
     assert.equal((await backend.admin.users()).length, 3);
   });
+
+  test(`${name}: kondisi situs hanya untuk pengelola; tanda selesai tersimpan`, async () => {
+    const { backend, signInAs } = make();
+    await signInAs(USERS.ani.email);
+    assert.equal(await code(backend.admin.health(new Date(0).toISOString())), 'forbidden');
+    assert.equal(await code(backend.admin.resolve('f1')), 'forbidden');
+    await signInAs(USERS.admin.email);
+    const h = await backend.admin.health(new Date(0).toISOString());
+    for (const key of ['events', 'metrics', 'users', 'projects', 'resolved']) assert.ok(Array.isArray(h[key]), key);
+    assert.equal(h.users.length, 3);
+    await backend.admin.resolve('f1');
+    const again = await backend.admin.health(new Date(0).toISOString());
+    assert.deepEqual(again.resolved.map((r) => r.fingerprint), ['f1']);
+    assert.ok(Date.parse(again.resolved[0].resolvedAt) > 0);
+  });
 }

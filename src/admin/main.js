@@ -9,9 +9,13 @@ import './admin.css';
 
 import { t, isEN, translateDom, languageSwitch } from '../i18n/index.js';
 import { mountAccount, toast } from '../account/ui.js';
-import { LOGO } from '../ui/icons.js';
+import { initMonitor } from '../monitor/client.js';
 
-// Halaman pengelola: hanya membaca data (proyek pengguna dibuka sebagai salinan di sandbox).
+initMonitor('admin');
+import { LOGO } from '../ui/icons.js';
+import { renderHealth } from './health.js';
+
+// Halaman pengelola: kondisi situs + membaca data (proyek pengguna dibuka sebagai salinan di sandbox).
 // Akses dijaga RLS di database; pemeriksaan di sini hanya menentukan apa yang ditampilkan.
 
 const $ = (s) => document.querySelector(s);
@@ -26,7 +30,7 @@ const pane = $('#pane');
 const when = new Intl.DateTimeFormat(isEN ? 'en' : 'id', { dateStyle: 'medium', timeStyle: 'short' });
 const fmt = (iso) => (iso ? when.format(new Date(iso)) : '—');
 let backend = null;
-let tab = 'requests';
+let tab = 'health';
 
 function show(message) {
   state.textContent = message;
@@ -53,6 +57,7 @@ function table(rows, cols) {
 }
 
 const TABS = {
+  health: () => renderHealth({ backend, t, isEN, table, fmt, toast, reload: () => render() }),
   async requests() {
     const rows = await backend.admin.requests();
     if (!rows.length) return Object.assign(document.createElement('p'), { className: 'adm-empty', textContent: t('adm.noRequests') });

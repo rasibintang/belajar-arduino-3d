@@ -8,19 +8,22 @@ import { AccountError } from './errors.js';
  * Antarmuka Backend (dipenuhi juga oleh supabase-backend.js):
  *   user() · onAuthChange(fn) · signIn() · signOut() · touch() · accessToken()
  *   projects.list/get/save/rename/remove · progress.pull/push
- *   admin.isAdmin/requests/projects/users/getLimit/setLimit
+ *   admin.isAdmin/requests/projects/users/getLimit/setLimit/health/resolve
  * Semua metode async melempar AccountError.
  *
- * opts: { users: [{ email, name }], admins: [email], fail, seed: { requests, usage, projects } }
+ * opts: { users: [{ email, name }], admins: [email], fail, seed: { requests, usage, projects, events, metrics } }
  */
 export function createMemoryBackend({ users = [], admins = [], fail = false, seed = {} } = {}) {
-  const accounts = users.map((u, i) => ({ id: `user-${i + 1}`, email: u.email, name: u.name ?? u.email, avatarUrl: null, lastSeenAt: null }));
+  const accounts = users.map((u, i) => ({ id: `user-${i + 1}`, email: u.email, name: u.name ?? u.email, avatarUrl: null, lastSeenAt: null, createdAt: '2026-10-24T00:00:00.000Z' }));
   const byEmail = (email) => accounts.find((a) => a.email === email);
   const projects = new Map(); // id -> { id, owner, name, sketch, diagram, eeprom, updatedAt }
   const progress = new Map(); // userId -> Set
   const settings = { ai_daily_limit: 1 };
   const requests = (seed.requests ?? []).map((r) => ({ userId: byEmail(r.email)?.id ?? null, prompt: r.prompt ?? '', component: r.component, createdAt: r.createdAt ?? new Date().toISOString() }));
   const usage = (seed.usage ?? []).map((u) => ({ userId: byEmail(u.email)?.id, ok: u.ok ?? true, createdAt: u.createdAt ?? new Date().toISOString() }));
+  const siteEvents = (seed.events ?? []).map((e) => ({ ...e, createdAt: new Date(e.createdAt).toISOString() }));
+  const siteMetrics = (seed.metrics ?? []).map((m) => ({ ...m, createdAt: new Date(m.createdAt).toISOString() }));
+  const resolved = new Map(); // fingerprint -> resolvedAt
   const listeners = new Set();
   let current = null;
   let seq = 0;
@@ -186,6 +189,22 @@ export function createMemoryBackend({ users = [], admins = [], fail = false, see
         await adminGuard();
         if (!Number.isInteger(n) || n < 0 || n > 100) throw new AccountError('invalid', 'batas 0–100');
         settings.ai_daily_limit = n;
+      },
+      /** Data tab "Kondisi situs" sejak `since` (ISO): kejadian, metrik, pengguna baru, proyek disimpan. */
+      async health(since) {
+        await adminGuard();
+        const from = new Date(since).toISOString();
+        return clone({
+          events: siteEvents.filter((e) => e.createdAt >= from),
+          metrics: siteMetrics.filter((m) => m.createdAt >= from),
+          users: accounts.filter((a) => a.createdAt >= from).map((a) => ({ createdAt: a.createdAt })),
+          projects: [...projects.values()].filter((p) => p.updatedAt >= from).map((p) => ({ updatedAt: p.updatedAt })),
+          resolved: [...resolved].map(([fingerprint, resolvedAt]) => ({ fingerprint, resolvedAt })),
+        });
+      },
+      async resolve(fingerprint) {
+        await adminGuard();
+        resolved.set(fingerprint, new Date().toISOString());
       },
     },
   };

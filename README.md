@@ -7,7 +7,7 @@
 **English** · [Bahasa Indonesia](README.id.md)
 
 [![Live site](https://img.shields.io/badge/live-learn--arduino--id.vercel.app-1f9e94?style=for-the-badge)](https://learn-arduino-id.vercel.app)
-[![Version](https://img.shields.io/badge/version-0.9.0-1d2740?style=for-the-badge)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.10.0-1d2740?style=for-the-badge)](CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/license-MIT-e8603c?style=for-the-badge)](LICENSE)
 
 ![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)
@@ -127,6 +127,10 @@ enable an optional **free site allowance** (server-side key, sign-in and a daily
 Signing in with Google (Supabase) adds features without taking anything away from guests:
 sandbox projects saved to your account, lesson progress synced across devices, and an admin page
 for the site owner. Data access is enforced with Postgres Row Level Security.
+
+The admin page opens on **Site health**: errors and warnings from browsers and the server (grouped,
+with a *Mark resolved* button), compile and AI success rates, and page load times on desktop vs
+mobile — without third-party trackers, and without storing sketches, prompts, keys, or emails.
 
 ## Tech stack
 

@@ -9,6 +9,7 @@ import { existsSync, accessSync, constants, cpSync, chmodSync, readdirSync, stat
 import { tmpdir } from 'node:os';
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createMonitor, record, serverEvent } from './monitor.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const TMP = join(tmpdir(), 'learn-arduino');
@@ -183,6 +184,8 @@ async function compileNow(source) {
       // arduino-cli menulis berkas kecil di HOME; di serverless hanya /tmp yang bisa ditulis
       env: { ...process.env, HOME: process.env.VERCEL ? TMP : process.env.HOME ?? TMP },
     });
+    // dihentikan (timeout) atau gagal dijalankan = masalah server, bukan kesalahan sketch pengguna
+    if (res.code === null || res.code === -1) return { ok: false, stderr: tidy(res.stderr || res.stdout || 'arduino-cli timeout', dir), internal: true };
     if (res.code !== 0) return { ok: false, stderr: tidy(res.stderr || res.stdout, dir) };
     const hex = await readFile(join(outDir, 'sketch.ino.hex'), 'utf8');
     const lines = await lineMap(join(outDir, 'sketch.ino.elf'));
@@ -197,7 +200,7 @@ async function compileNow(source) {
 export async function compileSketch(source, lang = 'id') {
   const problem = checkSource(source, lang);
   if (problem) return { ok: false, stderr: problem };
-  if (!existsSync(CLI)) return { ok: false, stderr: msg(lang).noCli };
+  if (!existsSync(CLI)) return { ok: false, stderr: msg(lang).noCli, internal: true };
   ensureExecutable();
   const key = createHash('sha256').update(source).digest('hex');
   if (cache.has(key)) return cache.get(key);
@@ -211,9 +214,9 @@ export async function compileSketch(source, lang = 'id') {
   return result;
 }
 
-/** Isi JSON permintaan. Vercel sudah mem-parse-nya (req.body); server Node/Vite belum. */
+/** Isi JSON permintaan. Vercel sudah mem-parse-nya (req.body); server Node/Vite belum (req.body kosong). */
 async function readBody(req) {
-  if (process.env.VERCEL && req.body !== undefined) return typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+  if (req.body !== undefined) return typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
   let body = '';
   for await (const chunk of req) {
     body += chunk;
@@ -222,8 +225,13 @@ async function readBody(req) {
   return JSON.parse(body);
 }
 
-/** Handler HTTP: POST /api/compile { sketch } -> { ok, hex, lines, stderr } */
-export async function handleCompile(req, res) {
+/**
+ * Handler HTTP: POST /api/compile { sketch } -> { ok, hex, lines, stderr }
+ * Lama kompilasi dicatat sebagai metrik "compile"; ok = server berfungsi (kesalahan sketch pengguna
+ * tetap ok). Toolchain hilang / timeout / pengecualian dicatat sebagai error server.
+ */
+export async function handleCompile(req, res, deps = { compile: compileSketch, monitor: createMonitor(), now: Date.now }) {
+  const { compile, monitor, now } = deps;
   res.setHeader('Access-Control-Allow-Origin', process.env.CORS_ORIGIN ?? '*');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') {
@@ -234,13 +242,20 @@ export async function handleCompile(req, res) {
     res.statusCode = 405;
     return res.end();
   }
-  let result;
+  let body;
   try {
-    const body = await readBody(req);
-    result = await compileSketch(body.sketch, body.lang);
+    body = await readBody(req);
   } catch (err) {
-    result = { ok: false, stderr: msg('id').badRequest(err.message) };
+    res.setHeader('Content-Type', 'application/json');
+    return res.end(JSON.stringify({ ok: false, stderr: msg('id').badRequest(err.message) }));
   }
+  const started = now();
+  const result = await compile(body.sketch, body.lang).catch((err) => ({ ok: false, stderr: String(err?.message ?? err), internal: true }));
+  const { internal, ...reply } = result;
+  await record(monitor, {
+    metrics: [{ name: 'compile', page: null, device: null, value_ms: Math.round(now() - started), ok: !internal }],
+    events: internal ? [serverEvent({ level: 'error', kind: 'compile', message: result.stderr })] : [],
+  });
   res.setHeader('Content-Type', 'application/json');
-  res.end(JSON.stringify(result));
+  res.end(JSON.stringify(reply));
 }

@@ -5,6 +5,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { runPipeline } from '../src/ai/pipeline.js';
 import { providerConfig, createAiClient } from './ai-client.mjs';
+import { createMonitor, record, serverEvent } from './monitor.mjs';
 
 const MAX_PROMPT = 1000;
 
@@ -63,6 +64,7 @@ function defaultDeps(req) {
     ai: config ? createAiClient(config) : null,
     db: supabaseDb(process.env),
     compile: httpCompile(req),
+    monitor: createMonitor(process.env),
     now: () => Date.now(),
   };
 }
@@ -94,7 +96,7 @@ function parseRequest(body) {
 }
 
 export async function handleAi(req, res, deps = defaultDeps(req)) {
-  const { ai, db, info, compile, now } = deps;
+  const { ai, db, info, compile, now, monitor } = deps;
   if (req.method === 'GET') return send(res, 200, { enabled: !!(ai && db), provider: (ai && db && info?.provider) || null, label: (ai && db && info?.label) || null });
   if (req.method !== 'POST') return send(res, 405, { ok: false, code: 'invalid' });
   let body;
@@ -129,7 +131,15 @@ export async function handleAi(req, res, deps = defaultDeps(req)) {
   const today = await db.countToday(user.id);
   if (!admin && today >= limit) return send(res, 429, { ok: false, code: 'quota', limit });
 
+  const started = now();
   const { outcome, result } = await runPipeline({ generate: (args) => ai.generate(args), request, compile, now });
+  // pemantauan: galat penyedia = error situs; gagal lain (rangkaian tidak sah dsb.) = warning
+  await record(monitor, {
+    metrics: [{ name: 'ai', page: 'sandbox', device: null, value_ms: Math.round(now() - started), ok: outcome.ok }],
+    events: outcome.ok
+      ? []
+      : [serverEvent({ level: outcome.reason === 'provider' ? 'error' : 'warn', kind: 'ai', page: 'sandbox', message: outcome.reason === 'provider' ? `provider: ${outcome.details?.[0] ?? ''}` : outcome.reason })],
+  });
 
   const missing = Array.isArray(result?.missing) ? result.missing.filter((m) => m?.component) : [];
   await db.recordRequests(user.id, request.prompt, missing).catch(() => {});

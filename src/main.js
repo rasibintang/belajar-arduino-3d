@@ -1,5 +1,8 @@
 import { t, translateDom, languageSwitch } from './i18n/index.js';
 import { mountAccount, toast } from './account/ui.js';
+import { initMonitor, monitor } from './monitor/client.js';
+
+initMonitor('home');
 import { syncProgress } from './account/progress-sync.js';
 import '@fontsource/barlow-semi-condensed/500.css';
 import '@fontsource/barlow-semi-condensed/600.css';
@@ -57,6 +60,7 @@ document.querySelectorAll('[data-logo]').forEach((el) => (el.innerHTML = LOGO));
 
 boot().catch((err) => {
   console.error(err);
+  monitor.event('error', 'boot', `${err?.name ?? 'Error'}: ${err?.message ?? err}`);
   loader.fail(t('load.fail'));
 });
 
@@ -500,6 +504,7 @@ async function boot() {
   loader.set(1, t('load.ready'));
   loader.done();
   callouts.measure();
+  monitor.ready();
 
   // Akses dari console browser saat pengembangan (tidak ikut di build produksi)
   if (import.meta.env.DEV) window.__la = { app, stage, runner, inspector, openLesson, setParam, toggleRun };

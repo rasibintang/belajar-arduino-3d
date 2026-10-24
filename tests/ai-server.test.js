@@ -187,3 +187,29 @@ test('laporan komponen dari jalur kunci sendiri: tanpa login → tanpa nama; tet
   // laporan tidak memakai jatah
   assert.equal(await db.countToday('u1'), 0);
 });
+
+function fakeMonitor() {
+  const m = { events: [], metrics: [] };
+  m.save = async ({ events = [], metrics = [] }) => {
+    m.events.push(...events);
+    m.metrics.push(...metrics);
+  };
+  return m;
+}
+
+test('pemantauan: AI berhasil → metrik ai ok; galat penyedia → error, gagal lain → warning', async () => {
+  const ok = fakeMonitor();
+  await call({ ai: fakeAi(LED()), db: fakeDb(), monitor: ok });
+  assert.deepEqual(ok.metrics.map((m) => [m.name, m.ok]), [['ai', true]]);
+  assert.equal(ok.events.length, 0);
+
+  const provider = fakeMonitor();
+  await call({ ai: fakeAi(new Error('HTTP 503 overloaded'), new Error('HTTP 503 overloaded')), db: fakeDb(), monitor: provider });
+  assert.deepEqual(provider.metrics.map((m) => [m.name, m.ok]), [['ai', false]]);
+  assert.deepEqual(provider.events.map((e) => [e.level, e.source, e.kind]), [['error', 'server', 'ai']]);
+  assert.match(provider.events[0].message, /provider/);
+
+  const infeasible = fakeMonitor();
+  await call({ ai: fakeAi({ ...LED(), feasible: false }), db: fakeDb(), monitor: infeasible });
+  assert.deepEqual(infeasible.events.map((e) => e.level), ['warn']);
+});

@@ -1,9 +1,9 @@
 // PGlite (Postgres di Node) dengan tiruan bagian Supabase yang dipakai migrasi:
 // schema auth (users, uid(), jwt()), peran anon/authenticated/service_role, hak bawaan schema public.
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { PGlite } from '@electric-sql/pglite';
 
-const MIGRATION = new URL('../../supabase/migrations/20261024000000_akun_dan_data.sql', import.meta.url);
+const MIGRATIONS = new URL('../../supabase/migrations/', import.meta.url);
 
 const SUPABASE_STUB = `
 create schema auth;
@@ -22,11 +22,11 @@ alter default privileges in schema public grant all on sequences to anon, authen
 alter default privileges in schema public grant all on functions to anon, authenticated, service_role;
 `;
 
-/** Database baru: tiruan Supabase + migrasi. */
+/** Database baru: tiruan Supabase + semua migrasi (urut nama berkas). */
 export async function freshDb() {
   const db = new PGlite();
   await db.exec(SUPABASE_STUB);
-  await db.exec(readFileSync(MIGRATION, 'utf8'));
+  for (const name of readdirSync(MIGRATIONS).filter((n) => n.endsWith('.sql')).sort()) await db.exec(readFileSync(new URL(name, MIGRATIONS), 'utf8'));
   /** Jalankan sql sebagai pengguna ({ id, email }) atau anon (null). */
   async function as(user, sql, params = []) {
     return db.transaction(async (tx) => {

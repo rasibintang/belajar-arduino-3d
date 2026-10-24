@@ -177,6 +177,29 @@ export async function createSupabaseBackend({ url, anonKey }, deps = {}) {
         if (!Number.isInteger(n) || n < 0 || n > 100) throw new AccountError('invalid', 'batas 0–100');
         changed(await run(client.from('settings').update({ value: n }).eq('key', 'ai_daily_limit').select('key')));
       },
+      /** Data tab "Kondisi situs" sejak `since` (ISO); tiap tabel maks 5000 baris terbaru. */
+      async health(since) {
+        await adminOnly();
+        const recent = (table, cols, col = 'created_at') => run(client.from(table).select(cols).gte(col, since).order(col, { ascending: false }).limit(5000));
+        const [events, metrics, users, projects, resolved] = await Promise.all([
+          recent('site_events', 'level, source, kind, message, page, device, browser, fingerprint, created_at'),
+          recent('site_metrics', 'name, page, device, value_ms, ok, created_at'),
+          recent('profiles', 'created_at'),
+          recent('projects', 'updated_at', 'updated_at'),
+          run(client.from('site_event_resolved').select('fingerprint, resolved_at')),
+        ]);
+        return {
+          events: events.map(({ created_at, ...e }) => ({ ...e, createdAt: created_at })),
+          metrics: metrics.map(({ value_ms, created_at, ...m }) => ({ ...m, valueMs: value_ms, createdAt: created_at })),
+          users: users.map((u) => ({ createdAt: u.created_at })),
+          projects: projects.map((p) => ({ updatedAt: p.updated_at })),
+          resolved: resolved.map((r) => ({ fingerprint: r.fingerprint, resolvedAt: r.resolved_at })),
+        };
+      },
+      async resolve(fingerprint) {
+        await adminOnly();
+        await run(client.from('site_event_resolved').upsert({ fingerprint, resolved_at: new Date().toISOString() }));
+      },
     },
   };
 }

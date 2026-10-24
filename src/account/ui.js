@@ -1,5 +1,6 @@
 import { t } from '../i18n/index.js';
 import { getAccount } from './index.js';
+import { monitor } from '../monitor/client.js';
 import './account.css';
 
 const GOOGLE =
@@ -81,7 +82,10 @@ export async function mountAccount(slot, { buttonClass = 'top-btn', menuItems = 
   }
 
   function signIn() {
-    backend.signIn().catch(() => toast(t('acct.offline'), 'error'));
+    backend.signIn().catch((err) => {
+      monitor.event('warn', 'account', `masuk: ${err?.code ?? err?.message ?? 'gagal'}`);
+      toast(t('acct.offline'), 'error');
+    });
   }
 
   function render() {

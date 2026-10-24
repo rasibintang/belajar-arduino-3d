@@ -34,3 +34,19 @@ test('memori: accessToken null sebelum masuk, ada setelah masuk', async () => {
   await signInAs(USERS.ani.email);
   assert.match(await backend.accessToken(), /^fake-token-/);
 });
+
+test('memori: kondisi situs hanya data sejak tanggal yang diminta', async () => {
+  const { backend, signInAs } = make({
+    seed: {
+      events: [
+        { level: 'error', source: 'browser', kind: 'js', message: 'baru', page: 'home', fingerprint: 'f1', createdAt: '2026-10-25T10:00:00Z' },
+        { level: 'warn', source: 'server', kind: 'compile', message: 'lama', page: null, fingerprint: 'f2', createdAt: '2026-10-01T10:00:00Z' },
+      ],
+      metrics: [{ name: 'load', page: 'home', device: 'desktop', valueMs: 900, ok: true, createdAt: '2026-10-25T10:00:00Z' }],
+    },
+  });
+  await signInAs(USERS.admin.email);
+  const h = await backend.admin.health('2026-10-20T00:00:00Z');
+  assert.deepEqual(h.events.map((e) => e.message), ['baru']);
+  assert.deepEqual(h.metrics.map((m) => m.valueMs), [900]);
+});

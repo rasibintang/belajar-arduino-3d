@@ -186,6 +186,30 @@ Langkah pemilik:
 5. Pasang di Vercel → Settings → Environment Variables (Production), lalu deploy ulang. Untuk lokal,
    tulis di `.env.local` (tidak di-commit) dan jalankan ulang `npm run dev`.
 
+## Pemantauan situs (tab "Kondisi situs")
+
+```
+browser (src/monitor/client.js) ──sendBeacon──▶ POST /api/log (server/log.mjs)
+  error JS/promise, WebGL hilang,                 validasi · potong · samarkan rahasia
+  halaman lambat, gagal akun,                     sidik jari (pesan tanpa angka) · 30/menit per IP
+  AI "kunci saya" gagal, waktu muat               ▼
+/api/compile, /api/ai ── server/monitor.mjs ──▶ site_events / site_metrics (service role)
+halaman pengelola ◀── backend.admin.health() ◀── RLS: hanya pengelola membaca
+  src/admin/health.js + src/monitor/summary.js (kelompok, p50/p95, pembanding periode)
+```
+
+- Pelapor browser aktif di produksi saja; saat pengembangan tambahkan `?monitor=1`. Maks 20
+  kejadian per halaman, pesan sama sekali. Untuk melapor dari kode baru:
+  `monitor.event('warn', 'jenis', 'pesan')` / `monitor.metric('load' | 'ai', ms, ok)`.
+- Jangan pernah mengirim isi sketch, perintah AI, kunci, atau email — `scrub()` hanya jaring
+  pengaman.
+- Kesalahan sketch pengguna bukan error situs: `/api/compile` hanya mencatat error bila toolchain
+  hilang, timeout, atau pengecualian.
+- Data > 30 hari dihapus oleh `/api/log` (peluang 1% per permintaan).
+- Butuh migrasi `supabase/migrations/20261025000000_pemantauan.sql` dan `SUPABASE_URL` +
+  `SUPABASE_SERVICE_ROLE_KEY` di Vercel. Tanpa itu situs tetap jalan; tidak ada yang tercatat.
+- Contoh data saat pengembangan: `admin.html?fakeauth=admin`.
+
 ## Deploy
 
 ### Semua di Vercel (frontend + fungsi kompilasi)

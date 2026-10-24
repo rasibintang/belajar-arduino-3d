@@ -3,6 +3,9 @@ import { mountAccount, toast } from '../account/ui.js';
 import { saveToAccount, openFromAccount, createAutosave } from '../account/cloud-projects.js';
 import { createAiPanel } from '../ai/panel.js';
 import { logicalCircuit } from '../ai/client.js';
+import { initMonitor, monitor } from '../monitor/client.js';
+
+initMonitor('sandbox');
 import '@fontsource/barlow-semi-condensed/500.css';
 import '@fontsource/barlow-semi-condensed/600.css';
 import '@fontsource/barlow-semi-condensed/700.css';
@@ -637,6 +640,7 @@ async function openCloud(id, { copy = false } = {}) {
     openProject(copy ? p : { ...p, cloudOwner: cloud.user.id });
     if (copy) toast(t('proj.copyOpened'));
   } catch (err) {
+    monitor.event('warn', 'account', `buka proyek: ${err.code ?? err.message}`);
     toast(err.code === 'network' ? t('acct.offline') : t('proj.notFound'), 'error');
   }
 }
@@ -662,6 +666,7 @@ async function openProjects() {
     rows = await cloud.backend.projects.list();
   } catch (err) {
     projectsModal.hidden = true;
+    monitor.event('warn', 'account', `daftar proyek: ${err.code ?? err.message}`);
     return toast(err.code === 'network' ? t('acct.offline') : err.message, 'error');
   }
   if (!rows.length) {
@@ -705,6 +710,7 @@ async function openProjects() {
             openProjects();
           }
         } catch (err) {
+          monitor.event('warn', 'account', `kelola proyek: ${err.code ?? err.message}`);
           toast(err.code === 'network' ? t('acct.offline') : err.message, 'error');
         }
       });
@@ -718,7 +724,10 @@ account.then(async (acc) => {
   cloud.backend = acc.backend;
   cloud.user = acc.user();
   cloud.autosave = createAutosave(acc.backend, {
-    onError: () => toast(t('proj.autosaveFail'), 'error'),
+    onError: (err) => {
+      monitor.event('warn', 'account', `simpan otomatis: ${err?.code ?? err?.message ?? 'gagal'}`);
+      toast(t('proj.autosaveFail'), 'error');
+    },
     onSaved: () => flashSaved(t('proj.savedCloud')),
   });
   acc.onChange((user) => {
@@ -832,6 +841,7 @@ function openProject(p) {
 }
 
 openProject(project);
+monitor.ready();
 if (fromLink) serial.sys(t('sb.fromLink'));
 showPanel(null);
 
