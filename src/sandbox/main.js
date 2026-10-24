@@ -526,6 +526,7 @@ $('#btn-new').addEventListener('click', () => {
   if (confirm(t('sb.newConfirm'))) openProject({ ...BLANK, name: t('sb.newProject') });
 });
 $('#btn-save').addEventListener('click', () => download(project));
+$('#btn-mine').addEventListener('click', () => openProjects());
 $('#btn-open').addEventListener('click', async () => {
   const data = await pickFile();
   if (!data) return;
@@ -604,6 +605,7 @@ const ownsCloud = () => !!(cloud.user && project.cloudId && project.cloudOwner =
 function updateCloudBadge() {
   const badge = $('#cloud-badge');
   badge.hidden = !cloud.user;
+  $('#btn-mine').hidden = !cloud.user;
   badge.textContent = ownsCloud() ? t('proj.badge.cloud') : t('proj.badge.local');
   badge.classList.toggle('is-cloud', ownsCloud());
 }

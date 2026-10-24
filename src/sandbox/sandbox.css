@@ -206,6 +206,7 @@ body.sb {
   display: flex;
   flex-direction: column;
 }
+.sb-btn[hidden],
 .sb-pane[hidden] {
   display: none;
 }
