@@ -62,5 +62,7 @@ const p = (s) => s.replace(/\\/g, '/');
 writeFileSync(CONFIG, `directories:\n  data: ${p(join(TOOLS, 'arduino-data'))}\n  downloads: ${p(join(TOOLS, 'arduino-data', 'staging'))}\n  user: ${p(join(TOOLS, 'arduino-user'))}\n`);
 cli(['core', 'update-index']);
 cli(['core', 'install', AVR_CORE]);
+// indeks library asli; slim-toolchain menggantinya dengan indeks kosong, yang bisa ikut dari cache build
+cli(['lib', 'update-index']);
 for (const lib of LIBRARIES) cli(['lib', 'install', lib]);
 console.log('\n✓ Server kompilasi siap. Jalankan `npm run dev` (atau `npm run compile-server`).');
