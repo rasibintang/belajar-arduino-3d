@@ -50,7 +50,10 @@ export function createAiPanel({ t, lang, toast, account, compile, getCurrent, on
             </label>
             <label class="ai-check"><input type="checkbox" name="remember"> ${escapeHtml(t('ai.remember'))}</label>
             <p class="ai-help">${escapeHtml(t('ai.keyNote'))}</p>
-            <details class="ai-howto"><summary>${escapeHtml(t('ai.howTo'))}</summary><p>${escapeHtml(t('ai.howToSteps'))}</p><a href="${PRESETS.gemini.keyUrl}" target="_blank" rel="noopener">aistudio.google.com</a></details>
+            <details class="ai-howto"><summary>${escapeHtml(t('ai.howTo'))}</summary>
+              <ol>${t('ai.howToSteps').split('\n').map((s) => `<li>${escapeHtml(s)}</li>`).join('')}</ol>
+              <a class="sb-btn" href="${PRESETS.gemini.keyUrl}" target="_blank" rel="noopener">${escapeHtml(t('ai.openStudio'))} ↗</a>
+            </details>
             <div class="ai-actions"><button type="button" class="sb-btn" data-act="save-key">${escapeHtml(t('ai.saveKey'))}</button></div>
           </div>
         </fieldset>
@@ -113,6 +116,7 @@ export function createAiPanel({ t, lang, toast, account, compile, getCurrent, on
     form.baseUrl.value = cfg?.baseUrl ?? '';
     form.remember.checked = !!cfg?.remember;
     $('.ai-base').hidden = form.provider.value !== 'custom';
+    $('.ai-howto').hidden = form.provider.value !== 'gemini';
   }
   function renderKey() {
     const cfg = loadKey();
@@ -134,6 +138,7 @@ export function createAiPanel({ t, lang, toast, account, compile, getCurrent, on
   });
   form.provider.addEventListener('change', () => {
     $('.ai-base').hidden = form.provider.value !== 'custom';
+    $('.ai-howto').hidden = form.provider.value !== 'gemini';
     form.model.value = form.provider.value === 'anthropic' ? 'claude-sonnet-5-5' : '';
     $('#ai-models').replaceChildren();
   });
@@ -141,7 +146,7 @@ export function createAiPanel({ t, lang, toast, account, compile, getCurrent, on
 
   async function refresh() {
     info ??= fake ? { enabled: true, label: 'contoh (DEV)' } : await fetchAiInfo();
-    $('.ai-source-site').hidden = !info.enabled;
+    $('.ai-source').hidden = !info.enabled; // satu sumber saja → tidak perlu tab
     if (!info.enabled && source() === 'site') form['ai-source'].value = 'own';
     const submit = form.querySelector('[type=submit]');
     const acc = await account;

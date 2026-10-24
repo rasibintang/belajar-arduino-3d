@@ -33,7 +33,7 @@ const $ = (s) => document.querySelector(s);
 document.querySelectorAll('[data-logo]').forEach((el) => (el.innerHTML = LOGO));
 translateDom();
 $('.sb-lang').append(languageSwitch());
-const account = mountAccount($('.account-slot'), { buttonClass: 'sb-btn', menuItems: () => accountMenu() });
+const account = mountAccount($('.account-slot'), { buttonClass: 'sb-btn' });
 
 await Promise.all(
   ['600 20px "Barlow Semi Condensed"', '700 20px "Barlow Semi Condensed"', '800 20px "Barlow Semi Condensed"', '600 20px "IBM Plex Mono"'].map((f) =>
@@ -284,8 +284,6 @@ stage.onUpdate((dt) => {
 
 // ------------------------------------------------------------------ toolbar & hint
 $('#btn-add').innerHTML = icon('plus');
-$('#btn-fit').innerHTML = icon('focus');
-$('#btn-fit').addEventListener('click', () => fit(false));
 let hintDefault = t('sb.hint.edit');
 function setHint(text) {
   $('#hint').textContent = text ?? hintDefault;
@@ -610,12 +608,13 @@ function updateCloudBadge() {
   badge.classList.toggle('is-cloud', ownsCloud());
 }
 
-function accountMenu() {
-  if (!cloud.user) return [];
-  return [
-    { label: ownsCloud() ? t('proj.saveNow') : t('proj.save'), onClick: saveCloud },
-    { label: t('proj.mine'), onClick: openProjects },
-  ];
+/** Baris atas kotak "Proyek saya": proyek yang terbuka, statusnya, dan tombol simpan. */
+function renderProjectsBar() {
+  $('#projects-current').textContent = project.name || t('sb.project');
+  const state = $('#projects-state');
+  state.textContent = ownsCloud() ? t('proj.badge.cloud') : t('proj.badge.local');
+  state.classList.toggle('is-cloud', ownsCloud());
+  $('#projects-save').textContent = ownsCloud() ? t('proj.saveNow') : t('proj.save');
 }
 
 async function saveCloud() {
@@ -626,6 +625,7 @@ async function saveCloud() {
     saveLocal(project);
     updateCloudBadge();
     flashSaved(t('proj.savedCloud'));
+    if (!projectsModal.hidden) openProjects();
   } catch (err) {
     toast(err.code === 'network' ? t('acct.offline') : err.message, 'error');
   }
@@ -644,6 +644,7 @@ async function openCloud(id, { copy = false } = {}) {
 const projectsModal = $('#projects-modal');
 $('#projects-close').innerHTML = icon('close');
 $('#projects-close').addEventListener('click', () => (projectsModal.hidden = true));
+$('#projects-save').addEventListener('click', () => saveCloud());
 projectsModal.addEventListener('click', (e) => {
   if (e.target === projectsModal) projectsModal.hidden = true;
 });
@@ -654,6 +655,7 @@ projectsModal.addEventListener('keydown', (e) => {
 
 async function openProjects() {
   const list = $('#projects-list');
+  renderProjectsBar();
   projectsModal.hidden = false;
   let rows;
   try {

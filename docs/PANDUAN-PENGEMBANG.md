@@ -90,7 +90,7 @@ Semua komponen di satu meja 3D: cari, saring per kategori, lihat pin & pengatura
 
 Masuk dengan Google (Supabase) membuka fitur tambahan; tanpa login semua tetap bekerja.
 
-- **Proyek di akun** (sandbox → menu akun): *Simpan ke akun*, *Proyek saya* (buka, ubah nama,
+- **Proyek di akun** (sandbox → tombol *Proyek saya* di toolbar, tampil saat login): *Simpan ke akun* dan daftar proyek (buka, ubah nama,
   hapus), lalu proyek itu tersimpan otomatis ke akun. Simpanan di browser tetap ada.
 - **Progres pelajaran** ikut akun; saat pertama masuk, progres di browser dan di akun digabung.
 - **Halaman pengelola** (`/admin.html`, hanya untuk email di tabel `admins`): laporan komponen

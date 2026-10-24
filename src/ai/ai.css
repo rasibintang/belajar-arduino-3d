@@ -202,6 +202,8 @@
   opacity: 0;
   pointer-events: none;
 }
+.ai-source[hidden],
+.ai-howto[hidden],
 .ai-source label[hidden],
 .ai-key[hidden],
 .ai-key-form[hidden],
@@ -263,13 +265,30 @@
   font: 500 12.5px/1.4 var(--f-body);
 }
 .ai-howto {
-  font: 500 13px/1.45 var(--f-body);
+  border-radius: 7px;
+  background: var(--paper-2, #f3eee3);
+  font: 500 13.5px/1.5 var(--f-body);
 }
 .ai-howto summary {
+  padding: 9px 12px;
   cursor: pointer;
   font-weight: 600;
   color: var(--teal);
 }
-.ai-howto p {
-  margin: 6px 0;
+.ai-howto[open] summary {
+  border-bottom: 1px solid var(--line);
+}
+.ai-howto ol {
+  margin: 0;
+  padding: 10px 14px 4px 34px;
+  display: grid;
+  gap: 4px;
+}
+.ai-howto li::marker {
+  font-weight: 700;
+  color: var(--teal);
+}
+.ai-howto .sb-btn {
+  margin: 6px 12px 12px 34px;
+  text-decoration: none;
 }
