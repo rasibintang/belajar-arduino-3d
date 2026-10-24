@@ -89,3 +89,11 @@ test('tabel waktu muat per halaman × perangkat; tabel kompilasi & AI', () => {
     { name: 'ai', count: 0, okRate: null, p50: null, p95: null },
   ]);
 });
+
+test('periode: data dengan jam server sedikit di depan jam browser tetap masuk periode ini', async () => {
+  const { periods } = await import('../src/monitor/summary.js');
+  const { current, previous } = periods(T0, 24 * H);
+  const data = { events: [], metrics: [metric({ name: 'compile', valueMs: 1900, createdAt: new Date(T0 + 90000).toISOString() })], users: [], projects: [] };
+  assert.equal(periodStats(data, ...current).compile.count, 1);
+  assert.deepEqual(previous, [T0 - 48 * H, T0 - 24 * H]);
+});

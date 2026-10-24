@@ -1,6 +1,6 @@
 // Tab "Kondisi situs": ringkasan periode, log error & warning (dikelompokkan), dan kinerja.
 // Data dari backend.admin.health(); pengolahan di src/monitor/summary.js.
-import { groupEvents, periodStats, loadTable, opsTable } from '../monitor/summary.js';
+import { groupEvents, periodStats, periods, loadTable, opsTable } from '../monitor/summary.js';
 import { escapeHtml } from '../ui/highlight.js';
 
 const HOUR = 3600000;
@@ -14,8 +14,9 @@ export async function renderHealth({ backend, t, isEN, table, fmt, toast, reload
   const now = Date.now();
   // dua periode sekaligus: periode ini + pembanding sebelumnya
   const data = await backend.admin.health(new Date(now - 2 * span).toISOString());
-  const current = periodStats(data, now - span, now + 1);
-  const previous = periodStats(data, now - 2 * span, now - span);
+  const range = periods(now, span);
+  const current = periodStats(data, ...range.current);
+  const previous = periodStats(data, ...range.previous);
   const inPeriod = (iso) => Date.parse(iso) >= now - span;
   const events = data.events.filter((e) => inPeriod(e.createdAt));
   const metrics = data.metrics.filter((m) => inPeriod(m.createdAt));

@@ -36,6 +36,14 @@ export function groupEvents(events, resolved) {
     .sort((a, b) => rank(a) - rank(b) || b.lastAt.localeCompare(a.lastAt));
 }
 
+/**
+ * Batas periode ini dan pembandingnya. Periode ini tanpa batas atas: jam browser pengelola bisa
+ * sedikit di belakang jam server, dan data terbaru tidak boleh hilang dari ringkasan.
+ */
+export function periods(now, span) {
+  return { current: [now - span, Infinity], previous: [now - 2 * span, now - span] };
+}
+
 const within = (iso, from, to) => {
   const t = Date.parse(iso);
   return t >= from && t < to;
